@@ -21,6 +21,11 @@ class PipelineSettings(BaseSettings):
 
     # v0 scope (see project doc): HS 2017 edition, last four years.
     baci_hs_revision: str = "HS17"
+    # Release id (YYYYMM). 202601 covers 2017-2024. Bump when CEPII publishes a new one.
+    baci_version: str = "202601"
+    baci_base_url: str = "https://www.cepii.fr/DATA_DOWNLOAD/baci/data"
+    baci_years: int = 4  # the minimum for 3-year growth
+    keep_raw_zip: bool = False  # delete the ~800 MB zip once converted, to save disk
     exporters: list[str] = ["PAK", "BGD", "VNM", "IND", "TUR", "EGY", "MAR", "KEN", "LKA", "ETH"]
 
     @property

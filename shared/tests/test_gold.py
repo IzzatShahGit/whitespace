@@ -28,6 +28,10 @@ def test_valid_row() -> None:
     assert MarketOpportunity(**_row()).market == "DEU"  # type: ignore[arg-type]
 
 
+def test_baci_grouping_codes_accepted() -> None:
+    assert MarketOpportunity(**_row(market="S19")).market == "S19"  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     "field,value",
     [("hs6", "6302"), ("exporter", "pk"), ("exporter_share", 1.5), ("rank", 0)],

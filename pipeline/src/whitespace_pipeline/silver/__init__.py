@@ -1,1 +1,1 @@
-"""Silver: cleaned data, standard country codes, importer-reported figures preferred."""
+"""Silver: cleaned data, standard country codes, six-digit product codes."""

@@ -1,1 +1,1 @@
-"""Gold: market metrics ready for scoring and serving."""
+"""Gold: market metrics and opportunity scores, ready to serve."""

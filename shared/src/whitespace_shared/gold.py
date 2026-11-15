@@ -11,8 +11,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# ISO 3166-1 alpha-3 country code, e.g. "PAK"
-CountryCode = Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")]
+# ISO 3166-1 alpha-3 country code, e.g. "PAK". BACI also reports three statistical
+# groupings with non-ISO codes, kept because dropping them distorts market totals:
+# S19 "Other Asia, nes" (mostly Taiwan), ZA1 Southern African Customs Union,
+# R20 "Europe EFTA, nes". Hence a letter followed by two letters or digits.
+CountryCode = Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[A-Z][A-Z0-9]{2}$")]
 # Six-digit Harmonized System product code, e.g. "630231"
 HS6Code = Annotated[str, Field(min_length=6, max_length=6, pattern=r"^\d{6}$")]
 

@@ -1,9 +1,10 @@
 .DEFAULT_GOAL := help
 FRONTEND := cd frontend &&
 
-# Load ports and settings from .env when it exists.
+# Read ports from .env when it exists. Only these are exported to commands:
+# secrets in .env stay out of every process environment (apps read .env themselves).
 -include .env
-export
+export WEB_PORT API_PORT DB_PORT OLLAMA_PORT OLLAMA_MODEL
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
