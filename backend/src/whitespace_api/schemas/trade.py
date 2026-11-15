@@ -6,6 +6,27 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 Label = Literal["Strong", "Good", "Watch"]
+Tone = Literal["positive", "neutral", "negative"]
+Action = Literal["go", "test", "grow", "defend", "care", "hard"]
+
+
+class Signal(BaseModel):
+    """One readable fact about a market, with the number behind it."""
+
+    kind: Literal["demand", "competition", "position", "size"]
+    tone: Tone
+    title: str = Field(description='Short, e.g. "Fast-growing demand"')
+    detail: str = Field(description='The figure, e.g. "Imports grew 19% a year, 2021-2024"')
+
+
+class Verdict(BaseModel):
+    """The recommended action, derived from the signals by fixed rules."""
+
+    action: Action
+    headline: str = Field(description='e.g. "Go for it"')
+    tone: Tone
+    summary: str = Field(description="The evidence, as sentences with figures")
+    next_step: str
 
 
 class CountryOut(BaseModel):
@@ -32,6 +53,9 @@ class MarketItem(BaseModel):
     exporter_share: float
     top_rival: CountryOut | None
     top_rival_share_change: float | None
+    top_rival_share: float | None
+    verdict: Verdict
+    signals: list[Signal]
     reasons: list[str] = Field(description="Three plain-language reasons, from the data")
     already_selling: bool = Field(
         default=False, description="The user said they already sell to this market"

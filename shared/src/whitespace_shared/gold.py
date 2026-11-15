@@ -57,6 +57,9 @@ class MarketOpportunity(_Contract):
         default=None, description="Largest supplier other than the exporter at the start"
     )
     top_rival_share_change: float | None = None
+    top_rival_share: float | None = Field(
+        default=None, ge=0, le=1, description="The rival's share of the market, last year"
+    )
     exporter_share: float = Field(ge=0, le=1)
     exporter_rca: float = Field(ge=0)
 

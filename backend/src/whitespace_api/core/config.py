@@ -105,10 +105,22 @@ class Settings(BaseSettings):
     redis_url: str | None = None
 
     # --- LLM ---
+    # Two tiers: "main" writes briefs; "small" does cheap, narrow tasks (extraction).
+    # Pinned versions, so behaviour never changes silently under an alias.
     llm_provider: LLMProvider = "gemini"
-    llm_model: str = "gemini-flash-latest"
+    # Measured (Nov 2026): 3.5 Flash-Lite with minimal thinking writes grounded summaries
+    # in ~1 s with no thinking tokens; larger Flash models took 16-40 s and spent ~190+
+    # thinking tokens that also ate into the output cap.
+    llm_model: str = "gemini-3.5-flash-lite"
+    llm_small_model: str = "gemini-3.5-flash-lite"
     llm_fallback_provider: LLMProvider | None = "groq"
-    llm_fallback_model: str = "llama-3.3-70b-versatile"
+    llm_fallback_model: str = "openai/gpt-oss-120b"
+    llm_fallback_small_model: str = "openai/gpt-oss-20b"
+    # Reasoning ("thinking") tokens are billed and count against the output cap.
+    # Gemini 3 takes a level (minimal | low | medium | high); "minimal" ~ off.
+    llm_thinking_level_main: str = "minimal"
+    llm_thinking_level_small: str = "minimal"
+    llm_timeout_seconds: float = Field(default=30, gt=0, description="Per LLM call")
     # One or many keys per provider (GOOGLE_API_KEY_1, _2, ...), used in rotation.
     google_api_keys: list[SecretStr] = Field(default_factory=list)
     groq_api_keys: list[SecretStr] = Field(default_factory=list)
@@ -123,6 +135,11 @@ class Settings(BaseSettings):
     # Monthly US imports (Census Bureau). EU monthly data (Eurostat) needs no key.
     census_api_key: SecretStr | None = None
     monthly_cache_days: int = Field(default=7, ge=1, description="Refresh monthly data after")
+
+    # --- AI briefs ---
+    brief_cache_days: int = Field(default=7, ge=1)
+    research_cache_days: int = Field(default=3, ge=1, description="Web research per market")
+    brief_daily_limit: int = Field(default=20, ge=1, description="New briefs per user per day")
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"

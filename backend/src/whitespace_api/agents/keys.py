@@ -58,7 +58,7 @@ class KeyPool:
             self._next = (chosen[0] + 1) % len(self.keys)
         return [PooledKey(self.provider, i + 1, self.keys[i]) for i in chosen]
 
-    def rest(self, key: PooledKey) -> None:
-        """Bench a key after a rate limit."""
+    def rest(self, key: PooledKey, seconds: float | None = None) -> None:
+        """Bench a key: after a rate limit (default rest), or longer if it was refused."""
         with self._lock:
-            self._resting_until[key.slot - 1] = self.clock() + self.rest_seconds
+            self._resting_until[key.slot - 1] = self.clock() + (seconds or self.rest_seconds)

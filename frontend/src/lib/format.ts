@@ -51,16 +51,23 @@ export function points(value: number): string {
 }
 
 /**
- * A readable product name from a BACI description, which comes in two shapes:
- * - "Bed linen: of cotton (…)": the head is the product, so join head and detail
- *   -> "Bed linen of cotton (…)".
- * - "Cereals: rice, broken": the head is only a category -> "Rice, broken".
+ * A readable product name from a BACI description ("Head: detail"):
+ * - "Bed linen: of cotton (…)"  -> "Bed linen of cotton (…)"   (detail continues the head)
+ * - "Balls: (other than …)"     -> "Balls (other than …)"      (bracketed qualifier)
+ * - "Balls: inflatable"         -> "Balls, inflatable"         (short qualifier)
+ * - "Cereals: rice, broken"     -> "Rice, broken"              (head is only a category)
  */
 export function shortProductName(description: string): string {
   const [head, ...rest] = description.split(": ");
   if (!rest.length) return head;
   const detail = rest.join(": ");
-  const continuesHead = /^(of|from|for|in|with|without|not)\b/.test(detail);
-  const name = continuesHead ? `${head} ${detail}` : detail;
+  let name: string;
+  if (/^(of|from|for|in|with|without|not)\b/.test(detail) || detail.startsWith("(")) {
+    name = `${head} ${detail}`;
+  } else if (detail.split(/\s+/).length <= 2) {
+    name = `${head}, ${detail}`;
+  } else {
+    name = detail;
+  }
   return name.charAt(0).toUpperCase() + name.slice(1);
 }

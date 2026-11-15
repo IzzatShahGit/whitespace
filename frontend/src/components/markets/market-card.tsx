@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { LabelPill, SellingBadge } from "@/components/markets/label-pill";
+import { SellingBadge, SignalChips, VerdictBadge } from "@/components/markets/verdict";
 import type { MarketItem } from "@/lib/api/queries";
 import { money, percent, signedPercent } from "@/lib/format";
 
@@ -13,7 +13,10 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** One ranked market. `compact` shows a single reason (dashboard); full shows all three. */
+/**
+ * One ranked market: the verdict first (what to do), then the signals (why), then
+ * the key figures. `compact` (dashboard) leaves out the written summary.
+ */
 export function MarketCard({
   item,
   href,
@@ -23,38 +26,35 @@ export function MarketCard({
   href: string;
   compact?: boolean;
 }) {
-  const reasons = compact ? item.reasons.slice(0, 1) : item.reasons;
   return (
     <Link
       href={href}
-      className="group block rounded-2xl border border-ink-line bg-ink-raised p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-dim/60 focus-visible:outline-2 focus-visible:outline-ember"
+      className="group flex h-full flex-col rounded-2xl border border-ink-line bg-ink-raised p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-dim/60 focus-visible:outline-2 focus-visible:outline-ember"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-baseline gap-3">
           <span className="font-mono text-sm text-sage-dim">#{item.rank}</span>
           <h3 className="text-lg font-medium">{item.market.name}</h3>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {item.already_selling && <SellingBadge />}
-          <LabelPill label={item.label} />
-        </div>
+        {item.already_selling && <SellingBadge />}
       </div>
 
-      <dl className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-3">
+        <VerdictBadge verdict={item.verdict} />
+      </div>
+      {!compact && <p className="mt-3 text-sm leading-6 text-sage">{item.verdict.summary}</p>}
+
+      <div className="mt-4">
+        <SignalChips signals={item.signals} />
+      </div>
+
+      <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-ink-line/60 pt-4">
         <Stat label="Imports" value={money(item.market_imports_usd)} />
         <Stat label="Growth / yr" value={signedPercent(item.import_growth_3y)} />
         <Stat label="Your share" value={percent(item.exporter_share, { floor: true })} />
       </dl>
 
-      <ul className="mt-4 flex flex-col gap-1.5">
-        {reasons.map((reason) => (
-          <li key={reason} className="flex items-start gap-2 text-sm text-sage">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-ember" aria-hidden />
-            {reason}
-          </li>
-        ))}
-      </ul>
-      <span className="mt-4 inline-block text-sm text-sage-dim transition-colors group-hover:text-cream">
+      <span className="mt-auto pt-4 text-sm text-sage-dim transition-colors group-hover:text-cream">
         See the market →
       </span>
     </Link>

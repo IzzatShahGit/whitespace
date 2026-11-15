@@ -58,7 +58,9 @@ export function ProductPicker({
   }
 
   return (
-    <div className="relative">
+    // Own stacking layer above later page sections: animated sections (transform) each
+    // create a stacking context, which would otherwise paint over the open list.
+    <div className="relative z-40">
       <input
         type="search"
         role="combobox"

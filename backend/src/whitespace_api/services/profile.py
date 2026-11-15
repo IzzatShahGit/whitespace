@@ -8,11 +8,22 @@ from whitespace_api.models.profile import UserProfile
 from whitespace_api.models.user import User
 from whitespace_api.repositories import profiles as profile_repo
 from whitespace_api.repositories import trade as trade_repo
-from whitespace_api.schemas.profile import Dashboard, ProductOpportunities, ProfileIn, ProfileOut
+from whitespace_api.schemas.profile import (
+    BestMove,
+    Dashboard,
+    ProductOpportunities,
+    ProfileIn,
+    ProfileOut,
+)
 from whitespace_api.schemas.trade import CountryOut, MarketItem, ProductOut
 from whitespace_api.services import trade as trade_service
 
 TOP_PER_PRODUCT = 3
+BEST_MOVES = 3
+# Candidates per product scanned for best moves: deeper than the cards, since the
+# top-ranked markets can be ones that are hard to enter.
+BEST_MOVE_CANDIDATES = 15
+ACTIONABLE = frozenset({"go", "test"})
 
 
 class NoProfileError(Exception):
@@ -107,24 +118,33 @@ async def selling_in(db: AsyncSession, user: User, exporter: str) -> frozenset[s
 
 
 async def dashboard(db: AsyncSession, user: User) -> Dashboard:
-    """Best new markets for each of the user's products, in the user's product order."""
+    """Best new markets per product, plus the best actionable moves across products."""
     profile = await _require(db, user)
     out = await _to_out(db, profile)
     product_codes = [p.hs6 for p in out.products]
+    names = {p.hs6: p for p in out.products}
     counts = await trade_repo.market_counts(db, exporter=profile.exporter, products=product_codes)
     rows = await trade_repo.top_markets_per_product(
         db,
         exporter=profile.exporter,
         products=product_codes,
         exclude_markets=profile.current_markets,
-        per_product=TOP_PER_PRODUCT,
+        per_product=BEST_MOVE_CANDIDATES,
     )
     top: dict[str, list[MarketItem]] = {code: [] for code in product_codes}
+    candidates: list[BestMove] = []
     for row in rows:
-        top[row.MarketOpportunity.hs6].append(trade_service.market_item(row, out.exporter))
+        item = trade_service.market_item(row, out.exporter)
+        hs6 = row.MarketOpportunity.hs6
+        if len(top[hs6]) < TOP_PER_PRODUCT:
+            top[hs6].append(item)
+        if item.verdict.action in ACTIONABLE:
+            candidates.append(BestMove(product=names[hs6], market=item))
+    best = sorted(candidates, key=lambda m: m.market.score, reverse=True)[:BEST_MOVES]
     return Dashboard(
         profile=out,
         data=trade_service.data_window(rows[0]) if rows else None,
+        best_moves=best,
         products=[
             ProductOpportunities(product=p, total_markets=counts.get(p.hs6, 0), top=top[p.hs6])
             for p in out.products

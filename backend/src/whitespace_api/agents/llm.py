@@ -12,17 +12,21 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable, RunnableLambda
+from pydantic import BaseModel
 
 from whitespace_api.agents.keys import KeyPool, PooledKey
 from whitespace_api.core.config import LLMProvider, Settings, get_settings
 
 log = logging.getLogger(__name__)
 TEMPERATURE = 0.2
+# A key refused for auth/billing reasons won't recover by itself in seconds.
+KEY_REFUSED_REST_SECONDS = 3600.0
 
 
 class LLMConfigError(RuntimeError):
@@ -39,6 +43,20 @@ def _pools() -> dict[str, KeyPool]:
     }
 
 
+def is_key_refused(exc: BaseException) -> bool:
+    """The key itself is unusable (invalid, no billing, no access): no point retrying soon."""
+    if getattr(exc, "status_code", None) in (401, 403) or getattr(exc, "code", None) in (401, 403):
+        return True
+    name = type(exc).__name__.lower()
+    text = str(exc).lower()
+    return (
+        "permissiondenied" in name
+        or "unauthenticated" in name
+        or "api key not valid" in text
+        or "billing" in text
+    )
+
+
 def is_rate_limited(exc: BaseException) -> bool:
     """Recognise a rate limit across provider SDKs (429 / quota exhausted)."""
     if getattr(exc, "status_code", None) == 429 or getattr(exc, "code", None) == 429:
@@ -48,25 +66,74 @@ def is_rate_limited(exc: BaseException) -> bool:
     return "ratelimit" in name or "resourceexhausted" in name or "429" in text or "quota" in text
 
 
-def _model(provider: LLMProvider, model: str, key: PooledKey | None, s: Settings) -> BaseChatModel:
+Tier = Literal["main", "small"]
+
+
+@dataclass(frozen=True)
+class CallSpec:
+    """What one LLM call needs: which tier, how much it may write, what shape to return."""
+
+    tier: Tier = "main"
+    max_output_tokens: int = 1024
+    schema: type[BaseModel] | None = None  # structured output; returns {"raw", "parsed"}
+    tools: Sequence[Any] = ()
+
+
+def _model_name(provider: LLMProvider, tier: Tier, s: Settings) -> str:
+    if provider == s.llm_provider:
+        return s.llm_small_model if tier == "small" else s.llm_model
+    return s.llm_fallback_small_model if tier == "small" else s.llm_fallback_model
+
+
+def _model(
+    provider: LLMProvider, key: PooledKey | None, s: Settings, spec: CallSpec
+) -> BaseChatModel:
+    model = _model_name(provider, spec.tier, s)
     if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         assert key is not None
+        level = s.llm_thinking_level_small if spec.tier == "small" else s.llm_thinking_level_main
         return ChatGoogleGenerativeAI(
-            model=model, google_api_key=key.secret, temperature=TEMPERATURE, max_retries=0
+            model=model,
+            google_api_key=key.secret,
+            temperature=TEMPERATURE,
+            max_output_tokens=spec.max_output_tokens,
+            thinking_config={"thinking_level": level},
+            timeout=s.llm_timeout_seconds,
+            max_retries=0,
         )
     if provider == "groq":
         from langchain_groq import ChatGroq
 
         assert key is not None
         return ChatGroq(
-            model_name=model, api_key=key.secret, temperature=TEMPERATURE, max_retries=0
+            model_name=model,
+            api_key=key.secret,
+            temperature=TEMPERATURE,
+            max_tokens=spec.max_output_tokens,
+            reasoning_effort="low",
+            reasoning_format="hidden",
+            timeout=s.llm_timeout_seconds,
+            max_retries=0,
         )
     from langchain_ollama import ChatOllama
 
-    # Always the small local model from OLLAMA_MODEL, whatever LLM_MODEL says.
-    return ChatOllama(model=s.ollama_model, base_url=s.ollama_base_url, temperature=TEMPERATURE)
+    # Always the small local model from OLLAMA_MODEL, whatever the tier says.
+    return ChatOllama(
+        model=s.ollama_model,
+        base_url=s.ollama_base_url,
+        temperature=TEMPERATURE,
+        num_predict=spec.max_output_tokens,
+    )
+
+
+def _shape(chat: BaseChatModel, spec: CallSpec) -> Runnable[Any, Any]:
+    if spec.schema is not None:
+        return chat.with_structured_output(spec.schema, include_raw=True)
+    if spec.tools:
+        return chat.bind_tools(spec.tools)
+    return chat
 
 
 def _attempt(
@@ -75,7 +142,10 @@ def _attempt(
     """Wrap one attempt so a rate limit benches its key before the next attempt runs."""
 
     def on_error(exc: BaseException) -> None:
-        if key is not None and pool is not None and is_rate_limited(exc):
+        if key is not None and pool is not None and is_key_refused(exc):
+            pool.rest(key, seconds=KEY_REFUSED_REST_SECONDS)
+            log.warning("%r refused (check its billing/validity); benched for 1 hour", key)
+        elif key is not None and pool is not None and is_rate_limited(exc):
             pool.rest(key)
             log.warning("%r rate-limited; resting it", key)
         else:
@@ -100,39 +170,37 @@ def _attempt(
 
 def _plan(
     provider: LLMProvider,
-    model: str,
     keys_wanted: int,
     s: Settings,
-    tools: Sequence[Any],
+    spec: CallSpec,
     pools: dict[str, KeyPool],
 ) -> list[Runnable[Any, Any]]:
     """The attempts for one provider: `keys_wanted` keys from its pool (Ollama needs none)."""
     if provider == "ollama":
-        built = _model(provider, model, None, s)
-        return [_attempt(built.bind_tools(tools) if tools else built, None, None)]
+        return [_attempt(_shape(_model(provider, None, s, spec), spec), None, None)]
     pool = pools[provider]
-    attempts = []
-    for key in pool.take(keys_wanted):
-        chat = _model(provider, model, key, s)
-        attempts.append(_attempt(chat.bind_tools(tools) if tools else chat, key, pool))
-    return attempts
+    return [
+        _attempt(_shape(_model(provider, key, s, spec), spec), key, pool)
+        for key in pool.take(keys_wanted)
+    ]
 
 
 def get_chat_model(
-    tools: Sequence[Any] = (),
+    spec: CallSpec | None = None,
     settings: Settings | None = None,
     pools: dict[str, KeyPool] | None = None,
 ) -> Runnable[Any, Any]:
     """A chat model for one request: rotated keys, then the fallback provider.
 
-    Pass `tools` to get a tool-calling model (tools are bound on every attempt).
-    `settings` and `pools` default to the process-wide ones (tests pass their own).
+    `spec` picks the tier (main or small), the output cap, and structured output or
+    tools. `settings` and `pools` default to the process-wide ones (tests pass their own).
     """
     s = settings or get_settings()
+    spec = spec or CallSpec()
     p = pools if pools is not None else _pools()
-    attempts = _plan(s.llm_provider, s.llm_model, s.llm_keys_per_request, s, tools, p)
+    attempts = _plan(s.llm_provider, s.llm_keys_per_request, s, spec, p)
     if s.llm_fallback_provider is not None:
-        attempts += _plan(s.llm_fallback_provider, s.llm_fallback_model, 1, s, tools, p)
+        attempts += _plan(s.llm_fallback_provider, 1, s, spec, p)
     if not attempts:
         raise LLMConfigError(
             f"No API key for {s.llm_provider}: set GOOGLE_API_KEY_1 / GROQ_API_KEY_1 in .env"

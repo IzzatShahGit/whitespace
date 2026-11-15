@@ -131,6 +131,9 @@ def compute(flows: pl.DataFrame, exporters: list[str], data_version: str) -> pl.
             how="left",
         )
         .with_columns(
+            top_rival_share=pl.when(pl.col("top_rival").is_not_null()).then(
+                (pl.col("rival_t3").fill_null(0) / pl.col("m_t3")).clip(0, 1)
+            ),
             top_rival_share_change=(
                 pl.col("rival_t3").fill_null(0) / pl.col("m_t3")
                 - pl.col("rival_t0") / pl.col("m_t0")
@@ -164,6 +167,7 @@ def compute(flows: pl.DataFrame, exporters: list[str], data_version: str) -> pl.
         pl.col("growth").alias("import_growth_3y"),
         "top_rival",
         "top_rival_share_change",
+        "top_rival_share",
         "exporter_share",
         pl.col("rca").alias("exporter_rca"),
         "score",

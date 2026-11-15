@@ -23,6 +23,11 @@ export type DataWindow = Schemas["DataWindow"];
 export type Sector = Schemas["SectorOut"];
 export type NicheDetail = Schemas["NicheDetail"];
 export type RecentMovement = Schemas["RecentMovement"];
+export type Signal = Schemas["Signal"];
+export type Verdict = Schemas["Verdict"];
+export type BestMove = Schemas["BestMove"];
+export type Brief = Schemas["BriefOut"];
+export type BriefContent = Schemas["BriefContent"];
 
 // ---------- errors ----------
 export class ApiError extends Error {
@@ -65,6 +70,8 @@ export const keys = {
     ["markets", exporter, hs6, market] as const,
   recent: (exporter: string, hs6: string, market: string) =>
     ["recent", exporter, hs6, market] as const,
+  brief: (exporter: string, hs6: string, market: string) =>
+    ["brief", exporter, hs6, market] as const,
   niches: (exporter: string) => ["niches", exporter] as const,
   niche: (exporter: string, slug: string) => ["niches", exporter, slug] as const,
 };
@@ -226,5 +233,37 @@ export function useNiche(exporter: string | undefined, slug: string) {
         }),
       ),
     enabled: Boolean(exporter),
+  });
+}
+
+// ---------- AI briefs ----------
+const BRIEF_POLL_MS = 2000;
+
+/** The brief's current state; polls while it's being written. */
+export function useBrief(exporter: string | undefined, hs6: string, market: string) {
+  return useQuery({
+    queryKey: keys.brief(exporter ?? "", hs6, market),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/markets/{market}/brief", {
+          params: { path: { market }, query: { exporter: exporter!, hs6 } },
+        }),
+      ),
+    enabled: Boolean(exporter),
+    refetchInterval: (query) => (query.state.data?.status === "pending" ? BRIEF_POLL_MS : false),
+  });
+}
+
+/** Ask for a brief to be written (or refreshed). Tokens are only spent on this action. */
+export function useRequestBrief(exporter: string | undefined, hs6: string, market: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST("/api/v1/markets/{market}/brief", {
+          params: { path: { market }, query: { exporter: exporter!, hs6 } },
+        }),
+      ),
+    onSuccess: (brief) => client.setQueryData(keys.brief(exporter ?? "", hs6, market), brief),
   });
 }

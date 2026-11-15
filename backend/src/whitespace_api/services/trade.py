@@ -23,6 +23,7 @@ from whitespace_api.schemas.trade import (
     SupplierOut,
 )
 from whitespace_api.services import explain
+from whitespace_shared.aliases import codes_for
 from whitespace_shared.niches import BY_SLUG, NICHES, SECTORS
 
 GROWTH_YEARS = 3  # matches the pipeline's scoring window
@@ -57,12 +58,41 @@ async def get_product(db: AsyncSession, hs6: str) -> ProductOut:
     return ProductOut(hs6=product.hs6, description=product.description)
 
 
+async def _alias_matches(db: AsyncSession, query: str, exporter: str) -> list[ProductMatch]:
+    """Products named by everyday words ("footballs" -> "Balls: inflatable")."""
+    codes = codes_for(query)
+    if not codes:
+        return []
+    counts = await repo.market_counts(db, exporter=exporter)
+    picked: list[str] = []
+    for code in codes:  # alias order first, then most markets within each code
+        group = sorted((h for h in counts if h.startswith(code)), key=lambda h: -counts[h])
+        picked += [h for h in group if h not in picked]
+    products = await repo.products_by_code(db, picked)
+    return [
+        ProductMatch(hs6=h, description=products[h].description, markets=counts[h])
+        for h in picked
+        if h in products
+    ]
+
+
 async def search_products(
     db: AsyncSession, *, q: str, exporter: str, limit: int
 ) -> list[ProductMatch]:
+    """Everyday-name matches first, then word matches; only products with markets."""
     await get_exporter(db, exporter)
-    rows = await repo.search_products(db, q=q.strip(), exporter=exporter, limit=limit)
-    return [ProductMatch(hs6=r.hs6, description=r.description, markets=r.markets) for r in rows]
+    query = q.strip()
+    aliased = [] if query.isdigit() else await _alias_matches(db, query, exporter)
+    rows = await repo.search_products(db, q=query, exporter=exporter, limit=limit)
+    if aliased:
+        # The everyday name already found the product: only add word matches that
+        # contain every query word, not ones sharing a single word ("salted hides").
+        rows = [r for r in rows if r.matched >= r.wanted]
+    worded = [ProductMatch(hs6=r.hs6, description=r.description, markets=r.markets) for r in rows]
+    unique: dict[str, ProductMatch] = {}
+    for match in aliased + worded:  # first occurrence wins, order preserved
+        unique.setdefault(match.hs6, match)
+    return list(unique.values())[:limit]
 
 
 def data_window(row: Row[Any]) -> DataWindow:
@@ -86,6 +116,7 @@ def market_item(
         import_growth_3y=o.import_growth_3y,
         top_rival_share_change=o.top_rival_share_change,
         exporter_share=o.exporter_share,
+        top_rival_share=o.top_rival_share,
     )
     return MarketItem(
         rank=o.rank,
@@ -97,6 +128,9 @@ def market_item(
         exporter_share=o.exporter_share,
         top_rival=CountryOut(code=o.top_rival, name=row.rival_name) if o.top_rival else None,
         top_rival_share_change=o.top_rival_share_change,
+        top_rival_share=o.top_rival_share,
+        verdict=explain.verdict(facts),
+        signals=explain.signals(facts),
         reasons=explain.reasons(facts),
         already_selling=o.market in selling_in,
     )

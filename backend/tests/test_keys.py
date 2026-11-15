@@ -92,6 +92,20 @@ class RateLimitedError(Exception):
     status_code = 429
 
 
+def test_refused_key_rests_for_an_hour() -> None:
+    now = [0.0]
+    p = pool(2, now)
+    p.rest(p.take()[0], seconds=llm.KEY_REFUSED_REST_SECONDS)
+    now[0] = 120.0  # a rate-limited key would be back by now; a refused one isn't
+    assert [p.take()[0].slot for _ in range(3)] == [2, 2, 2]
+
+
+def test_refusal_detection() -> None:
+    assert llm.is_key_refused(type("GooglePermissionDeniedError", (Exception,), {})())
+    assert llm.is_key_refused(Exception("API key not valid. Please pass a valid API key."))
+    assert not llm.is_key_refused(RateLimitedError("429"))
+
+
 def test_rate_limit_detection() -> None:
     assert llm.is_rate_limited(RateLimitedError())
     assert llm.is_rate_limited(Exception("429 Too Many Requests"))
@@ -106,7 +120,7 @@ async def test_failed_key_rests_and_next_attempt_answers(monkeypatch: pytest.Mon
     def rate_limited(_: object) -> object:
         raise RateLimitedError("429 Too Many Requests")
 
-    def fake_model(provider, model, key, settings):  # type: ignore[no-untyped-def]
+    def fake_model(provider, key, settings, spec):  # type: ignore[no-untyped-def]
         if key.slot == 1:
             return RunnableLambda(rate_limited)
         return FakeListChatModel(responses=[f"answer from key {key.slot}"])

@@ -35,7 +35,15 @@ class ProductOpportunities(BaseModel):
     top: list[MarketItem] = Field(description="Best new markets (excluding current ones)")
 
 
+class BestMove(BaseModel):
+    product: ProductOut
+    market: MarketItem
+
+
 class Dashboard(BaseModel):
     profile: ProfileOut
     data: DataWindow | None
+    best_moves: list[BestMove] = Field(
+        description="Top actionable markets across all products (verdict: go or test)"
+    )
     products: list[ProductOpportunities]

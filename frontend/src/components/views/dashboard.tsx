@@ -6,6 +6,7 @@ import { type CSSProperties, useEffect } from "react";
 
 import { MarketCard } from "@/components/markets/market-card";
 import { ProductPicker } from "@/components/markets/product-picker";
+import { HowWeDecide, VerdictBadge } from "@/components/markets/verdict";
 import { buttonClass } from "@/components/ui/button";
 import { DataNote, Loading, Problem } from "@/components/views/states";
 import { useDashboard, useMe, useProfile } from "@/lib/api/queries";
@@ -29,12 +30,12 @@ export function Dashboard() {
     return <Problem title="Couldn’t load your dashboard">Please refresh the page.</Problem>;
   }
 
-  const { profile: p, products, data } = dashboard.data;
+  const { profile: p, products, data, best_moves: bestMoves } = dashboard.data;
   const firstName = me.data?.full_name.split(" ")[0];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-12">
-      <section className="rise-in flex flex-col gap-6">
+      <section className="rise-in relative z-30 flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             {firstName ? `Hi ${firstName}, here` : "Here"}’s where to sell next
@@ -57,11 +58,43 @@ export function Dashboard() {
         </div>
       </section>
 
+      {bestMoves.length > 0 && (
+        <section className="rise-in flex flex-col gap-4" style={delay(80)}>
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Your best moves</h2>
+            <p className="text-sm text-sage">
+              The strongest new markets across your products, where the data says go.
+            </p>
+          </div>
+          <ol className="grid gap-4 md:grid-cols-3">
+            {bestMoves.map(({ product, market }) => (
+              <li key={`${product.hs6}-${market.market.code}`}>
+                <Link
+                  href={`/app/markets/${product.hs6}/${market.market.code}`}
+                  className="group flex h-full flex-col gap-3 rounded-2xl border border-ember/30 bg-ink-raised p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-ember/60"
+                >
+                  <p className="text-xs text-sage-dim">{shortProductName(product.description)}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-lg font-medium">{market.market.name}</h3>
+                    <VerdictBadge verdict={market.verdict} />
+                  </div>
+                  <p className="text-sm leading-6 text-sage">{market.verdict.summary}</p>
+                  <p className="mt-auto text-xs text-sage">
+                    <span className="text-cream">Next: </span>
+                    {market.verdict.next_step}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {products.map((entry, i) => (
         <section
           key={entry.product.hs6}
           className="rise-in flex flex-col gap-4"
-          style={delay(100 + i * 120)}
+          style={delay(160 + i * 120)}
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -98,6 +131,7 @@ export function Dashboard() {
         </section>
       ))}
 
+      <HowWeDecide />
       {data && <DataNote start={data.start_year} end={data.end_year} />}
     </main>
   );

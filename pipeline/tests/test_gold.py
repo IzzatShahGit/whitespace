@@ -78,6 +78,7 @@ def test_rival_is_largest_supplier_other_than_exporter(gold: pl.DataFrame) -> No
     assert de["top_rival"] == "CHN"
     # China: 8/10 = 80% in 2021 -> 10/20 = 50% in 2024.
     assert de["top_rival_share_change"] == pytest.approx(-0.3)
+    assert de["top_rival_share"] == pytest.approx(0.5)
 
     pl_ = gold.filter(market="POL", exporter="PAK").row(0, named=True)
     assert pl_["top_rival"] == "IND"  # Pakistan itself is the top supplier, so skip it

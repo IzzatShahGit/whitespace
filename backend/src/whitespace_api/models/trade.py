@@ -63,6 +63,7 @@ class MarketOpportunity(Base):
     import_growth_3y: Mapped[float] = mapped_column(Float)
     top_rival: Mapped[str | None] = mapped_column(CHAR(3))
     top_rival_share_change: Mapped[float | None] = mapped_column(Float)
+    top_rival_share: Mapped[float | None] = mapped_column(Float)
     exporter_share: Mapped[float] = mapped_column(Float)
     exporter_rca: Mapped[float] = mapped_column(Float)
     score: Mapped[float] = mapped_column(Float)

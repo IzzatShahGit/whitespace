@@ -15,7 +15,7 @@ MarketCountry = aliased(Country, name="market_country")
 RivalCountry = aliased(Country, name="rival_country")
 
 # Word search: OR of the stemmed query words, ranked by how many distinct words a
-# product contains, then text rank, then the exporter's strength in the product.
+# product contains (`matched` of `wanted`), then text rank, then the exporter's strength.
 # Only products the exporter has ranked markets for are returned (no dead ends).
 # `to_tsvector('english', p.description)` must match the index expression in
 # models/trade.py (PRODUCT_TSVECTOR_SQL) so Postgres can use the index.
@@ -28,16 +28,15 @@ _WORD_SEARCH = text("""
         SELECT hs6, max(exporter_rca) AS rca, count(*) AS markets
         FROM gold_market_opportunity WHERE exporter = :exporter GROUP BY hs6
     )
-    SELECT p.hs6, p.description, s.markets
-    FROM ref_product p JOIN strength s USING (hs6), query q
-    WHERE to_tsvector('english', p.description) @@ q.tq
-    ORDER BY
+    SELECT p.hs6, p.description, s.markets,
         cardinality(array(
             SELECT unnest(tsvector_to_array(q.qv))
             INTERSECT SELECT unnest(tsvector_to_array(to_tsvector('english', p.description)))
-        )) DESC,
-        ts_rank_cd(to_tsvector('english', p.description), q.tq) DESC,
-        s.rca DESC
+        )) AS matched,
+        cardinality(tsvector_to_array(q.qv)) AS wanted
+    FROM ref_product p JOIN strength s USING (hs6), query q
+    WHERE to_tsvector('english', p.description) @@ q.tq
+    ORDER BY matched DESC, ts_rank_cd(to_tsvector('english', p.description), q.tq) DESC, s.rca DESC
     LIMIT :limit
 """)
 
@@ -50,7 +49,7 @@ _FUZZY_SEARCH = text("""
         SELECT hs6, max(exporter_rca) AS rca, count(*) AS markets
         FROM gold_market_opportunity WHERE exporter = :exporter GROUP BY hs6
     )
-    SELECT p.hs6, p.description, s.markets
+    SELECT p.hs6, p.description, s.markets, 0 AS matched, 1 AS wanted
     FROM ref_product p JOIN strength s USING (hs6)
     WHERE word_similarity(:q, p.description) >= :threshold
     ORDER BY word_similarity(:q, p.description) DESC, s.rca DESC
@@ -59,7 +58,7 @@ _FUZZY_SEARCH = text("""
 
 # Code prefix search ("6302" -> every 6302xx product).
 _CODE_SEARCH = text("""
-    SELECT p.hs6, p.description, count(*) AS markets
+    SELECT p.hs6, p.description, count(*) AS markets, 1 AS matched, 1 AS wanted
     FROM ref_product p JOIN gold_market_opportunity g ON g.hs6 = p.hs6 AND g.exporter = :exporter
     WHERE p.hs6 LIKE :q || '%'
     GROUP BY p.hs6, p.description
@@ -71,6 +70,8 @@ _CODE_SEARCH = text("""
 async def search_products(
     session: AsyncSession, *, q: str, exporter: str, limit: int
 ) -> Sequence[Row[Any]]:
+    """Rows of (hs6, description, markets, matched, wanted): `matched` of the `wanted`
+    query words appear in the description (typo matches report 0 of 1)."""
     params = {"q": q, "exporter": exporter, "limit": limit}
     if q.isdigit():
         return (await session.execute(_CODE_SEARCH, params)).all()

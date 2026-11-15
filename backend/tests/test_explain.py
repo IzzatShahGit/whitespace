@@ -1,6 +1,6 @@
 import pytest
 
-from whitespace_api.services.explain import Facts, label, money, reasons
+from whitespace_api.services.explain import Facts, label, money, reasons, signals, verdict
 
 
 def facts(**overrides: object) -> Facts:
@@ -63,3 +63,63 @@ def test_steady_values_and_no_rival() -> None:
         "A $164M market in 2024",
         "Pakistan holds 5% of this market: room to grow",
     ]
+
+
+# ---------- verdicts and signals ----------
+
+
+@pytest.mark.parametrize(
+    "overrides,action",
+    [
+        # Thailand towels: growing, but China supplies 96% and isn't slipping.
+        ({"top_rival_share": 0.96, "top_rival_share_change": 0.0}, "hard"),
+        # Kyrgyzstan: growing, rival collapsed, Pakistan absent.
+        ({"top_rival_share": 0.10, "top_rival_share_change": -0.81}, "go"),
+        # Already strong and the rival is gaining.
+        ({"exporter_share": 0.24, "top_rival_share_change": 0.03}, "defend"),
+        # Already strong, rival not gaining.
+        ({"exporter_share": 0.40, "top_rival_share_change": -0.02}, "grow"),
+        # Already strong but the market is shrinking: defend, don't "grow".
+        ({"exporter_share": 0.26, "import_growth_3y": -0.17}, "defend"),
+        # Shrinking demand beats everything except an established position.
+        ({"import_growth_3y": -0.06, "top_rival_share": 0.3}, "care"),
+        # Flat demand, no dominance.
+        ({"import_growth_3y": 0.0, "top_rival_share": 0.3}, "test"),
+        # A dominant rival losing a lot of share is an opening, not a wall.
+        ({"top_rival_share": 0.70, "top_rival_share_change": -0.10}, "go"),
+    ],
+)
+def test_verdict_rules(overrides: dict[str, object], action: str) -> None:
+    assert verdict(facts(**overrides)).action == action
+
+
+def test_verdict_summary_quotes_the_numbers() -> None:
+    v = verdict(facts(top_rival_share=0.96, top_rival_share_change=0.0))
+    assert v.headline == "Hard to break in" and v.tone == "negative"
+    assert "China supplies 96% of imports" in v.summary
+    assert "China" in v.next_step
+
+
+def test_signals_cover_four_angles_with_figures() -> None:
+    s = signals(facts(top_rival_share=0.3))
+    assert [x.kind for x in s] == ["demand", "competition", "position", "size"]
+    assert s[0].title == "Fast-growing demand" and "19%" in s[0].detail
+    assert s[2].title == "Untapped for Pakistan" and "under 1%" in s[2].detail
+    assert s[3].title == "Large market" and "$164M" in s[3].detail
+
+
+@pytest.mark.parametrize(
+    "growth,title",
+    [
+        (0.10, "Fast-growing demand"),
+        (0.03, "Growing demand"),
+        (0.0, "Stable demand"),
+        (-0.05, "Shrinking demand"),
+    ],
+)
+def test_demand_thresholds(growth: float, title: str) -> None:
+    assert signals(facts(import_growth_3y=growth))[0].title == title
+
+
+def test_zero_share_reads_naturally() -> None:
+    assert signals(facts(exporter_share=0.0))[2].detail == "Pakistan doesn't sell here yet"

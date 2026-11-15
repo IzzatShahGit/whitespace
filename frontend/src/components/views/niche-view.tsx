@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use } from "react";
 
-import { LabelPill } from "@/components/markets/label-pill";
+import { VerdictBadge } from "@/components/markets/verdict";
 import { Loading, Problem } from "@/components/views/states";
 import { ApiError, useNiche } from "@/lib/api/queries";
 import { money, signedPercent, shortProductName } from "@/lib/format";
@@ -77,7 +77,7 @@ export function NicheView({ params }: { params: Promise<{ slug: string }> }) {
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                   <span className="text-sage-dim">Best market</span>
                   <span className="font-medium">{best.market.name}</span>
-                  <LabelPill label={best.label} />
+                  <VerdictBadge verdict={best.verdict} />
                   <span className="text-sage tabular-nums">
                     {money(best.market_imports_usd)} · {signedPercent(best.import_growth_3y)} / yr
                   </span>

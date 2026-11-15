@@ -31,7 +31,13 @@ async def test_exporters(user: AsyncClient) -> None:
 
 @pytest.mark.parametrize(
     "q,first",
-    [("cotton bed sheets", BED_LINEN), ("towels", TOWELS), ("6302", BED_LINEN), ("towell", TOWELS)],
+    [
+        ("cotton bed sheets", BED_LINEN),
+        ("bedsheets", BED_LINEN),  # only the everyday-name dictionary knows this word
+        ("towels", TOWELS),
+        ("6302", BED_LINEN),
+        ("towell", TOWELS),
+    ],
 )
 async def test_product_search(user: AsyncClient, q: str, first: str) -> None:
     response = await user.get("/api/v1/products/search", params={"exporter": "PAK", "q": q})

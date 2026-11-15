@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { type CSSProperties, use } from "react";
 
-import { LabelPill, SellingBadge } from "@/components/markets/label-pill";
+import { BriefPanel } from "@/components/markets/brief-panel";
 import { RecentPanel } from "@/components/markets/recent-panel";
 import { SupplierChart } from "@/components/markets/supplier-chart";
+import { HowWeDecide, SellingBadge, SignalGrid, VerdictPanel } from "@/components/markets/verdict";
 import { DataNote, Loading, Problem } from "@/components/views/states";
 import { ApiError, useMarketDetail } from "@/lib/api/queries";
 import { money, percent, points, shortProductName, signedPercent } from "@/lib/format";
@@ -64,13 +65,20 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">{m.market.name}</h1>
-          <LabelPill label={m.label} />
           {m.already_selling && <SellingBadge />}
         </div>
         <p className="mt-2 text-sage">
-          Ranked #{m.rank} for {shortProductName(product.description).toLowerCase()} from {exp.name}
+          Ranked #{m.rank} for {shortProductName(product.description).toLowerCase()} from {exp.name}{" "}
+          · opportunity score: {m.label}
         </p>
       </div>
+
+      <section
+        className="rise-in rounded-2xl border border-ink-line bg-ink-raised p-6"
+        style={{ "--delay": "60ms" } as CSSProperties}
+      >
+        <VerdictPanel verdict={m.verdict} />
+      </section>
 
       <div
         className="rise-in grid grid-cols-2 gap-4 md:grid-cols-4"
@@ -97,19 +105,18 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
         />
       </div>
 
+      <div className="rise-in" style={{ "--delay": "140ms" } as CSSProperties}>
+        <BriefPanel exporter={exp.code} hs6={product.hs6} market={m.market.code} />
+      </div>
+
       <section
         className="rise-in rounded-2xl border border-ink-line bg-ink-raised p-6"
         style={{ "--delay": "180ms" } as CSSProperties}
       >
-        <h2 className="text-lg font-medium">Why it ranks here</h2>
-        <ul className="mt-4 flex flex-col gap-2.5">
-          {m.reasons.map((reason) => (
-            <li key={reason} className="flex items-start gap-2.5 text-sage">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rotate-45 bg-ember" aria-hidden />
-              {reason}
-            </li>
-          ))}
-        </ul>
+        <h2 className="text-lg font-medium">The signals behind it</h2>
+        <div className="mt-4">
+          <SignalGrid signals={m.signals} />
+        </div>
       </section>
 
       {suppliers.length > 0 && (
@@ -133,6 +140,7 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
         />
       </div>
 
+      <HowWeDecide />
       <DataNote start={data.start_year} end={data.end_year} />
     </main>
   );

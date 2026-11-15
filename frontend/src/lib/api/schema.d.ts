@@ -390,10 +390,173 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/markets/{market}/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Brief
+         * @description The brief if one exists ("missing" otherwise), or its progress while being written.
+         */
+        get: operations["get_brief_api_v1_markets__market__brief_get"];
+        put?: never;
+        /**
+         * Request Brief
+         * @description Write the brief (in the background) unless a fresh one already exists.
+         */
+        post: operations["request_brief_api_v1_markets__market__brief_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BestMove */
+        BestMove: {
+            product: components["schemas"]["ProductOut"];
+            market: components["schemas"]["MarketItem"];
+        };
+        /** BriefClaim */
+        BriefClaim: {
+            /**
+             * Id
+             * @description C1, C2, ...
+             */
+            id: string;
+            /** Text */
+            text: string;
+            /**
+             * Source
+             * @description The source id this claim comes from
+             */
+            source: string;
+        };
+        /** BriefContent */
+        BriefContent: {
+            /** Headline */
+            headline: string;
+            /**
+             * Why Now
+             * @description Measured: from customs data
+             */
+            why_now: components["schemas"]["BriefPoint"][];
+            /**
+             * Drivers
+             * @description Reported: from cited news
+             */
+            drivers: components["schemas"]["BriefPoint"][];
+            /** Risks */
+            risks: components["schemas"]["BriefPoint"][];
+            /**
+             * Entry Checks
+             * @description Guidance: what to verify before exporting
+             */
+            entry_checks: string[];
+            /**
+             * Roadmap
+             * @description Guidance: steps to a first shipment
+             */
+            roadmap: components["schemas"]["BriefStep"][];
+            /** Facts */
+            facts: components["schemas"]["BriefFact"][];
+            /** Claims */
+            claims: components["schemas"]["BriefClaim"][];
+            /** Sources */
+            sources: components["schemas"]["BriefSource"][];
+            /**
+             * Research Available
+             * @description False if web research couldn't run
+             */
+            research_available: boolean;
+            /**
+             * Removed Points
+             * @description Points dropped by the grounding check
+             */
+            removed_points: number;
+        };
+        /** BriefFact */
+        BriefFact: {
+            /**
+             * Id
+             * @description F1, F2, ...
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /** BriefOut */
+        BriefOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "missing" | "pending" | "ready" | "failed";
+            content?: components["schemas"]["BriefContent"] | null;
+            /** Error */
+            error?: string | null;
+            /** Generated At */
+            generated_at?: string | null;
+            /**
+             * Stale
+             * @description Older than the refresh window
+             * @default false
+             */
+            stale: boolean;
+            usage?: components["schemas"]["BriefUsage"] | null;
+        };
+        /** BriefPoint */
+        BriefPoint: {
+            /** Text */
+            text: string;
+            /**
+             * Refs
+             * @description Fact and claim ids this point rests on
+             */
+            refs: string[];
+        };
+        /** BriefSource */
+        BriefSource: {
+            /**
+             * Id
+             * @description S1, S2, ...
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Domain */
+            domain: string;
+            /** Published */
+            published: string | null;
+        };
+        /** BriefStep */
+        BriefStep: {
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+        };
+        /** BriefUsage */
+        BriefUsage: {
+            /** Calls */
+            calls: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Models */
+            models: string[];
+        };
         /** CountryOut */
         CountryOut: {
             /** Code */
@@ -405,6 +568,11 @@ export interface components {
         Dashboard: {
             profile: components["schemas"]["ProfileOut"];
             data: components["schemas"]["DataWindow"] | null;
+            /**
+             * Best Moves
+             * @description Top actionable markets across all products (verdict: go or test)
+             */
+            best_moves: components["schemas"]["BestMove"][];
             /** Products */
             products: components["schemas"]["ProductOpportunities"][];
         };
@@ -472,6 +640,11 @@ export interface components {
             top_rival: components["schemas"]["CountryOut"] | null;
             /** Top Rival Share Change */
             top_rival_share_change: number | null;
+            /** Top Rival Share */
+            top_rival_share: number | null;
+            verdict: components["schemas"]["Verdict"];
+            /** Signals */
+            signals: components["schemas"]["Signal"][];
             /**
              * Reasons
              * @description Three plain-language reasons, from the data
@@ -720,6 +893,32 @@ export interface components {
             /** Niches */
             niches: components["schemas"]["NicheSummary"][];
         };
+        /**
+         * Signal
+         * @description One readable fact about a market, with the number behind it.
+         */
+        Signal: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "demand" | "competition" | "position" | "size";
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /**
+             * Title
+             * @description Short, e.g. "Fast-growing demand"
+             */
+            title: string;
+            /**
+             * Detail
+             * @description The figure, e.g. "Imports grew 19% a year, 2021-2024"
+             */
+            detail: string;
+        };
         /** SupplierOut */
         SupplierOut: {
             country: components["schemas"]["CountryOut"];
@@ -764,6 +963,34 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * Verdict
+         * @description The recommended action, derived from the signals by fixed rules.
+         */
+        Verdict: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "go" | "test" | "grow" | "defend" | "care" | "hard";
+            /**
+             * Headline
+             * @description e.g. "Go for it"
+             */
+            headline: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /**
+             * Summary
+             * @description The evidence, as sentences with figures
+             */
+            summary: string;
+            /** Next Step */
+            next_step: string;
         };
     };
     responses: never;
@@ -1444,6 +1671,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_brief_api_v1_markets__market__brief_get: {
+        parameters: {
+            query: {
+                exporter: string;
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_brief_api_v1_markets__market__brief_post: {
+        parameters: {
+            query: {
+                exporter: string;
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefOut"];
                 };
             };
             /** @description Validation Error */

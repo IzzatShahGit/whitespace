@@ -96,3 +96,13 @@ async def test_no_flags_when_browsing_another_exporter(user: AsyncClient) -> Non
 async def test_all_countries_list(user: AsyncClient) -> None:
     names = [c["name"] for c in (await user.get("/api/v1/countries")).json()]
     assert names == sorted(names) and "Thailand" in names
+
+
+async def test_best_moves_are_actionable_new_markets(user: AsyncClient) -> None:
+    await save(user)  # sells to Thailand already
+    moves = (await user.get("/api/v1/me/dashboard")).json()["best_moves"]
+    picked = [(m["product"]["hs6"], m["market"]["market"]["code"]) for m in moves]
+    # Thailand: already served. Germany: Pakistan holds 24% there, so "grow", not a new move.
+    assert picked == [(BED_LINEN, "USA"), (TOWELS, "USA")]
+    assert all(m["market"]["verdict"]["action"] in ("go", "test") for m in moves)
+    assert moves[0]["market"]["verdict"]["summary"].endswith(".")
