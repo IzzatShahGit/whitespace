@@ -25,6 +25,7 @@ class UserProfile(Base):
     )
     exporter: Mapped[str] = mapped_column(CHAR(3))
     role: Mapped[str] = mapped_column(String(20))
+    goal: Mapped[str] = mapped_column(String(10), server_default="sell")  # sell | buy | both
     products: Mapped[list[str]] = mapped_column(ARRAY(CHAR(6)))  # ordered, max 5
     current_markets: Mapped[list[str]] = mapped_column(ARRAY(CHAR(3)), server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

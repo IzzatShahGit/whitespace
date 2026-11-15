@@ -21,6 +21,7 @@ from whitespace_shared.gold import (
     MARKET_OPPORTUNITY_TABLE,
     MARKET_SUPPLIER_TABLE,
     PRODUCT_TABLE,
+    SUPPLIER_LANDSCAPE_TABLE,
 )
 
 log = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ def tables(gold_dir: Path) -> dict[str, pl.DataFrame]:
         ),
         MARKET_OPPORTUNITY_TABLE: pl.read_parquet(gold_dir / "market_opportunity.parquet"),
         MARKET_SUPPLIER_TABLE: pl.read_parquet(gold_dir / "market_supplier.parquet"),
+        SUPPLIER_LANDSCAPE_TABLE: pl.read_parquet(gold_dir / "supplier_landscape.parquet"),
     }
 
 

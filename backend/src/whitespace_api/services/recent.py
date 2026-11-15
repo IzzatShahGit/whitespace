@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, date, datetime, timedelta
-from functools import lru_cache
 from typing import Any
 
-import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from whitespace_api.core.config import Settings
+from whitespace_api.core.http import http_client
 from whitespace_api.integrations import monthly_trade as source
 from whitespace_api.repositories import monthly as repo
 from whitespace_api.schemas.trade import MonthPoint, RecentMovement, RecentSupplier
@@ -44,12 +43,6 @@ class NotCoveredError(Exception):
 
 class UnavailableError(Exception):
     """The source can't be reached and nothing is cached. The message is safe to show."""
-
-
-@lru_cache
-def http_client() -> httpx.AsyncClient:
-    """One pooled client per process (closed on shutdown in main.py)."""
-    return httpx.AsyncClient(headers={"User-Agent": "whitespace-api"})
 
 
 def _since(today: date) -> date:

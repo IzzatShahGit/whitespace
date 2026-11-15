@@ -82,6 +82,19 @@ def write_gold(root: Path, version: str, rows: int) -> None:
             "share_end": [0.5, 0.5],
         }
     ).write_parquet(out / "market_supplier.parquet")
+    pl.DataFrame(
+        {
+            "hs6": ["630260"],
+            "supplier": ["CHN"],
+            "rank": [1],
+            "exports_usd": [3e9],
+            "exports_growth_3y": [0.05],
+            "world_share": [0.4],
+            "markets_served": [120],
+            "unit_price_usd_kg": [4.2],
+        },
+        schema_overrides={"rank": pl.Int32, "markets_served": pl.Int32},
+    ).write_parquet(out / "supplier_landscape.parquet")
 
 
 def test_load_replaces_tables(db: str, tmp_path: Path) -> None:

@@ -414,6 +414,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sourcing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sourcing
+         * @description The best countries to buy a product from, with prices, growth and reliability.
+         */
+        get: operations["sourcing_api_v1_sourcing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sourcing/products/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Products
+         * @description Products to buy, by everyday words or an HS code.
+         */
+        get: operations["search_products_api_v1_sourcing_products_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exchange Rates
+         * @description Every currency against the US dollar: one small payload, converted in the browser.
+         */
+        get: operations["exchange_rates_api_v1_fx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Threads */
+        get: operations["list_threads_api_v1_chat_threads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/threads/{thread_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Thread */
+        get: operations["get_thread_api_v1_chat_threads__thread_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Thread */
+        delete: operations["delete_thread_api_v1_chat_threads__thread_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggestions */
+        get: operations["suggestions_api_v1_chat_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Message
+         * @description Ask the guide. Starts a new conversation when `thread_id` is omitted.
+         */
+        post: operations["send_message_api_v1_chat_messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -557,12 +689,150 @@ export interface components {
             /** Models */
             models: string[];
         };
+        /** CardMarket */
+        CardMarket: {
+            market: components["schemas"]["CountryOut"];
+            /** Rank */
+            rank: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "go" | "test" | "grow" | "defend" | "care" | "hard";
+            /** Headline */
+            headline: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /** Imports Usd */
+            imports_usd: number;
+            /** Growth */
+            growth: number;
+            /** Already Selling */
+            already_selling: boolean;
+        };
+        /**
+         * ChatEvent
+         * @description One server-sent event while a reply is produced (documented for clients).
+         */
+        ChatEvent: {
+            /**
+             * Event
+             * @enum {string}
+             */
+            event: "thread" | "status" | "card" | "answer" | "error" | "done";
+            /** Thread Id */
+            thread_id?: string | null;
+            /** Message Id */
+            message_id?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Card */
+            card?: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"]) | null;
+            /** Follow Ups */
+            follow_ups?: string[] | null;
+            /** Grounded */
+            grounded?: boolean | null;
+        };
+        /** ChatMessageIn */
+        ChatMessageIn: {
+            /**
+             * Thread Id
+             * @description Omit to start a new thread
+             */
+            thread_id?: string | null;
+            /** Text */
+            text: string;
+        };
+        /** ChatMessageOut */
+        ChatMessageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "done" | "failed";
+            /** Content */
+            content: string;
+            /** Cards */
+            cards: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"])[];
+            /** Follow Ups */
+            follow_ups: string[];
+            /** Grounded */
+            grounded: boolean | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ChatSuggestions */
+        ChatSuggestions: {
+            /**
+             * Prompts
+             * @description Starter questions, personalised from the profile
+             */
+            prompts: string[];
+            /** Remaining Today */
+            remaining_today: number;
+        };
+        /** ChatThreadDetail */
+        ChatThreadDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Messages */
+            messages: components["schemas"]["ChatMessageOut"][];
+        };
+        /** ChatThreadOut */
+        ChatThreadOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** CountryOut */
         CountryOut: {
             /** Code */
             code: string;
             /** Name */
             name: string;
+        };
+        /** CurrentSupplier */
+        CurrentSupplier: {
+            country: components["schemas"]["CountryOut"];
+            /** Share */
+            share: number;
+            /** Unit Price Usd Kg */
+            unit_price_usd_kg: number | null;
         };
         /** Dashboard */
         Dashboard: {
@@ -584,6 +854,34 @@ export interface components {
             end_year: number;
             /** Version */
             version: string;
+        };
+        /**
+         * FxRates
+         * @description Today's exchange rates against the US dollar (updated daily).
+         */
+        FxRates: {
+            /**
+             * Base
+             * @default USD
+             */
+            base: string;
+            /**
+             * Rates
+             * @description Units of each currency per 1 US dollar
+             */
+            rates: {
+                [key: string]: number;
+            };
+            /**
+             * Updated
+             * @description When the source last published, as it states it
+             */
+            updated: string;
+            /**
+             * Source
+             * @description Shown with the rates (the free service asks for credit)
+             */
+            source: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -609,6 +907,26 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MarketCard */
+        MarketCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "market";
+            product: components["schemas"]["ProductOut"];
+            exporter: components["schemas"]["CountryOut"];
+            market: components["schemas"]["CountryOut"];
+            verdict: components["schemas"]["Verdict"];
+            /** Imports Usd */
+            imports_usd: number;
+            /** Growth */
+            growth: number;
+            /** Exporter Share */
+            exporter_share: number;
+            /** Price Usd Kg */
+            price_usd_kg: number | null;
         };
         /** MarketDetail */
         MarketDetail: {
@@ -642,6 +960,11 @@ export interface components {
             top_rival_share_change: number | null;
             /** Top Rival Share */
             top_rival_share: number | null;
+            /**
+             * Market Unit Price Usd Kg
+             * @description What the market paid per kg on average (value/weight)
+             */
+            market_unit_price_usd_kg?: number | null;
             verdict: components["schemas"]["Verdict"];
             /** Signals */
             signals: components["schemas"]["Signal"][];
@@ -657,6 +980,20 @@ export interface components {
              */
             already_selling: boolean;
         };
+        /** MarketsCard */
+        MarketsCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "markets";
+            product: components["schemas"]["ProductOut"];
+            exporter: components["schemas"]["CountryOut"];
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["CardMarket"][];
+        };
         /** MarketsPage */
         MarketsPage: {
             exporter: components["schemas"]["CountryOut"];
@@ -671,6 +1008,22 @@ export interface components {
             offset: number;
             /** Items */
             items: components["schemas"]["MarketItem"][];
+        };
+        /** MoneyCard */
+        MoneyCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "money";
+            /** Amount */
+            amount: number;
+            /** From Currency */
+            from_currency: string;
+            /** To Currency */
+            to_currency: string;
+            /** Result */
+            result: number;
         };
         /** MonthPoint */
         MonthPoint: {
@@ -689,6 +1042,29 @@ export interface components {
              * @description Imports from the exporter country
              */
             exporter: number;
+        };
+        /** NewsCard */
+        NewsCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "news";
+            /** Query */
+            query: string;
+            /** Items */
+            items: components["schemas"]["NewsItem"][];
+        };
+        /** NewsItem */
+        NewsItem: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Domain */
+            domain: string;
+            /** Published */
+            published: string | null;
         };
         /** NicheDetail */
         NicheDetail: {
@@ -722,17 +1098,53 @@ export interface components {
              */
             products: number;
         };
+        /** PriceCard */
+        PriceCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "price";
+            product: components["schemas"]["ProductOut"];
+            market: components["schemas"]["CountryOut"];
+            /** Currency */
+            currency: string;
+            /** Stock Value */
+            stock_value: number;
+            /** Value Usd */
+            value_usd: number;
+            /** Quantity Kg */
+            quantity_kg: number | null;
+            /** Cost Usd Kg */
+            cost_usd_kg: number | null;
+            /** Market Price Usd Kg */
+            market_price_usd_kg: number | null;
+            /** Revenue Usd */
+            revenue_usd: number | null;
+            /** Tone */
+            tone: ("positive" | "neutral" | "negative") | null;
+            /** Verdict */
+            verdict: string | null;
+        };
         /** ProductMatch */
         ProductMatch: {
             /** Hs6 */
             hs6: string;
-            /** Description */
+            /**
+             * Description
+             * @description Official customs description
+             */
             description: string;
             /**
              * Markets
              * @description Ranked markets available for this exporter
              */
             markets: number;
+            /**
+             * Name
+             * @description What people call it, e.g. "towels" for 630260 (for titles and sentences).
+             */
+            readonly name: string;
         };
         /** ProductOpportunities */
         ProductOpportunities: {
@@ -752,18 +1164,35 @@ export interface components {
         ProductOut: {
             /** Hs6 */
             hs6: string;
-            /** Description */
+            /**
+             * Description
+             * @description Official customs description
+             */
             description: string;
+            /**
+             * Name
+             * @description What people call it, e.g. "towels" for 630260 (for titles and sentences).
+             */
+            readonly name: string;
         };
         /** ProfileIn */
         ProfileIn: {
-            /** Exporter */
+            /**
+             * Exporter
+             * @description The user's country (exports from / buys into)
+             */
             exporter: string;
             /**
              * Role
              * @enum {string}
              */
             role: "exporter" | "consultant" | "agency" | "other";
+            /**
+             * Goal
+             * @default sell
+             * @enum {string}
+             */
+            goal: "sell" | "buy" | "both";
             /** Products */
             products: string[];
             /**
@@ -780,6 +1209,11 @@ export interface components {
              * @enum {string}
              */
             role: "exporter" | "consultant" | "agency" | "other";
+            /**
+             * Goal
+             * @enum {string}
+             */
+            goal: "sell" | "buy" | "both";
             /** Products */
             products: components["schemas"]["ProductOut"][];
             /** Current Markets */
@@ -919,6 +1353,124 @@ export interface components {
              */
             detail: string;
         };
+        /** SourceProductMatch */
+        SourceProductMatch: {
+            /** Hs6 */
+            hs6: string;
+            /**
+             * Description
+             * @description Official customs description
+             */
+            description: string;
+            /**
+             * Suppliers
+             * @description Supplier countries listed for this product
+             */
+            suppliers: number;
+            /**
+             * Name
+             * @description What people call it, e.g. "towels" for 630260 (for titles and sentences).
+             */
+            readonly name: string;
+        };
+        /** SourceSignal */
+        SourceSignal: {
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /**
+             * Text
+             * @description One measured fact, e.g. '18% below the median price'
+             */
+            text: string;
+        };
+        /** SourcingCard */
+        SourcingCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "sourcing";
+            product: components["schemas"]["ProductOut"];
+            buyer: components["schemas"]["CountryOut"];
+            /** Picks */
+            picks: components["schemas"]["SourcingPick"][];
+            /** Median Price Usd Kg */
+            median_price_usd_kg: number | null;
+        };
+        /** SourcingPage */
+        SourcingPage: {
+            buyer: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            /** Data Year */
+            data_year: number;
+            /**
+             * Median Price Usd Kg
+             * @description Across the listed suppliers
+             */
+            median_price_usd_kg: number | null;
+            /** Picks */
+            picks: components["schemas"]["SourcingPick"][];
+            /** Suppliers */
+            suppliers: components["schemas"]["SupplierOption"][];
+            /**
+             * Current Suppliers
+             * @description Who supplies the buyer today
+             */
+            current_suppliers: components["schemas"]["CurrentSupplier"][];
+        };
+        /** SourcingPick */
+        SourcingPick: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "best_value" | "most_established" | "rising" | "current";
+            /** Title */
+            title: string;
+            country: components["schemas"]["CountryOut"];
+            /**
+             * Reason
+             * @description Why, in one sentence with figures
+             */
+            reason: string;
+        };
+        /**
+         * SupplierOption
+         * @description One country you could buy from, with the measured facts behind it.
+         */
+        SupplierOption: {
+            country: components["schemas"]["CountryOut"];
+            /**
+             * Rank
+             * @description By world exports of this product
+             */
+            rank: number;
+            /** Exports Usd */
+            exports_usd: number;
+            /** World Share */
+            world_share: number;
+            /** Exports Growth 3Y */
+            exports_growth_3y: number | null;
+            /** Markets Served */
+            markets_served: number;
+            /** Unit Price Usd Kg */
+            unit_price_usd_kg: number | null;
+            /**
+             * Supplies You Share
+             * @description Its share of your imports, if any
+             */
+            supplies_you_share: number | null;
+            /**
+             * Tags
+             * @description e.g. "Lowest price", "Supplies you today"
+             */
+            tags: string[];
+            /** Signals */
+            signals: components["schemas"]["SourceSignal"][];
+        };
         /** SupplierOut */
         SupplierOut: {
             country: components["schemas"]["CountryOut"];
@@ -928,6 +1480,28 @@ export interface components {
             share_start: number;
             /** Share End */
             share_end: number;
+            /** Unit Price Usd Kg */
+            unit_price_usd_kg?: number | null;
+        };
+        /** TrendCard */
+        TrendCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "trend";
+            product: components["schemas"]["ProductOut"];
+            market: components["schemas"]["CountryOut"];
+            /** Source */
+            source: string;
+            /** Latest Month */
+            latest_month: string;
+            /** Change 12M */
+            change_12m: number | null;
+            /** Exporter Share Recent */
+            exporter_share_recent: number;
+            /** Exporter Share Before */
+            exporter_share_before: number | null;
         };
         /** UserOut */
         UserOut: {
@@ -1757,6 +2331,305 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    sourcing_api_v1_sourcing_get: {
+        parameters: {
+            query: {
+                /** @description Buying country */
+                buyer: string;
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcingPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_products_api_v1_sourcing_products_search_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceProductMatch"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exchange_rates_api_v1_fx_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRates"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_threads_api_v1_chat_threads_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThreadOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_thread_api_v1_chat_threads__thread_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThreadDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_thread_api_v1_chat_threads__thread_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggestions_api_v1_chat_suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSuggestions"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_v1_chat_messages_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Server-sent events: each `data:` line is one ChatEvent as JSON */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                    "application/json": components["schemas"]["ChatEvent"];
+                };
+            };
+            /** @description Conversation not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A reply in this conversation is still being written */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Daily message limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

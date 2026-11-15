@@ -19,6 +19,7 @@ async def upsert_profile(
     user_id: uuid.UUID,
     exporter: str,
     role: str,
+    goal: str,
     products: list[str],
     current_markets: list[str],
 ) -> UserProfile:
@@ -26,6 +27,7 @@ async def upsert_profile(
     values = {
         "exporter": exporter,
         "role": role,
+        "goal": goal,
         "products": products,
         "current_markets": current_markets,
     }

@@ -10,7 +10,6 @@ type Schemas = components["schemas"];
 export type User = Schemas["UserOut"];
 export type Country = Schemas["CountryOut"];
 export type Product = Schemas["ProductOut"];
-export type ProductMatch = Schemas["ProductMatch"];
 export type MarketItem = Schemas["MarketItem"];
 export type MarketsPage = Schemas["MarketsPage"];
 export type MarketDetail = Schemas["MarketDetail"];
@@ -18,6 +17,7 @@ export type Supplier = Schemas["SupplierOut"];
 export type Profile = Schemas["ProfileOut"];
 export type ProfileInput = Schemas["ProfileIn"];
 export type Role = ProfileInput["role"];
+export type Goal = NonNullable<ProfileInput["goal"]>;
 export type Dashboard = Schemas["Dashboard"];
 export type DataWindow = Schemas["DataWindow"];
 export type Sector = Schemas["SectorOut"];
@@ -28,6 +28,19 @@ export type Verdict = Schemas["Verdict"];
 export type BestMove = Schemas["BestMove"];
 export type Brief = Schemas["BriefOut"];
 export type BriefContent = Schemas["BriefContent"];
+export type SourcingPage = Schemas["SourcingPage"];
+export type SupplierOption = Schemas["SupplierOption"];
+export type SourcingPick = Schemas["SourcingPick"];
+export type FxRates = Schemas["FxRates"];
+export type ChatThread = Schemas["ChatThreadOut"];
+export type ChatThreadDetail = Schemas["ChatThreadDetail"];
+export type ChatMessage = Schemas["ChatMessageOut"];
+export type ChatEvent = Schemas["ChatEvent"];
+export type ChatCard = ChatMessage["cards"][number];
+
+/** A product found by search: `count` is ranked markets (selling) or supplier countries (buying). */
+export type ProductOption = Product & { count: number };
+export type Mode = "sell" | "buy";
 
 // ---------- errors ----------
 export class ApiError extends Error {
@@ -64,7 +77,12 @@ export const keys = {
   dashboard: ["dashboard"] as const,
   exporters: ["exporters"] as const,
   countries: ["countries"] as const,
-  search: (exporter: string, q: string) => ["search", exporter, q] as const,
+  search: (mode: Mode, exporter: string, q: string) => ["search", mode, exporter, q] as const,
+  sourcing: (buyer: string, hs6: string) => ["sourcing", buyer, hs6] as const,
+  fx: ["fx"] as const,
+  chatThreads: ["chat", "threads"] as const,
+  chatThread: (id: string) => ["chat", "threads", id] as const,
+  chatSuggestions: ["chat", "suggestions"] as const,
   markets: (exporter: string, hs6: string) => ["markets", exporter, hs6] as const,
   market: (exporter: string, hs6: string, market: string) =>
     ["markets", exporter, hs6, market] as const,
@@ -141,17 +159,28 @@ export function useCountries() {
 }
 
 // ---------- markets ----------
-export function useProductSearch(exporter: string | undefined, q: string) {
+/** Products by everyday words or HS code. Selling: ranked markets from `exporter`. Buying: suppliers. */
+export function useProductSearch(mode: Mode, exporter: string | undefined, q: string) {
   const query = q.trim();
   return useQuery({
-    queryKey: keys.search(exporter ?? "", query),
-    queryFn: () =>
-      unwrap(
+    queryKey: keys.search(mode, exporter ?? "", query),
+    queryFn: async (): Promise<ProductOption[]> => {
+      if (mode === "buy") {
+        const found = await unwrap(
+          api.GET("/api/v1/sourcing/products/search", {
+            params: { query: { q: query, limit: 8 } },
+          }),
+        );
+        return found.map(({ suppliers, ...product }) => ({ ...product, count: suppliers }));
+      }
+      const found = await unwrap(
         api.GET("/api/v1/products/search", {
           params: { query: { exporter: exporter!, q: query, limit: 8 } },
         }),
-      ),
-    enabled: Boolean(exporter) && query.length >= 2,
+      );
+      return found.map(({ markets, ...product }) => ({ ...product, count: markets }));
+    },
+    enabled: (mode === "buy" || Boolean(exporter)) && query.length >= 2,
     placeholderData: (previous) => previous, // keep old suggestions while typing
   });
 }
@@ -265,5 +294,68 @@ export function useRequestBrief(exporter: string | undefined, hs6: string, marke
         }),
       ),
     onSuccess: (brief) => client.setQueryData(keys.brief(exporter ?? "", hs6, market), brief),
+  });
+}
+
+// ---------- buying ----------
+/** Where `buyer` can source a product. Null when there's no supplier data for it. */
+export function useSourcing(buyer: string | undefined, hs6: string) {
+  return useQuery({
+    queryKey: keys.sourcing(buyer ?? "", hs6),
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/sourcing", { params: { query: { buyer: buyer!, hs6 } } })),
+    enabled: Boolean(buyer),
+  });
+}
+
+/** Every currency against the US dollar. Rates update daily, so they're kept for hours. */
+export function useFxRates() {
+  return useQuery({
+    queryKey: keys.fx,
+    queryFn: () => unwrap(api.GET("/api/v1/fx")),
+    staleTime: 6 * 60 * 60 * 1000,
+  });
+}
+
+// ---------- the guide ----------
+export function useChatThreads() {
+  return useQuery({
+    queryKey: keys.chatThreads,
+    queryFn: () => unwrap(api.GET("/api/v1/chat/threads")),
+  });
+}
+
+/** One conversation. Polls while a reply is still being written elsewhere (e.g. after a reload). */
+export function useChatThread(id: string | undefined, { paused = false } = {}) {
+  return useQuery({
+    queryKey: keys.chatThread(id ?? ""),
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/chat/threads/{thread_id}", { params: { path: { thread_id: id! } } })),
+    enabled: Boolean(id) && !paused,
+    refetchInterval: (query) =>
+      query.state.data?.messages.some((m) => m.status === "pending") ? 2000 : false,
+  });
+}
+
+export function useChatSuggestions() {
+  return useQuery({
+    queryKey: keys.chatSuggestions,
+    queryFn: () => unwrap(api.GET("/api/v1/chat/suggestions")),
+  });
+}
+
+export function useDeleteThread() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrap(
+        api.DELETE("/api/v1/chat/threads/{thread_id}", { params: { path: { thread_id: id } } }),
+      ).catch((e) => {
+        if (!isMissing(e)) throw e; // already gone is fine
+      }),
+    onSuccess: (_, id) => {
+      client.removeQueries({ queryKey: keys.chatThread(id) });
+      void client.invalidateQueries({ queryKey: keys.chatThreads });
+    },
   });
 }

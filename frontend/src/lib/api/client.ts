@@ -9,7 +9,7 @@ export const api = createClient<paths>({ baseUrl: "", credentials: "include" });
 // When the 15-minute access token expires, refresh the session once and retry.
 let refreshing: Promise<boolean> | null = null;
 
-function refreshSession(): Promise<boolean> {
+export function refreshSession(): Promise<boolean> {
   refreshing ??= fetch("/api/v1/auth/refresh", { method: "POST", credentials: "include" })
     .then((r) => r.ok)
     .finally(() => {

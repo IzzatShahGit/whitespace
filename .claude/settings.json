@@ -6,7 +6,8 @@
       "Bash(curl -sS -o /dev/null -w \"%{http_code} in %{time_total}s\\\\n\" --max-time 25 https://www.cepii.fr/)",
       "Bash(curl -sS -I --max-time 40 \"https://www.cepii.fr/DATA_DOWNLOAD/baci/data/BACI_HS17_V202601.zip\")",
       "Bash(uv run *)",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(python3 -)"
     ]
   }
 }

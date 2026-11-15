@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tests.seed import BED_LINEN, TOWELS
 from whitespace_api.agents.brief import prompts
 from whitespace_api.agents.llm import CallSpec
+from whitespace_api.core import tasks
 from whitespace_api.core.config import Settings, get_settings
 from whitespace_api.main import app
 from whitespace_api.services import briefs as brief_service
@@ -44,7 +45,7 @@ def model_calls(
         return RunnableLambda(lambda _: {"raw": raw, "parsed": DRAFT})
 
     monkeypatch.setattr(brief_service.llm, "get_chat_model", fake_get_chat_model)
-    monkeypatch.setattr(brief_service, "session_factory", db_sessionmaker)
+    monkeypatch.setattr(tasks, "session_factory", db_sessionmaker)
     app.dependency_overrides[get_settings] = lambda: Settings(
         _env_file=None,  # type: ignore[call-arg]
         brief_daily_limit=2,
@@ -63,7 +64,7 @@ async def test_request_generates_in_background_then_serves_cache(
 ) -> None:
     started = await user.post(URL)
     assert started.status_code == 202 and started.json()["status"] == "pending"
-    await brief_service.wait_for_jobs()
+    await tasks.wait_for_jobs()
 
     ready = (await user.get(URL)).json()
     assert ready["status"] == "ready" and ready["generated_at"]
@@ -84,7 +85,7 @@ async def test_request_generates_in_background_then_serves_cache(
 async def test_daily_limit(user: AsyncClient, model_calls: list[str]) -> None:
     for market, hs6 in (("THA", TOWELS), ("USA", TOWELS)):
         await user.post(f"/api/v1/markets/{market}/brief?exporter=PAK&hs6={hs6}")
-        await brief_service.wait_for_jobs()
+        await tasks.wait_for_jobs()
     limited = await user.post(f"/api/v1/markets/USA/brief?exporter=PAK&hs6={BED_LINEN}")
     assert limited.status_code == 429 and "limit" in limited.json()["detail"]
 
@@ -105,7 +106,7 @@ async def test_failure_is_recorded_and_can_be_retried(
 
     monkeypatch.setattr(brief_service.llm, "get_chat_model", broken)
     await user.post(URL)
-    await brief_service.wait_for_jobs()
+    await tasks.wait_for_jobs()
     failed = (await user.get(URL)).json()
     assert failed["status"] == "failed" and "provider" not in failed["error"]  # no internals
 

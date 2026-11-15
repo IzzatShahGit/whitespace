@@ -2,23 +2,26 @@
 
 import { type KeyboardEvent, useId, useState } from "react";
 
-import { type ProductMatch, useProductSearch } from "@/lib/api/queries";
+import { type Mode, type ProductOption, useProductSearch } from "@/lib/api/queries";
 import { shortProductName } from "@/lib/format";
 import { useDebounced } from "@/lib/use-debounced";
 
 /**
  * Search-as-you-type for products, as an accessible combobox
- * (arrow keys, Enter to pick, Escape to close).
+ * (arrow keys, Enter to pick, Escape to close). Selling lists products with ranked
+ * markets from `exporter`; buying lists products with supplier data.
  */
 export function ProductPicker({
+  mode = "sell",
   exporter,
   onSelect,
   exclude = [],
   placeholder = "Describe your product, e.g. cotton towels",
   disabled = false,
 }: {
+  mode?: Mode;
   exporter: string | undefined;
-  onSelect: (product: ProductMatch) => void;
+  onSelect: (product: ProductOption) => void;
   exclude?: string[];
   placeholder?: string;
   disabled?: boolean;
@@ -28,13 +31,13 @@ export function ProductPicker({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const query = useDebounced(text);
-  const search = useProductSearch(exporter, query);
+  const search = useProductSearch(mode, exporter, query);
 
   const options = (search.data ?? []).filter((p) => !exclude.includes(p.hs6));
   const showList = open && query.trim().length >= 2;
   const waiting = search.isFetching && !search.data;
 
-  function pick(product: ProductMatch) {
+  function pick(product: ProductOption) {
     onSelect(product);
     setText("");
     setOpen(false);
@@ -69,7 +72,7 @@ export function ProductPicker({
         aria-autocomplete="list"
         aria-activedescendant={showList && options[active] ? `${listId}-${active}` : undefined}
         value={text}
-        disabled={disabled || !exporter}
+        disabled={disabled || (mode === "sell" && !exporter)}
         placeholder={placeholder}
         onChange={(e) => {
           setText(e.target.value);
@@ -109,7 +112,8 @@ export function ProductPicker({
             >
               <p className="text-sm text-cream">{shortProductName(product.description)}</p>
               <p className="mt-0.5 text-xs text-sage-dim">
-                HS {product.hs6} · {product.markets} ranked markets
+                HS {product.hs6} · {product.count}{" "}
+                {mode === "buy" ? "supplier countries" : "ranked markets"}
               </p>
             </li>
           ))}

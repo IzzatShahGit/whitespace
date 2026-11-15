@@ -49,6 +49,7 @@ async def _to_out(db: AsyncSession, profile: UserProfile) -> ProfileOut:
             code=profile.exporter, name=exporter.name if exporter else profile.exporter
         ),
         role=profile.role,
+        goal=profile.goal,
         products=[
             ProductOut(hs6=p.hs6, description=p.description)
             for code in profile.products
@@ -81,12 +82,15 @@ async def save_profile(db: AsyncSession, user: User, body: ProfileIn) -> Profile
         raise InvalidProfileError(str(exc)) from exc
 
     products = _unique(body.products)
-    with_markets = await trade_repo.market_counts(db, exporter=body.exporter, products=products)
-    missing = [code for code in products if code not in with_markets]
+    if body.goal == "buy":  # buyers need suppliers listed; sellers need ranked markets
+        available = await trade_repo.landscape_counts(db, products)
+        problem = "No supplier data for product(s)"
+    else:
+        available = await trade_repo.market_counts(db, exporter=body.exporter, products=products)
+        problem = f"No ranked markets from {body.exporter} for product(s)"
+    missing = [code for code in products if code not in available]
     if missing:
-        raise InvalidProfileError(
-            f"No ranked markets for product(s) {', '.join(missing)} from {body.exporter}"
-        )
+        raise InvalidProfileError(f"{problem} {', '.join(missing)}")
 
     markets = [m for m in _unique(body.current_markets) if m != body.exporter]
     known = await trade_repo.countries_by_code(db, markets)
@@ -99,6 +103,7 @@ async def save_profile(db: AsyncSession, user: User, body: ProfileIn) -> Profile
         user_id=user.id,
         exporter=body.exporter,
         role=body.role,
+        goal=body.goal,
         products=products,
         current_markets=markets,
     )

@@ -8,6 +8,7 @@ import { BriefPanel } from "@/components/markets/brief-panel";
 import { RecentPanel } from "@/components/markets/recent-panel";
 import { SupplierChart } from "@/components/markets/supplier-chart";
 import { HowWeDecide, SellingBadge, SignalGrid, VerdictPanel } from "@/components/markets/verdict";
+import { PriceCheck } from "@/components/money/price-check";
 import { DataNote, Loading, Problem } from "@/components/views/states";
 import { ApiError, useMarketDetail } from "@/lib/api/queries";
 import { money, percent, points, shortProductName, signedPercent } from "@/lib/format";
@@ -61,15 +62,14 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
       <div className="rise-in">
         <Link href={back} className="text-sm text-sage hover:text-cream">
-          ← All markets for {shortProductName(product.description)}
+          ← All markets for {product.name}
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight">{m.market.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{m.market.name}</h1>
           {m.already_selling && <SellingBadge />}
         </div>
         <p className="mt-2 text-sage">
-          Ranked #{m.rank} for {shortProductName(product.description).toLowerCase()} from {exp.name}{" "}
-          · opportunity score: {m.label}
+          Ranked #{m.rank} for {product.name} from {exp.name} · opportunity score: {m.label}
         </p>
       </div>
 
@@ -118,6 +118,16 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
           <SignalGrid signals={m.signals} />
         </div>
       </section>
+
+      <div className="rise-in" style={{ "--delay": "220ms" } as CSSProperties}>
+        <PriceCheck
+          exporter={exp.code}
+          market={m.market.code}
+          marketName={m.market.name}
+          averagePrice={m.market_unit_price_usd_kg ?? null}
+          suppliers={suppliers}
+        />
+      </div>
 
       {suppliers.length > 0 && (
         <div className="rise-in" style={{ "--delay": "260ms" } as CSSProperties}>

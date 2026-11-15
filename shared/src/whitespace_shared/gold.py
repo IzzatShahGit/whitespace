@@ -24,6 +24,7 @@ HS6Code = Annotated[str, Field(min_length=6, max_length=6, pattern=HS6_PATTERN)]
 
 MARKET_OPPORTUNITY_TABLE = "gold_market_opportunity"
 MARKET_SUPPLIER_TABLE = "gold_market_supplier"
+SUPPLIER_LANDSCAPE_TABLE = "gold_supplier_landscape"
 PRODUCT_TABLE = "ref_product"
 COUNTRY_TABLE = "ref_country"
 
@@ -60,6 +61,9 @@ class MarketOpportunity(_Contract):
     top_rival_share: float | None = Field(
         default=None, ge=0, le=1, description="The rival's share of the market, last year"
     )
+    market_unit_price_usd_kg: float | None = Field(
+        default=None, ge=0, description="Average import price per kg, last year (value/weight)"
+    )
     exporter_share: float = Field(ge=0, le=1)
     exporter_rca: float = Field(ge=0)
 
@@ -77,3 +81,19 @@ class MarketSupplier(_Contract):
     value_usd: float = Field(ge=0, description="Supplier's sales to the market, last year")
     share_start: float = Field(ge=0, le=1, description="Share of the market, first year")
     share_end: float = Field(ge=0, le=1, description="Share of the market, last year")
+    unit_price_usd_kg: float | None = Field(
+        default=None, ge=0, description="This supplier's average price per kg, last year"
+    )
+
+
+class SupplierLandscape(_Contract):
+    """One of the world's largest exporters of a product: where buyers can source it."""
+
+    hs6: HS6Code
+    supplier: CountryCode
+    rank: int = Field(ge=1, description="By export value, last year")
+    exports_usd: float = Field(ge=0, description="Exports to all markets, last year")
+    exports_growth_3y: float | None = Field(description="Compound annual growth over 3 years")
+    world_share: float = Field(ge=0, le=1)
+    markets_served: int = Field(ge=0, description="Markets buying at least $100k from it")
+    unit_price_usd_kg: float | None = Field(default=None, ge=0)

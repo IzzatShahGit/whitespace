@@ -10,13 +10,36 @@ import type { User } from "@/lib/api/queries";
 import { signOut } from "@/lib/auth";
 
 const NAV = [
-  { href: "/app", label: "Dashboard" },
+  { href: "/app", label: "Sell" },
+  { href: "/app/buy", label: "Buy" },
+  { href: "/app/ask", label: "Ask" },
   { href: "/app/browse", label: "Browse" },
   { href: "/onboarding", label: "Preferences" },
 ];
 
-// Dashboard owns /app and the market pages; Browse owns /app/browse.
-const isDashboard = (path: string) => path.startsWith("/app") && !path.startsWith("/app/browse");
+// "Sell" owns /app and the market pages; the other sections own their prefixes.
+function isActive(href: string, path: string): boolean {
+  if (href !== "/app") return path.startsWith(href);
+  return path.startsWith("/app") && !NAV.some((n) => n.href !== "/app" && path.startsWith(n.href));
+}
+
+function NavLinks({ pathname }: { pathname: string }) {
+  return NAV.map(({ href, label }) => {
+    const active = isActive(href, pathname);
+    return (
+      <Link
+        key={href}
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={`shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors ${
+          active ? "bg-ink-raised text-cream" : "text-sage hover:text-cream"
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  });
+}
 
 export function AppHeader({ user }: { user: User }) {
   const router = useRouter();
@@ -36,21 +59,7 @@ export function AppHeader({ user }: { user: User }) {
         <div className="flex items-center gap-6">
           <Logo href="/app" />
           <div className="hidden items-center gap-1 sm:flex">
-            {NAV.map(({ href, label }) => {
-              const active = href === "/app" ? isDashboard(pathname) : pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
-                    active ? "bg-ink-raised text-cream" : "text-sage hover:text-cream"
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+            <NavLinks pathname={pathname} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -60,6 +69,10 @@ export function AppHeader({ user }: { user: User }) {
           </Button>
         </div>
       </nav>
+      {/* Phones: the same sections as a scrollable tab strip under the bar. */}
+      <div className="flex gap-1 overflow-x-auto border-t border-ink-line/60 px-4 py-2 sm:hidden">
+        <NavLinks pathname={pathname} />
+      </div>
     </header>
   );
 }

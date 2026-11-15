@@ -50,6 +50,11 @@ export function points(value: number): string {
   return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded)} pts`;
 }
 
+/** "towels" -> "Towels" (everyday names come lower-case, for use mid-sentence). */
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /**
  * A readable product name from a BACI description ("Head: detail"):
  * - "Bed linen: of cotton (…)"  -> "Bed linen of cotton (…)"   (detail continues the head)

@@ -4,16 +4,19 @@ from __future__ import annotations
 
 from typing import Annotated
 
+import httpx
 from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from whitespace_api.core.config import Settings, get_settings
 from whitespace_api.core.db import get_session
+from whitespace_api.core.http import http_client
 from whitespace_api.models.user import User
 from whitespace_api.services import auth as auth_service
 
 DbSession = Annotated[AsyncSession, Depends(get_session)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
+HttpClient = Annotated[httpx.AsyncClient, Depends(http_client)]
 
 
 async def get_current_user(

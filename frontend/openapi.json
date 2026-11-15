@@ -1569,6 +1569,614 @@
           }
         }
       }
+    },
+    "/api/v1/sourcing": {
+      "get": {
+        "tags": [
+          "sourcing"
+        ],
+        "summary": "Sourcing",
+        "description": "The best countries to buy a product from, with prices, growth and reliability.",
+        "operationId": "sourcing_api_v1_sourcing_get",
+        "parameters": [
+          {
+            "name": "buyer",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "Buying country",
+              "title": "Buyer"
+            },
+            "description": "Buying country"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcingPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sourcing/products/search": {
+      "get": {
+        "tags": [
+          "sourcing"
+        ],
+        "summary": "Search Products",
+        "description": "Products to buy, by everyday words or an HS code.",
+        "operationId": "search_products_api_v1_sourcing_products_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceProductMatch"
+                  },
+                  "title": "Response Search Products Api V1 Sourcing Products Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fx": {
+      "get": {
+        "tags": [
+          "fx"
+        ],
+        "summary": "Exchange Rates",
+        "description": "Every currency against the US dollar: one small payload, converted in the browser.",
+        "operationId": "exchange_rates_api_v1_fx_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FxRates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/threads": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "List Threads",
+        "operationId": "list_threads_api_v1_chat_threads_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatThreadOut"
+                  },
+                  "title": "Response List Threads Api V1 Chat Threads Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/threads/{thread_id}": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Get Thread",
+        "operationId": "get_thread_api_v1_chat_threads__thread_id__get",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Thread Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatThreadDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Delete Thread",
+        "operationId": "delete_thread_api_v1_chat_threads__thread_id__delete",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Thread Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/suggestions": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Suggestions",
+        "operationId": "suggestions_api_v1_chat_suggestions_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSuggestions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/messages": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Send Message",
+        "description": "Ask the guide. Starts a new conversation when `thread_id` is omitted.",
+        "operationId": "send_message_api_v1_chat_messages_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessageIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events: each `data:` line is one ChatEvent as JSON",
+            "content": {
+              "text/event-stream": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatEvent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found"
+          },
+          "409": {
+            "description": "A reply in this conversation is still being written"
+          },
+          "429": {
+            "description": "Daily message limit reached"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1911,6 +2519,407 @@
         ],
         "title": "BriefUsage"
       },
+      "CardMarket": {
+        "properties": {
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "go",
+              "test",
+              "grow",
+              "defend",
+              "care",
+              "hard"
+            ],
+            "title": "Action"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "neutral",
+              "negative"
+            ],
+            "title": "Tone"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd"
+          },
+          "growth": {
+            "type": "number",
+            "title": "Growth"
+          },
+          "already_selling": {
+            "type": "boolean",
+            "title": "Already Selling"
+          }
+        },
+        "type": "object",
+        "required": [
+          "market",
+          "rank",
+          "action",
+          "headline",
+          "tone",
+          "imports_usd",
+          "growth",
+          "already_selling"
+        ],
+        "title": "CardMarket"
+      },
+      "ChatEvent": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "thread",
+              "status",
+              "card",
+              "answer",
+              "error",
+              "done"
+            ],
+            "title": "Event"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "card": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/MarketsCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MarketCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SourcingCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PriceCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TrendCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NewsCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MoneyCard"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "type",
+                  "mapping": {
+                    "market": "#/components/schemas/MarketCard",
+                    "markets": "#/components/schemas/MarketsCard",
+                    "money": "#/components/schemas/MoneyCard",
+                    "news": "#/components/schemas/NewsCard",
+                    "price": "#/components/schemas/PriceCard",
+                    "sourcing": "#/components/schemas/SourcingCard",
+                    "trend": "#/components/schemas/TrendCard"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card"
+          },
+          "follow_ups": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Ups"
+          },
+          "grounded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grounded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event"
+        ],
+        "title": "ChatEvent",
+        "description": "One server-sent event while a reply is produced (documented for clients)."
+      },
+      "ChatMessageIn": {
+        "properties": {
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id",
+            "description": "Omit to start a new thread"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ChatMessageIn"
+      },
+      "ChatMessageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "cards": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/MarketsCard"
+                },
+                {
+                  "$ref": "#/components/schemas/MarketCard"
+                },
+                {
+                  "$ref": "#/components/schemas/SourcingCard"
+                },
+                {
+                  "$ref": "#/components/schemas/PriceCard"
+                },
+                {
+                  "$ref": "#/components/schemas/TrendCard"
+                },
+                {
+                  "$ref": "#/components/schemas/NewsCard"
+                },
+                {
+                  "$ref": "#/components/schemas/MoneyCard"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "market": "#/components/schemas/MarketCard",
+                  "markets": "#/components/schemas/MarketsCard",
+                  "money": "#/components/schemas/MoneyCard",
+                  "news": "#/components/schemas/NewsCard",
+                  "price": "#/components/schemas/PriceCard",
+                  "sourcing": "#/components/schemas/SourcingCard",
+                  "trend": "#/components/schemas/TrendCard"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "follow_ups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Follow Ups"
+          },
+          "grounded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grounded"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "status",
+          "content",
+          "cards",
+          "follow_ups",
+          "grounded",
+          "created_at"
+        ],
+        "title": "ChatMessageOut"
+      },
+      "ChatSuggestions": {
+        "properties": {
+          "prompts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Prompts",
+            "description": "Starter questions, personalised from the profile"
+          },
+          "remaining_today": {
+            "type": "integer",
+            "title": "Remaining Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompts",
+          "remaining_today"
+        ],
+        "title": "ChatSuggestions"
+      },
+      "ChatThreadDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageOut"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "updated_at",
+          "messages"
+        ],
+        "title": "ChatThreadDetail"
+      },
+      "ChatThreadOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "updated_at"
+        ],
+        "title": "ChatThreadOut"
+      },
       "CountryOut": {
         "properties": {
           "code": {
@@ -1928,6 +2937,35 @@
           "name"
         ],
         "title": "CountryOut"
+      },
+      "CurrentSupplier": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "unit_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Usd Kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "share",
+          "unit_price_usd_kg"
+        ],
+        "title": "CurrentSupplier"
       },
       "Dashboard": {
         "properties": {
@@ -1992,6 +3030,41 @@
         ],
         "title": "DataWindow"
       },
+      "FxRates": {
+        "properties": {
+          "base": {
+            "type": "string",
+            "title": "Base",
+            "default": "USD"
+          },
+          "rates": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Rates",
+            "description": "Units of each currency per 1 US dollar"
+          },
+          "updated": {
+            "type": "string",
+            "title": "Updated",
+            "description": "When the source last published, as it states it"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Shown with the rates (the free service asks for credit)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rates",
+          "updated",
+          "source"
+        ],
+        "title": "FxRates",
+        "description": "Today's exchange rates against the US dollar (updated daily)."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2044,6 +3117,63 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "MarketCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "market",
+            "title": "Type",
+            "default": "market"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd"
+          },
+          "growth": {
+            "type": "number",
+            "title": "Growth"
+          },
+          "exporter_share": {
+            "type": "number",
+            "title": "Exporter Share"
+          },
+          "price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Usd Kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "exporter",
+          "market",
+          "verdict",
+          "imports_usd",
+          "growth",
+          "exporter_share",
+          "price_usd_kg"
+        ],
+        "title": "MarketCard"
       },
       "MarketDetail": {
         "properties": {
@@ -2143,6 +3273,18 @@
             ],
             "title": "Top Rival Share"
           },
+          "market_unit_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Unit Price Usd Kg",
+            "description": "What the market paid per kg on average (value/weight)"
+          },
           "verdict": {
             "$ref": "#/components/schemas/Verdict"
           },
@@ -2185,6 +3327,41 @@
           "reasons"
         ],
         "title": "MarketItem"
+      },
+      "MarketsCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "markets",
+            "title": "Type",
+            "default": "markets"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CardMarket"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "exporter",
+          "total",
+          "items"
+        ],
+        "title": "MarketsCard"
       },
       "MarketsPage": {
         "properties": {
@@ -2237,6 +3414,40 @@
         ],
         "title": "MarketsPage"
       },
+      "MoneyCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "money",
+            "title": "Type",
+            "default": "money"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "from_currency": {
+            "type": "string",
+            "title": "From Currency"
+          },
+          "to_currency": {
+            "type": "string",
+            "title": "To Currency"
+          },
+          "result": {
+            "type": "number",
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "from_currency",
+          "to_currency",
+          "result"
+        ],
+        "title": "MoneyCard"
+      },
       "MonthPoint": {
         "properties": {
           "month": {
@@ -2262,6 +3473,68 @@
           "exporter"
         ],
         "title": "MonthPoint"
+      },
+      "NewsCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "news",
+            "title": "Type",
+            "default": "news"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "items"
+        ],
+        "title": "NewsCard"
+      },
+      "NewsItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "url",
+          "domain",
+          "published"
+        ],
+        "title": "NewsItem"
       },
       "NicheDetail": {
         "properties": {
@@ -2344,6 +3617,120 @@
         ],
         "title": "NicheSummary"
       },
+      "PriceCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "price",
+            "title": "Type",
+            "default": "price"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "stock_value": {
+            "type": "number",
+            "title": "Stock Value"
+          },
+          "value_usd": {
+            "type": "number",
+            "title": "Value Usd"
+          },
+          "quantity_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Kg"
+          },
+          "cost_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd Kg"
+          },
+          "market_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Price Usd Kg"
+          },
+          "revenue_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Usd"
+          },
+          "tone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "neutral",
+                  "negative"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tone"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "market",
+          "currency",
+          "stock_value",
+          "value_usd",
+          "quantity_kg",
+          "cost_usd_kg",
+          "market_price_usd_kg",
+          "revenue_usd",
+          "tone",
+          "verdict"
+        ],
+        "title": "PriceCard"
+      },
       "ProductMatch": {
         "properties": {
           "hs6": {
@@ -2352,19 +3739,27 @@
           },
           "description": {
             "type": "string",
-            "title": "Description"
+            "title": "Description",
+            "description": "Official customs description"
           },
           "markets": {
             "type": "integer",
             "title": "Markets",
             "description": "Ranked markets available for this exporter"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What people call it, e.g. \"towels\" for 630260 (for titles and sentences).",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "hs6",
           "description",
-          "markets"
+          "markets",
+          "name"
         ],
         "title": "ProductMatch"
       },
@@ -2403,13 +3798,21 @@
           },
           "description": {
             "type": "string",
-            "title": "Description"
+            "title": "Description",
+            "description": "Official customs description"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What people call it, e.g. \"towels\" for 630260 (for titles and sentences).",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "hs6",
-          "description"
+          "description",
+          "name"
         ],
         "title": "ProductOut"
       },
@@ -2420,7 +3823,8 @@
             "maxLength": 3,
             "minLength": 3,
             "pattern": "^[A-Z][A-Z0-9]{2}$",
-            "title": "Exporter"
+            "title": "Exporter",
+            "description": "The user's country (exports from / buys into)"
           },
           "role": {
             "type": "string",
@@ -2431,6 +3835,16 @@
               "other"
             ],
             "title": "Role"
+          },
+          "goal": {
+            "type": "string",
+            "enum": [
+              "sell",
+              "buy",
+              "both"
+            ],
+            "title": "Goal",
+            "default": "sell"
           },
           "products": {
             "items": {
@@ -2480,6 +3894,15 @@
             ],
             "title": "Role"
           },
+          "goal": {
+            "type": "string",
+            "enum": [
+              "sell",
+              "buy",
+              "both"
+            ],
+            "title": "Goal"
+          },
           "products": {
             "items": {
               "$ref": "#/components/schemas/ProductOut"
@@ -2504,6 +3927,7 @@
         "required": [
           "exporter",
           "role",
+          "goal",
           "products",
           "current_markets",
           "updated_at"
@@ -2775,6 +4199,285 @@
         "title": "Signal",
         "description": "One readable fact about a market, with the number behind it."
       },
+      "SourceProductMatch": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Official customs description"
+          },
+          "suppliers": {
+            "type": "integer",
+            "title": "Suppliers",
+            "description": "Supplier countries listed for this product"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What people call it, e.g. \"towels\" for 630260 (for titles and sentences).",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "description",
+          "suppliers",
+          "name"
+        ],
+        "title": "SourceProductMatch"
+      },
+      "SourceSignal": {
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "neutral",
+              "negative"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "One measured fact, e.g. '18% below the median price'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tone",
+          "text"
+        ],
+        "title": "SourceSignal"
+      },
+      "SourcingCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sourcing",
+            "title": "Type",
+            "default": "sourcing"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/components/schemas/SourcingPick"
+            },
+            "type": "array",
+            "title": "Picks"
+          },
+          "median_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Price Usd Kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "buyer",
+          "picks",
+          "median_price_usd_kg"
+        ],
+        "title": "SourcingCard"
+      },
+      "SourcingPage": {
+        "properties": {
+          "buyer": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "data_year": {
+            "type": "integer",
+            "title": "Data Year"
+          },
+          "median_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Price Usd Kg",
+            "description": "Across the listed suppliers"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/components/schemas/SourcingPick"
+            },
+            "type": "array",
+            "title": "Picks"
+          },
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierOption"
+            },
+            "type": "array",
+            "title": "Suppliers"
+          },
+          "current_suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/CurrentSupplier"
+            },
+            "type": "array",
+            "title": "Current Suppliers",
+            "description": "Who supplies the buyer today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "buyer",
+          "product",
+          "data_year",
+          "median_price_usd_kg",
+          "picks",
+          "suppliers",
+          "current_suppliers"
+        ],
+        "title": "SourcingPage"
+      },
+      "SourcingPick": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "best_value",
+              "most_established",
+              "rising",
+              "current"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Why, in one sentence with figures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "country",
+          "reason"
+        ],
+        "title": "SourcingPick"
+      },
+      "SupplierOption": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "By world exports of this product"
+          },
+          "exports_usd": {
+            "type": "number",
+            "title": "Exports Usd"
+          },
+          "world_share": {
+            "type": "number",
+            "title": "World Share"
+          },
+          "exports_growth_3y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exports Growth 3Y"
+          },
+          "markets_served": {
+            "type": "integer",
+            "title": "Markets Served"
+          },
+          "unit_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Usd Kg"
+          },
+          "supplies_you_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplies You Share",
+            "description": "Its share of your imports, if any"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "e.g. \"Lowest price\", \"Supplies you today\""
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSignal"
+            },
+            "type": "array",
+            "title": "Signals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "rank",
+          "exports_usd",
+          "world_share",
+          "exports_growth_3y",
+          "markets_served",
+          "unit_price_usd_kg",
+          "supplies_you_share",
+          "tags",
+          "signals"
+        ],
+        "title": "SupplierOption",
+        "description": "One country you could buy from, with the measured facts behind it."
+      },
       "SupplierOut": {
         "properties": {
           "country": {
@@ -2791,6 +4494,17 @@
           "share_end": {
             "type": "number",
             "title": "Share End"
+          },
+          "unit_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Usd Kg"
           }
         },
         "type": "object",
@@ -2801,6 +4515,67 @@
           "share_end"
         ],
         "title": "SupplierOut"
+      },
+      "TrendCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "trend",
+            "title": "Type",
+            "default": "trend"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "latest_month": {
+            "type": "string",
+            "title": "Latest Month"
+          },
+          "change_12m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change 12M"
+          },
+          "exporter_share_recent": {
+            "type": "number",
+            "title": "Exporter Share Recent"
+          },
+          "exporter_share_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter Share Before"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "market",
+          "source",
+          "latest_month",
+          "change_12m",
+          "exporter_share_recent",
+          "exporter_share_before"
+        ],
+        "title": "TrendCard"
       },
       "UserOut": {
         "properties": {

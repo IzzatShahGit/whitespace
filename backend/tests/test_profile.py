@@ -106,3 +106,16 @@ async def test_best_moves_are_actionable_new_markets(user: AsyncClient) -> None:
     assert picked == [(BED_LINEN, "USA"), (TOWELS, "USA")]
     assert all(m["market"]["verdict"]["action"] in ("go", "test") for m in moves)
     assert moves[0]["market"]["verdict"]["summary"].endswith(".")
+
+
+async def test_goal_defaults_to_selling(user: AsyncClient) -> None:
+    assert (await save(user)).json()["goal"] == "sell"
+
+
+async def test_buyers_need_supplier_data_not_markets(user: AsyncClient) -> None:
+    buyer = await save(user, goal="buy", products=[TOWELS])
+    assert buyer.status_code == 200 and buyer.json()["goal"] == "buy"
+    # Bed linen has ranked markets (fine for selling) but no supplier data (not for buying).
+    no_suppliers = await save(user, goal="buy", products=[BED_LINEN])
+    assert no_suppliers.status_code == 422 and "supplier" in no_suppliers.json()["detail"]
+    assert (await save(user, goal="trade")).status_code == 422

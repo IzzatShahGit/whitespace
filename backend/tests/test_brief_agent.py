@@ -11,12 +11,13 @@ from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableLambda
 
 from whitespace_api.agents.brief import grounding, prompts
-from whitespace_api.agents.brief.facts import everyday_name, sector_term, short_product
+from whitespace_api.agents.brief.facts import sector_term
 from whitespace_api.agents.brief.graph import BriefDeps, build_graph, check
 from whitespace_api.agents.brief.research import Query, matches, plan_queries, rank
 from whitespace_api.agents.llm import CallSpec
 from whitespace_api.integrations import tavily
 from whitespace_api.schemas.brief import BriefFact
+from whitespace_shared.naming import everyday_name, short_product
 
 FACTS = [
     BriefFact(id="F1", label="Market imports, 2024", value="$164M"),

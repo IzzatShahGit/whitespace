@@ -12,15 +12,15 @@ from whitespace_api import __version__
 from whitespace_api.api.v1.router import api_router
 from whitespace_api.core.config import get_settings
 from whitespace_api.core.db import get_engine
+from whitespace_api.core.http import http_client
 from whitespace_api.core.logging import configure_logging
-from whitespace_api.services.briefs import wait_for_jobs
-from whitespace_api.services.recent import http_client
+from whitespace_api.core.tasks import wait_for_jobs
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
-    await wait_for_jobs()  # let in-flight briefs finish before shutting down
+    await wait_for_jobs()  # let in-flight briefs and replies finish before shutting down
     await http_client().aclose()
     await get_engine().dispose()
 

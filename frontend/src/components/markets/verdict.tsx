@@ -53,7 +53,13 @@ const signalIcons: Record<Signal["kind"], (tone: Tone) => ReactNode> = {
   size: () => <path d="M2.5 13.5h11M4 13.5V8M8 13.5V4.5M12 13.5V10" />,
 };
 
-export function VerdictBadge({ verdict, large = false }: { verdict: Verdict; large?: boolean }) {
+export function VerdictBadge({
+  verdict,
+  large = false,
+}: {
+  verdict: Pick<Verdict, "action" | "headline" | "tone">;
+  large?: boolean;
+}) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full font-medium ${toneStyles[verdict.tone]} ${

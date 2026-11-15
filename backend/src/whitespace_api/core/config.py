@@ -136,10 +136,10 @@ class Settings(BaseSettings):
     census_api_key: SecretStr | None = None
     monthly_cache_days: int = Field(default=7, ge=1, description="Refresh monthly data after")
 
-    # --- AI briefs ---
+    # --- AI briefs and the guide ---
     brief_cache_days: int = Field(default=7, ge=1)
-    research_cache_days: int = Field(default=3, ge=1, description="Web research per market")
     brief_daily_limit: int = Field(default=20, ge=1, description="New briefs per user per day")
+    chat_daily_limit: int = Field(default=40, ge=1, description="Guide messages per user per day")
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"

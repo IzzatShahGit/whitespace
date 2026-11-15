@@ -58,14 +58,18 @@ async def get_product(db: AsyncSession, hs6: str) -> ProductOut:
     return ProductOut(hs6=product.hs6, description=product.description)
 
 
-async def _alias_matches(db: AsyncSession, query: str, exporter: str) -> list[ProductMatch]:
+async def _alias_matches(db: AsyncSession, query: str, exporter: str | None) -> list[ProductMatch]:
     """Products named by everyday words ("footballs" -> "Balls: inflatable")."""
     codes = codes_for(query)
     if not codes:
         return []
-    counts = await repo.market_counts(db, exporter=exporter)
+    counts = (
+        await repo.market_counts(db, exporter=exporter)
+        if exporter
+        else await repo.landscape_counts(db)
+    )
     picked: list[str] = []
-    for code in codes:  # alias order first, then most markets within each code
+    for code in codes:  # alias order first, then the largest count within each code
         group = sorted((h for h in counts if h.startswith(code)), key=lambda h: -counts[h])
         picked += [h for h in group if h not in picked]
     products = await repo.products_by_code(db, picked)
@@ -76,11 +80,14 @@ async def _alias_matches(db: AsyncSession, query: str, exporter: str) -> list[Pr
     ]
 
 
-async def search_products(
-    db: AsyncSession, *, q: str, exporter: str, limit: int
+async def search_products_by_mode(
+    db: AsyncSession, *, q: str, limit: int, exporter: str | None
 ) -> list[ProductMatch]:
-    """Everyday-name matches first, then word matches; only products with markets."""
-    await get_exporter(db, exporter)
+    """Everyday-name matches first, then word matches.
+
+    With `exporter` (selling): products with ranked markets; `markets` counts them.
+    Without (buying): products with listed suppliers; `markets` counts the suppliers.
+    """
     query = q.strip()
     aliased = [] if query.isdigit() else await _alias_matches(db, query, exporter)
     rows = await repo.search_products(db, q=query, exporter=exporter, limit=limit)
@@ -88,11 +95,19 @@ async def search_products(
         # The everyday name already found the product: only add word matches that
         # contain every query word, not ones sharing a single word ("salted hides").
         rows = [r for r in rows if r.matched >= r.wanted]
-    worded = [ProductMatch(hs6=r.hs6, description=r.description, markets=r.markets) for r in rows]
+    worded = [ProductMatch(hs6=r.hs6, description=r.description, markets=r.n) for r in rows]
     unique: dict[str, ProductMatch] = {}
     for match in aliased + worded:  # first occurrence wins, order preserved
         unique.setdefault(match.hs6, match)
     return list(unique.values())[:limit]
+
+
+async def search_products(
+    db: AsyncSession, *, q: str, exporter: str, limit: int
+) -> list[ProductMatch]:
+    """Products to sell from `exporter` (validated)."""
+    await get_exporter(db, exporter)
+    return await search_products_by_mode(db, q=q, limit=limit, exporter=exporter)
 
 
 def data_window(row: Row[Any]) -> DataWindow:
@@ -129,6 +144,7 @@ def market_item(
         top_rival=CountryOut(code=o.top_rival, name=row.rival_name) if o.top_rival else None,
         top_rival_share_change=o.top_rival_share_change,
         top_rival_share=o.top_rival_share,
+        market_unit_price_usd_kg=o.market_unit_price_usd_kg,
         verdict=explain.verdict(facts),
         signals=explain.signals(facts),
         reasons=explain.reasons(facts),
@@ -186,6 +202,7 @@ async def market_detail(
                 value_usd=s.MarketSupplier.value_usd,
                 share_start=s.MarketSupplier.share_start,
                 share_end=s.MarketSupplier.share_end,
+                unit_price_usd_kg=s.MarketSupplier.unit_price_usd_kg,
             )
             for s in suppliers
         ],

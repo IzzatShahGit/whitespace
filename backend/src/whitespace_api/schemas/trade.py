@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+
+from whitespace_shared.naming import everyday_name
 
 Label = Literal["Strong", "Good", "Watch"]
 Tone = Literal["positive", "neutral", "negative"]
@@ -36,7 +38,13 @@ class CountryOut(BaseModel):
 
 class ProductOut(BaseModel):
     hs6: str
-    description: str
+    description: str = Field(description="Official customs description")
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def name(self) -> str:
+        """What people call it, e.g. "towels" for 630260 (for titles and sentences)."""
+        return everyday_name(self.hs6, self.description)
 
 
 class ProductMatch(ProductOut):
@@ -54,6 +62,9 @@ class MarketItem(BaseModel):
     top_rival: CountryOut | None
     top_rival_share_change: float | None
     top_rival_share: float | None
+    market_unit_price_usd_kg: float | None = Field(
+        default=None, description="What the market paid per kg on average (value/weight)"
+    )
     verdict: Verdict
     signals: list[Signal]
     reasons: list[str] = Field(description="Three plain-language reasons, from the data")
@@ -83,6 +94,7 @@ class SupplierOut(BaseModel):
     value_usd: float
     share_start: float
     share_end: float
+    unit_price_usd_kg: float | None = None
 
 
 class MarketDetail(BaseModel):

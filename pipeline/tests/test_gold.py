@@ -7,19 +7,26 @@ import math
 import polars as pl
 import pytest
 
-from whitespace_pipeline.gold.opportunity import compute, compute_suppliers
+from whitespace_pipeline.gold.opportunity import (
+    buyer_pairs,
+    compute,
+    compute_suppliers,
+    ranked_pairs,
+)
+from whitespace_pipeline.gold.sourcing import compute_landscape
 from whitespace_pipeline.io import validate_against
 from whitespace_pipeline.silver.baci import FLOWS_SCHEMA
-from whitespace_shared.gold import MarketOpportunity, MarketSupplier
+from whitespace_shared.gold import MarketOpportunity, MarketSupplier, SupplierLandscape
 
 TOWELS = "630260"
 OTHER = "999999"  # everything else the world trades, so RCA has a baseline
 M = 1_000_000
 
 
-def flows(rows: list[tuple[int, str, str, str, float]]) -> pl.DataFrame:
+def flows(rows: list[tuple]) -> pl.DataFrame:  # type: ignore[type-arg]
+    """Rows of (year, exporter, importer, hs6, value[, tons])."""
     return pl.DataFrame(
-        [(y, e, i, p, v, None) for y, e, i, p, v in rows], schema=FLOWS_SCHEMA, orient="row"
+        [(*r[:5], r[5] if len(r) > 5 else None) for r in rows], schema=FLOWS_SCHEMA, orient="row"
     )
 
 
@@ -54,7 +61,7 @@ def test_columns_match_shared_contract(gold: pl.DataFrame) -> None:
 
 
 def test_suppliers_for_ranked_markets(gold: pl.DataFrame) -> None:
-    suppliers = compute_suppliers(world(), gold)
+    suppliers = compute_suppliers(world(), ranked_pairs(gold), 2024)
     validate_against(suppliers, MarketSupplier)
     de = suppliers.filter(market="DEU", hs6=TOWELS).sort("value_usd", descending=True)
     # Germany 2024: China 10M and Pakistan 10M of 20M; in 2021 China 8M of 10M.
@@ -119,3 +126,49 @@ def test_needs_four_years() -> None:
     short = world().filter(pl.col("year") >= 2023)
     with pytest.raises(ValueError, match="Need years"):
         compute(short, ["PAK"], "TEST")
+
+
+# ---------- prices and sourcing ----------
+def priced_world() -> pl.DataFrame:
+    rows = []
+    for year in (2021, 2024):
+        rows += [
+            # Germany buys towels: China 10M for 2,000 t ($5/kg), Pakistan 6M for 1,000 t ($6/kg).
+            (year, "CHN", "DEU", TOWELS, 10 * M, 2000.0),
+            (year, "PAK", "DEU", TOWELS, 6 * M if year == 2024 else 3 * M, 1000.0),
+            # A tiny shipment: too little weight for a reliable price.
+            (year, "TUR", "DEU", TOWELS, 0.2 * M, 0.5),
+            # Pakistan buys towels too (for the sourcing view).
+            (year, "CHN", "PAK", TOWELS, 0.3 * M, 100.0),
+            (year, "CHN", "USA", OTHER, 900 * M, None),
+        ]
+    return flows(rows)
+
+
+def test_market_and_supplier_prices_per_kg() -> None:
+    data = priced_world()
+    gold = compute(data, ["PAK"], "TEST")
+    de = gold.filter(market="DEU", hs6=TOWELS).row(0, named=True)
+    # (10 + 6 + 0.2)M over 3,000.5 t
+    assert de["market_unit_price_usd_kg"] == pytest.approx(16.2e6 / 3000.5e3)
+    suppliers = compute_suppliers(data, ranked_pairs(gold), 2024)
+    prices = {r["supplier"]: r["unit_price_usd_kg"] for r in suppliers.iter_rows(named=True)}
+    assert prices["CHN"] == pytest.approx(5.0) and prices["PAK"] == pytest.approx(6.0)
+    assert prices["TUR"] is None  # 0.5 t is below the reliable-price threshold
+
+
+def test_buyer_pairs_cover_what_covered_countries_import() -> None:
+    pairs = buyer_pairs(priced_world(), ["PAK"], 2024)
+    assert pairs.rows() == [("PAK", TOWELS)]
+
+
+def test_supplier_landscape() -> None:
+    landscape = compute_landscape(priced_world(), 2024, 3)
+    validate_against(landscape, SupplierLandscape)
+    towels = landscape.filter(hs6=TOWELS).sort("rank")
+    assert towels["supplier"].to_list() == ["CHN", "PAK", "TUR"]
+    china = towels.row(0, named=True)
+    # China exports 10.3M of towels: 10M to Germany + 0.3M to Pakistan; both >= $100k.
+    assert china["exports_usd"] == pytest.approx(10.3e6) and china["markets_served"] == 2
+    assert china["world_share"] == pytest.approx(10.3 / 16.5)
+    assert towels.row(1, named=True)["exports_growth_3y"] == pytest.approx(2 ** (1 / 3) - 1)

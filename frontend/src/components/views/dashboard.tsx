@@ -10,7 +10,7 @@ import { HowWeDecide, VerdictBadge } from "@/components/markets/verdict";
 import { buttonClass } from "@/components/ui/button";
 import { DataNote, Loading, Problem } from "@/components/views/states";
 import { useDashboard, useMe, useProfile } from "@/lib/api/queries";
-import { shortProductName } from "@/lib/format";
+import { capitalize, shortProductName } from "@/lib/format";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
 
@@ -18,14 +18,16 @@ export function Dashboard() {
   const router = useRouter();
   const me = useMe();
   const profile = useProfile();
-  const dashboard = useDashboard(Boolean(profile.data));
   const needsOnboarding = profile.isSuccess && profile.data === null;
+  const buyerOnly = profile.data?.goal === "buy";
+  const dashboard = useDashboard(Boolean(profile.data) && !buyerOnly);
 
   useEffect(() => {
     if (needsOnboarding) router.replace("/onboarding");
-  }, [needsOnboarding, router]);
+    else if (buyerOnly) router.replace("/app/buy"); // buyers' home is the Buy section
+  }, [needsOnboarding, buyerOnly, router]);
 
-  if (profile.isPending || needsOnboarding || dashboard.isPending) return <Loading />;
+  if (profile.isPending || needsOnboarding || buyerOnly || dashboard.isPending) return <Loading />;
   if (profile.isError || dashboard.isError) {
     return <Problem title="Couldn’t load your dashboard">Please refresh the page.</Problem>;
   }
@@ -37,7 +39,7 @@ export function Dashboard() {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-12">
       <section className="rise-in relative z-30 flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {firstName ? `Hi ${firstName}, here` : "Here"}’s where to sell next
           </h1>
           <p className="mt-2 text-sage">
@@ -55,6 +57,11 @@ export function Dashboard() {
           <Link href="/app/browse" className={buttonClass("secondary", "h-12 shrink-0")}>
             Browse by niche
           </Link>
+          {p.goal === "both" && (
+            <Link href="/app/buy" className={buttonClass("secondary", "h-12 shrink-0")}>
+              Find suppliers
+            </Link>
+          )}
         </div>
       </section>
 
@@ -99,10 +106,11 @@ export function Dashboard() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold tracking-tight">
-                {shortProductName(entry.product.description)}
+                {capitalize(entry.product.name)}
               </h2>
               <p className="text-sm text-sage-dim">
-                HS {entry.product.hs6} · {entry.total_markets} ranked markets
+                {shortProductName(entry.product.description)} · HS {entry.product.hs6} ·{" "}
+                {entry.total_markets} ranked markets
               </p>
             </div>
             <Link

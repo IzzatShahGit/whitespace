@@ -9,14 +9,16 @@ from whitespace_api.schemas.trade import CountryOut, DataWindow, MarketItem, Pro
 from whitespace_shared.gold import CountryCode, HS6Code
 
 Role = Literal["exporter", "consultant", "agency", "other"]
+Goal = Literal["sell", "buy", "both"]
 
 MAX_PRODUCTS = 5
 MAX_CURRENT_MARKETS = 60
 
 
 class ProfileIn(BaseModel):
-    exporter: CountryCode
+    exporter: CountryCode = Field(description="The user's country (exports from / buys into)")
     role: Role
+    goal: Goal = "sell"
     products: Annotated[list[HS6Code], Field(min_length=1, max_length=MAX_PRODUCTS)]
     current_markets: Annotated[list[CountryCode], Field(max_length=MAX_CURRENT_MARKETS)] = []
 
@@ -24,6 +26,7 @@ class ProfileIn(BaseModel):
 class ProfileOut(BaseModel):
     exporter: CountryOut
     role: Role
+    goal: Goal
     products: list[ProductOut]
     current_markets: list[CountryOut]
     updated_at: datetime

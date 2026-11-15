@@ -1,4 +1,8 @@
-"""A small trade dataset for API tests: Pakistan, three products, a few markets."""
+"""A small trade dataset for API tests: Pakistan, three products, a few markets.
+
+Towels also have a world supplier landscape (for buying): Thailand is the cheapest but
+tiny, so it must never be picked; Germany buys from China and Pakistan today.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +12,13 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from whitespace_api.models import Country, MarketOpportunity, MarketSupplier, Product
+from whitespace_api.models import (
+    Country,
+    MarketOpportunity,
+    MarketSupplier,
+    Product,
+    SupplierLandscape,
+)
 
 TOWELS, BED_LINEN, THREAD = "630260", "630231", "520411"
 
@@ -33,6 +43,21 @@ def opportunity(
     }
     values.update(extra)
     return MarketOpportunity(**values)
+
+
+def source(
+    supplier: str, rank: int, share: float, growth: float, served: int, price: float
+) -> SupplierLandscape:
+    return SupplierLandscape(
+        hs6=TOWELS,
+        supplier=supplier,
+        rank=rank,
+        exports_usd=share * 12e9,
+        exports_growth_3y=growth,
+        world_share=share,
+        markets_served=served,
+        unit_price_usd_kg=price,
+    )
 
 
 @pytest.fixture
@@ -81,6 +106,7 @@ async def seeded(db_sessionmaker: async_sessionmaker[AsyncSession]) -> None:
                     value_usd=10e6,
                     share_start=0.8,
                     share_end=0.5,
+                    unit_price_usd_kg=4.2,
                 ),
                 MarketSupplier(
                     market="DEU",
@@ -90,6 +116,11 @@ async def seeded(db_sessionmaker: async_sessionmaker[AsyncSession]) -> None:
                     share_start=0.2,
                     share_end=0.2,
                 ),
+                source("CHN", 1, 0.40, 0.02, 150, 4.0),
+                source("PAK", 2, 0.12, 0.06, 120, 3.0),
+                source("BGD", 3, 0.03, 0.15, 40, 3.5),
+                source("DEU", 4, 0.02, -0.08, 90, 9.0),
+                source("THA", 5, 0.0005, 0.50, 5, 1.0),
             ]
         )
         await s.commit()

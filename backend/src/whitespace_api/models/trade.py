@@ -14,6 +14,7 @@ from whitespace_shared.gold import (
     MARKET_OPPORTUNITY_TABLE,
     MARKET_SUPPLIER_TABLE,
     PRODUCT_TABLE,
+    SUPPLIER_LANDSCAPE_TABLE,
 )
 
 # Word search uses Postgres' English config, which stems words ("sheets" -> "sheet").
@@ -64,6 +65,7 @@ class MarketOpportunity(Base):
     top_rival: Mapped[str | None] = mapped_column(CHAR(3))
     top_rival_share_change: Mapped[float | None] = mapped_column(Float)
     top_rival_share: Mapped[float | None] = mapped_column(Float)
+    market_unit_price_usd_kg: Mapped[float | None] = mapped_column(Float)
     exporter_share: Mapped[float] = mapped_column(Float)
     exporter_rca: Mapped[float] = mapped_column(Float)
     score: Mapped[float] = mapped_column(Float)
@@ -85,3 +87,19 @@ class MarketSupplier(Base):
     value_usd: Mapped[float] = mapped_column(Float)
     share_start: Mapped[float] = mapped_column(Float)
     share_end: Mapped[float] = mapped_column(Float)
+    unit_price_usd_kg: Mapped[float | None] = mapped_column(Float)
+
+
+class SupplierLandscape(Base):
+    """The world's largest exporters of each product (for buyers looking for sources)."""
+
+    __tablename__ = SUPPLIER_LANDSCAPE_TABLE
+
+    hs6: Mapped[str] = mapped_column(CHAR(6), primary_key=True)
+    supplier: Mapped[str] = mapped_column(CHAR(3), primary_key=True)
+    rank: Mapped[int] = mapped_column(Integer)
+    exports_usd: Mapped[float] = mapped_column(Float)
+    exports_growth_3y: Mapped[float | None] = mapped_column(Float)
+    world_share: Mapped[float] = mapped_column(Float)
+    markets_served: Mapped[int] = mapped_column(Integer)
+    unit_price_usd_kg: Mapped[float | None] = mapped_column(Float)

@@ -8,6 +8,7 @@ import { ProductPicker } from "@/components/markets/product-picker";
 import { Button } from "@/components/ui/button";
 import {
   type Country,
+  type Goal,
   type Product,
   type Profile,
   type Role,
@@ -19,6 +20,11 @@ import {
 import { shortProductName } from "@/lib/format";
 
 const MAX_PRODUCTS = 5;
+const GOALS: { value: Goal; label: string; hint: string }[] = [
+  { value: "sell", label: "Sell abroad", hint: "Find markets for what I make or stock" },
+  { value: "buy", label: "Buy from abroad", hint: "Find the best countries to source from" },
+  { value: "both", label: "Both", hint: "I export, and I import inputs" },
+];
 const ROLES: { value: Role; label: string; hint: string }[] = [
   { value: "exporter", label: "Exporter", hint: "I sell my own products abroad" },
   { value: "consultant", label: "Consultant", hint: "I advise exporters" },
@@ -70,10 +76,19 @@ function OnboardingForm({
   const [step, setStep] = useState<1 | 2>(1);
   const [exporter, setExporter] = useState(initial?.exporter.code);
   const [role, setRole] = useState<Role | undefined>(initial?.role);
+  const [goal, setGoal] = useState<Goal>(initial?.goal ?? "sell");
+  const buyerOnly = goal === "buy";
   const [products, setProducts] = useState<Product[]>(initial?.products ?? []);
   const [markets, setMarkets] = useState<string[]>(
     initial?.current_markets.map((c) => c.code) ?? [],
   );
+
+  function chooseGoal(next: Goal) {
+    if (next === goal) return;
+    // Buying checks products against supplier data, selling against ranked markets.
+    if ((next === "buy") !== buyerOnly) setProducts([]);
+    setGoal(next);
+  }
 
   function chooseExporter(code: string) {
     if (code === exporter) return;
@@ -88,10 +103,11 @@ function OnboardingForm({
     await save.mutateAsync({
       exporter,
       role,
+      goal,
       products: products.map((p) => p.hs6),
-      current_markets: markets,
+      current_markets: buyerOnly ? [] : markets,
     });
-    router.push("/app");
+    router.push(buyerOnly ? "/app/buy" : "/app");
   }
 
   return (
@@ -109,9 +125,28 @@ function OnboardingForm({
       {step === 1 ? (
         <section key="step-1" className="rise-in mt-10 flex flex-col gap-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Where do you export from?</h1>
-            <p className="mt-2 text-sage">Every ranking is built for exporters in this country.</p>
-            <div role="radiogroup" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <h1 className="text-3xl font-semibold tracking-tight">What do you want to do?</h1>
+            <p className="mt-2 text-sage">You can switch any time; both sections stay open.</p>
+            <div role="radiogroup" className="mt-6 grid gap-3 sm:grid-cols-3">
+              {GOALS.map((g) => (
+                <Choice
+                  key={g.value}
+                  selected={goal === g.value}
+                  onClick={() => chooseGoal(g.value)}
+                  title={g.label}
+                  hint={g.hint}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Where is your business based?</h2>
+            <p className="mt-2 text-sm text-sage">
+              {buyerOnly
+                ? "We compare suppliers for buyers in this country."
+                : "Every ranking is built for exporters in this country."}
+            </p>
+            <div role="radiogroup" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {exporters.map((c) => (
                 <Choice
                   key={c.code}
@@ -145,13 +180,18 @@ function OnboardingForm({
       ) : (
         <section key="step-2" className="rise-in mt-10 flex flex-col gap-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">What do you export?</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {buyerOnly ? "What do you buy?" : "What do you export?"}
+            </h1>
             <p className="mt-2 text-sage">
-              Pick up to {MAX_PRODUCTS} products. Your dashboard shows the best new markets for
-              each.
+              Pick up to {MAX_PRODUCTS} products.{" "}
+              {buyerOnly
+                ? "We'll compare the best countries to buy each from."
+                : "Your dashboard shows the best new markets for each."}
             </p>
             <div className="mt-6">
               <ProductPicker
+                mode={buyerOnly ? "buy" : "sell"}
                 exporter={exporter}
                 exclude={products.map((p) => p.hs6)}
                 disabled={products.length >= MAX_PRODUCTS}
@@ -188,22 +228,24 @@ function OnboardingForm({
             )}
           </div>
 
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Where do you already sell? <span className="text-sage-dim">(optional)</span>
-            </h2>
-            <p className="mt-2 text-sm text-sage">
-              We’ll mark these markets and focus your top picks on new ones.
-            </p>
-            <div className="mt-4">
-              <CountryMultiSelect
-                countries={countries}
-                selected={markets}
-                onChange={setMarkets}
-                exclude={exporter}
-              />
+          {!buyerOnly && (
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">
+                Where do you already sell? <span className="text-sage-dim">(optional)</span>
+              </h2>
+              <p className="mt-2 text-sm text-sage">
+                We’ll mark these markets and focus your top picks on new ones.
+              </p>
+              <div className="mt-4">
+                <CountryMultiSelect
+                  countries={countries}
+                  selected={markets}
+                  onChange={setMarkets}
+                  exclude={exporter}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {save.error && (
             <p role="alert" className="rounded-lg bg-ember/10 px-3 py-2 text-sm text-ember">
@@ -216,7 +258,13 @@ function OnboardingForm({
               ← Back
             </Button>
             <Button disabled={products.length === 0 || save.isPending} onClick={submit}>
-              {save.isPending ? "Saving…" : editing ? "Save changes" : "Show my markets"}
+              {save.isPending
+                ? "Saving…"
+                : editing
+                  ? "Save changes"
+                  : buyerOnly
+                    ? "Show me suppliers"
+                    : "Show my markets"}
             </Button>
           </div>
         </section>

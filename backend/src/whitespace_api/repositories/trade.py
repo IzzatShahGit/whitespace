@@ -9,14 +9,25 @@ from sqlalchemy import Row, and_, exists, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from whitespace_api.models.trade import Country, MarketOpportunity, MarketSupplier, Product
+from whitespace_api.models.trade import (
+    Country,
+    MarketOpportunity,
+    MarketSupplier,
+    Product,
+    SupplierLandscape,
+)
 
 MarketCountry = aliased(Country, name="market_country")
 RivalCountry = aliased(Country, name="rival_country")
 
+# Search works in two modes, chosen by :mode. "sell": products the exporter has ranked
+# markets for, strongest first. "buy": products with listed supplier countries, most
+# traded first. Each query's `strength` CTE has one branch per mode; the branch whose
+# mode doesn't match is a constant-false filter that Postgres skips entirely.
+# `n` counts markets (sell) or supplier countries (buy).
+
 # Word search: OR of the stemmed query words, ranked by how many distinct words a
-# product contains (`matched` of `wanted`), then text rank, then the exporter's strength.
-# Only products the exporter has ranked markets for are returned (no dead ends).
+# product contains (`matched` of `wanted`), then text rank, then strength.
 # `to_tsvector('english', p.description)` must match the index expression in
 # models/trade.py (PRODUCT_TSVECTOR_SQL) so Postgres can use the index.
 _WORD_SEARCH = text("""
@@ -25,10 +36,13 @@ _WORD_SEARCH = text("""
                replace(plainto_tsquery('english', :q)::text, '&', '|')::tsquery AS tq
     ),
     strength AS (
-        SELECT hs6, max(exporter_rca) AS rca, count(*) AS markets
-        FROM gold_market_opportunity WHERE exporter = :exporter GROUP BY hs6
+        SELECT hs6, max(exporter_rca) AS strength, count(*) AS n
+        FROM gold_market_opportunity WHERE :mode = 'sell' AND exporter = :exporter GROUP BY hs6
+        UNION ALL
+        SELECT hs6, sum(exports_usd), count(*)
+        FROM gold_supplier_landscape WHERE :mode = 'buy' GROUP BY hs6
     )
-    SELECT p.hs6, p.description, s.markets,
+    SELECT p.hs6, p.description, s.n,
         cardinality(array(
             SELECT unnest(tsvector_to_array(q.qv))
             INTERSECT SELECT unnest(tsvector_to_array(to_tsvector('english', p.description)))
@@ -36,7 +50,8 @@ _WORD_SEARCH = text("""
         cardinality(tsvector_to_array(q.qv)) AS wanted
     FROM ref_product p JOIN strength s USING (hs6), query q
     WHERE to_tsvector('english', p.description) @@ q.tq
-    ORDER BY matched DESC, ts_rank_cd(to_tsvector('english', p.description), q.tq) DESC, s.rca DESC
+    ORDER BY matched DESC, ts_rank_cd(to_tsvector('english', p.description), q.tq) DESC,
+             s.strength DESC
     LIMIT :limit
 """)
 
@@ -46,33 +61,45 @@ _WORD_SEARCH = text("""
 FUZZY_THRESHOLD = 0.65
 _FUZZY_SEARCH = text("""
     WITH strength AS (
-        SELECT hs6, max(exporter_rca) AS rca, count(*) AS markets
-        FROM gold_market_opportunity WHERE exporter = :exporter GROUP BY hs6
+        SELECT hs6, max(exporter_rca) AS strength, count(*) AS n
+        FROM gold_market_opportunity WHERE :mode = 'sell' AND exporter = :exporter GROUP BY hs6
+        UNION ALL
+        SELECT hs6, sum(exports_usd), count(*)
+        FROM gold_supplier_landscape WHERE :mode = 'buy' GROUP BY hs6
     )
-    SELECT p.hs6, p.description, s.markets, 0 AS matched, 1 AS wanted
+    SELECT p.hs6, p.description, s.n, 0 AS matched, 1 AS wanted
     FROM ref_product p JOIN strength s USING (hs6)
     WHERE word_similarity(:q, p.description) >= :threshold
-    ORDER BY word_similarity(:q, p.description) DESC, s.rca DESC
+    ORDER BY word_similarity(:q, p.description) DESC, s.strength DESC
     LIMIT :limit
 """)
 
 # Code prefix search ("6302" -> every 6302xx product).
 _CODE_SEARCH = text("""
-    SELECT p.hs6, p.description, count(*) AS markets, 1 AS matched, 1 AS wanted
-    FROM ref_product p JOIN gold_market_opportunity g ON g.hs6 = p.hs6 AND g.exporter = :exporter
+    WITH strength AS (
+        SELECT hs6, count(*) AS n
+        FROM gold_market_opportunity WHERE :mode = 'sell' AND exporter = :exporter GROUP BY hs6
+        UNION ALL
+        SELECT hs6, count(*)
+        FROM gold_supplier_landscape WHERE :mode = 'buy' GROUP BY hs6
+    )
+    SELECT p.hs6, p.description, s.n, 1 AS matched, 1 AS wanted
+    FROM ref_product p JOIN strength s USING (hs6)
     WHERE p.hs6 LIKE :q || '%'
-    GROUP BY p.hs6, p.description
     ORDER BY p.hs6
     LIMIT :limit
 """)
 
 
 async def search_products(
-    session: AsyncSession, *, q: str, exporter: str, limit: int
+    session: AsyncSession, *, q: str, limit: int, exporter: str | None = None
 ) -> Sequence[Row[Any]]:
-    """Rows of (hs6, description, markets, matched, wanted): `matched` of the `wanted`
-    query words appear in the description (typo matches report 0 of 1)."""
-    params = {"q": q, "exporter": exporter, "limit": limit}
+    """Rows of (hs6, description, n, matched, wanted).
+
+    With `exporter`: sell mode (n = ranked markets). Without: buy mode (n = supplier
+    countries). `matched` of the `wanted` query words appear in the description.
+    """
+    params = {"q": q, "limit": limit, "mode": "sell" if exporter else "buy", "exporter": exporter}
     if q.isdigit():
         return (await session.execute(_CODE_SEARCH, params)).all()
     rows = (await session.execute(_WORD_SEARCH, params)).all()
@@ -255,3 +282,30 @@ async def market_suppliers(
         .order_by(MarketSupplier.value_usd.desc())
     )
     return (await session.execute(query)).all()
+
+
+async def landscape(session: AsyncSession, hs6: str) -> Sequence[Row[SupplierLandscape, str]]:
+    """The world's largest exporters of a product, with country names, by rank."""
+    query = (
+        select(SupplierLandscape, Country.name.label("supplier_name"))
+        .join(Country, Country.code == SupplierLandscape.supplier)
+        .where(SupplierLandscape.hs6 == hs6)
+        .order_by(SupplierLandscape.rank)
+    )
+    return (await session.execute(query)).all()
+
+
+async def landscape_counts(
+    session: AsyncSession, products: Sequence[str] | None = None
+) -> dict[str, int]:
+    """Listed supplier countries per product: all products, or just `products`."""
+    if products is not None and not products:
+        return {}
+    query = select(SupplierLandscape.hs6, func.count()).group_by(SupplierLandscape.hs6)
+    if products is not None:
+        query = query.where(SupplierLandscape.hs6.in_(products))
+    return {hs6: count for hs6, count in (await session.execute(query)).all()}  # noqa: C416
+
+
+async def latest_data_year(session: AsyncSession) -> int | None:
+    return await session.scalar(select(func.max(MarketOpportunity.data_year)))
