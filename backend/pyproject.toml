@@ -1,0 +1,39 @@
+[project]
+name = "whitespace-api"
+version = "0.1.0"
+description = "Whitespace HTTP API (FastAPI)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "whitespace-shared",
+    # web
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    # database
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "pgvector>=0.3",
+    # http client (outbound calls, tests)
+    "httpx>=0.28",
+    # AI layer: provider-agnostic chat models + agent graph
+    "langchain-core>=0.3",
+    "langgraph>=0.2",
+    "langchain-google-genai>=2.0",
+    "langchain-groq>=0.2",
+    "langchain-ollama>=0.2",
+    "pwdlib[argon2]>=0.2",
+    "pyjwt[crypto]>=2.10",
+    "email-validator>=2.2",
+]
+
+[project.scripts]
+whitespace-api = "whitespace_api.main:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/whitespace_api"]

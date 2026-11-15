@@ -1,0 +1,15 @@
+# Context for backend/Dockerfile (repo root). Keep it small.
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+.git
+.github
+.claude
+.env
+.env.*
+data
+docs
+frontend
+**/tests

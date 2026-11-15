@@ -1,0 +1,66 @@
+# uv workspace root. Not a package itself: it ties backend, pipeline and shared
+# together so they share one lockfile (uv.lock) and one virtualenv in development.
+[project]
+name = "whitespace"
+version = "0.1.0"
+description = "Whitespace monorepo (workspace root)"
+requires-python = ">=3.12,<3.13"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["backend", "pipeline", "shared"]
+
+[tool.uv.sources]
+whitespace-shared = { workspace = true }
+whitespace-api = { workspace = true }
+whitespace-pipeline = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "whitespace-api",
+    "whitespace-pipeline",
+    "whitespace-shared",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pre-commit>=4.0",
+]
+
+# ---------- Ruff (lint + format) ----------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["frontend", "**/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "ASYNC", "S"]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.isort]
+known-first-party = ["whitespace_api", "whitespace_pipeline", "whitespace_shared"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S"]
+
+# ---------- mypy ----------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["backend/src", "pipeline/src", "shared/src"]
+explicit_package_bases = true
+mypy_path = ["backend/src", "pipeline/src", "shared/src"]
+
+[[tool.mypy.overrides]]
+module = ["langchain_google_genai.*", "langchain_groq.*", "langchain_ollama.*", "duckdb.*"]
+ignore_missing_imports = true
+
+# ---------- pytest ----------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["backend/tests", "pipeline/tests", "shared/tests"]
+addopts = "--import-mode=importlib"

@@ -1,0 +1,94 @@
+# Local stack:  docker compose up --build
+# Host ports come from .env and avoid 3000/8000/5434/5678/6380 (the sumhuman project; 5434 is its Postgres).
+name: whitespace
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: whitespace_db
+    environment:
+      POSTGRES_USER: whitespace
+      POSTGRES_PASSWORD: whitespace
+      POSTGRES_DB: whitespace
+    ports:
+      - "${DB_PORT:-5440}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whitespace -d whitespace"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: applies database migrations, then exits.
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: whitespace-backend:local
+    container_name: whitespace_migrate
+    working_dir: /app/backend
+    command: ["alembic", "upgrade", "head"]
+    environment: &api-env
+      DATABASE_URL: postgresql+asyncpg://whitespace:whitespace@db:5432/whitespace
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: whitespace-backend:local
+    container_name: whitespace_backend
+    environment:
+      <<: *api-env
+      CORS_ORIGINS: http://localhost:${WEB_PORT:-3400}
+      PUBLIC_APP_URL: http://localhost:${WEB_PORT:-3400}
+      OLLAMA_BASE_URL: http://ollama:11434
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${API_PORT:-8400}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: frontend
+      args:
+        # The web server forwards /api/* to the backend over the Docker network.
+        API_INTERNAL_URL: http://api:8000
+    image: whitespace-frontend:local
+    container_name: whitespace_frontend
+    ports:
+      - "${WEB_PORT:-3400}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Optional local LLM for development only. Off by default; start with `make ollama`.
+  # Capped so it can't slow down other work on this laptop (4-core CPU, no GPU).
+  ollama:
+    image: ollama/ollama:latest
+    container_name: whitespace_ollama
+    profiles: ["ollama"]
+    ports:
+      - "${OLLAMA_PORT:-11444}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 5m         # unload the model from RAM after 5 idle minutes
+      OLLAMA_MAX_LOADED_MODELS: 1   # never hold two models in memory
+      OLLAMA_NUM_PARALLEL: 1        # one request at a time
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 6g
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  db-data:
+  ollama-data:
