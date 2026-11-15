@@ -443,10 +443,1018 @@
           }
         }
       }
+    },
+    "/api/v1/countries/exporters": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Exporters",
+        "description": "Exporter countries we have ranked markets for.",
+        "operationId": "exporters_api_v1_countries_exporters_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryOut"
+                  },
+                  "title": "Response Exporters Api V1 Countries Exporters Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/countries": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Countries",
+        "description": "Every country in the trade data (e.g. for \"where do you already sell?\").",
+        "operationId": "countries_api_v1_countries_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryOut"
+                  },
+                  "title": "Response Countries Api V1 Countries Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/search": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Search Products",
+        "description": "Products matching everyday words, limited to ones with markets for this exporter.",
+        "operationId": "search_products_api_v1_products_search_get",
+        "parameters": [
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Words or an HS code",
+              "title": "Q"
+            },
+            "description": "Words or an HS code"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductMatch"
+                  },
+                  "title": "Response Search Products Api V1 Products Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Ranked Markets",
+        "description": "Markets ranked by opportunity, each with a label and three reasons.",
+        "operationId": "ranked_markets_api_v1_markets_get",
+        "parameters": [
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets/{market}/recent": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Recent Movement",
+        "description": "Monthly imports since the annual data ends (EU members and the US only).",
+        "operationId": "recent_movement_api_v1_markets__market__recent_get",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentMovement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets/{market}": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Market Detail",
+        "description": "One market in depth: the scores, the reasons, and who supplies it.",
+        "operationId": "market_detail_api_v1_markets__market__get",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/niches": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Niches",
+        "description": "Plain-language product groups (e.g. \"Socks & hosiery\"), by sector.",
+        "operationId": "niches_api_v1_niches_get",
+        "parameters": [
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectorOut"
+                  },
+                  "title": "Response Niches Api V1 Niches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/niches/{slug}": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Niche Detail",
+        "description": "A niche's products for this exporter, each with its best market.",
+        "operationId": "niche_detail_api_v1_niches__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,40}$",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/profile": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Get Profile",
+        "operationId": "get_profile_api_v1_me_profile_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Save Profile",
+        "description": "Create or replace the profile (onboarding and \"edit preferences\" both use this).",
+        "operationId": "save_profile_api_v1_me_profile_put",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/dashboard": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Dashboard",
+        "description": "The best new markets for each of the user's products.",
+        "operationId": "dashboard_api_v1_me_dashboard_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CountryOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "CountryOut"
+      },
+      "Dashboard": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/ProfileOut"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataWindow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOpportunities"
+            },
+            "type": "array",
+            "title": "Products"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "data",
+          "products"
+        ],
+        "title": "Dashboard"
+      },
+      "DataWindow": {
+        "properties": {
+          "start_year": {
+            "type": "integer",
+            "title": "Start Year"
+          },
+          "end_year": {
+            "type": "integer",
+            "title": "End Year"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_year",
+          "end_year",
+          "version"
+        ],
+        "title": "DataWindow"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -500,6 +1508,447 @@
         ],
         "title": "LoginRequest"
       },
+      "MarketDetail": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DataWindow"
+          },
+          "market": {
+            "$ref": "#/components/schemas/MarketItem"
+          },
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierOut"
+            },
+            "type": "array",
+            "title": "Suppliers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "product",
+          "data",
+          "market",
+          "suppliers"
+        ],
+        "title": "MarketDetail"
+      },
+      "MarketItem": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "Strong",
+              "Good",
+              "Watch"
+            ],
+            "title": "Label"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "market_imports_usd": {
+            "type": "number",
+            "title": "Market Imports Usd"
+          },
+          "import_growth_3y": {
+            "type": "number",
+            "title": "Import Growth 3Y"
+          },
+          "exporter_share": {
+            "type": "number",
+            "title": "Exporter Share"
+          },
+          "top_rival": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "top_rival_share_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Rival Share Change"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Three plain-language reasons, from the data"
+          },
+          "already_selling": {
+            "type": "boolean",
+            "title": "Already Selling",
+            "description": "The user said they already sell to this market",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "market",
+          "label",
+          "score",
+          "market_imports_usd",
+          "import_growth_3y",
+          "exporter_share",
+          "top_rival",
+          "top_rival_share_change",
+          "reasons"
+        ],
+        "title": "MarketItem"
+      },
+      "MarketsPage": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataWindow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None when there are no ranked markets"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MarketItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "product",
+          "data",
+          "total",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "MarketsPage"
+      },
+      "MonthPoint": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month",
+            "description": "YYYY-MM"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total",
+            "description": "Imports from all suppliers"
+          },
+          "exporter": {
+            "type": "number",
+            "title": "Exporter",
+            "description": "Imports from the exporter country"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "total",
+          "exporter"
+        ],
+        "title": "MonthPoint"
+      },
+      "NicheDetail": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/NicheProduct"
+            },
+            "type": "array",
+            "title": "Products"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "sector",
+          "exporter",
+          "products"
+        ],
+        "title": "NicheDetail"
+      },
+      "NicheProduct": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "markets": {
+            "type": "integer",
+            "title": "Markets"
+          },
+          "best": {
+            "$ref": "#/components/schemas/MarketItem",
+            "description": "The top-ranked market for this product"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "markets",
+          "best"
+        ],
+        "title": "NicheProduct"
+      },
+      "NicheSummary": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "products": {
+            "type": "integer",
+            "title": "Products",
+            "description": "Products in this niche with ranked markets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "products"
+        ],
+        "title": "NicheSummary"
+      },
+      "ProductMatch": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "markets": {
+            "type": "integer",
+            "title": "Markets",
+            "description": "Ranked markets available for this exporter"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "description",
+          "markets"
+        ],
+        "title": "ProductMatch"
+      },
+      "ProductOpportunities": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "total_markets": {
+            "type": "integer",
+            "title": "Total Markets",
+            "description": "All ranked markets for this product"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/MarketItem"
+            },
+            "type": "array",
+            "title": "Top",
+            "description": "Best new markets (excluding current ones)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "total_markets",
+          "top"
+        ],
+        "title": "ProductOpportunities"
+      },
+      "ProductOut": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "description"
+        ],
+        "title": "ProductOut"
+      },
+      "ProfileIn": {
+        "properties": {
+          "exporter": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Exporter"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "exporter",
+              "consultant",
+              "agency",
+              "other"
+            ],
+            "title": "Role"
+          },
+          "products": {
+            "items": {
+              "type": "string",
+              "maxLength": 6,
+              "minLength": 6,
+              "pattern": "^\\d{6}$"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Products"
+          },
+          "current_markets": {
+            "items": {
+              "type": "string",
+              "maxLength": 3,
+              "minLength": 3,
+              "pattern": "^[A-Z][A-Z0-9]{2}$"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Current Markets",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "role",
+          "products"
+        ],
+        "title": "ProfileIn"
+      },
+      "ProfileOut": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "exporter",
+              "consultant",
+              "agency",
+              "other"
+            ],
+            "title": "Role"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "current_markets": {
+            "items": {
+              "$ref": "#/components/schemas/CountryOut"
+            },
+            "type": "array",
+            "title": "Current Markets"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "role",
+          "products",
+          "current_markets",
+          "updated_at"
+        ],
+        "title": "ProfileOut"
+      },
       "ProvidersOut": {
         "properties": {
           "password": {
@@ -544,6 +1993,136 @@
         ],
         "title": "ReadinessResponse"
       },
+      "RecentMovement": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Human-readable source name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "latest_month": {
+            "type": "string",
+            "title": "Latest Month"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MonthPoint"
+            },
+            "type": "array",
+            "title": "Months",
+            "description": "Up to 24 months, oldest first"
+          },
+          "change_12m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change 12M",
+            "description": "Last 12 months vs the 12 before (None if fewer than 24 months)"
+          },
+          "exporter_share_recent": {
+            "type": "number",
+            "title": "Exporter Share Recent"
+          },
+          "exporter_share_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter Share Before"
+          },
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/RecentSupplier"
+            },
+            "type": "array",
+            "title": "Suppliers",
+            "description": "Largest suppliers, last 12 months"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "How this source differs from the annual data"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True if the source was unreachable and this is older"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "currency",
+          "latest_month",
+          "months",
+          "change_12m",
+          "exporter_share_recent",
+          "exporter_share_before",
+          "suppliers",
+          "note",
+          "fetched_at",
+          "stale"
+        ],
+        "title": "RecentMovement",
+        "description": "Monthly customs data newer than the annual rankings, for EU and US markets."
+      },
+      "RecentSupplier": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "share_recent": {
+            "type": "number",
+            "title": "Share Recent",
+            "description": "Share of the last 12 months"
+          },
+          "share_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Before",
+            "description": "Share of the 12 months before"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "share_recent",
+          "share_before"
+        ],
+        "title": "RecentSupplier"
+      },
       "RegisterRequest": {
         "properties": {
           "email": {
@@ -571,6 +2150,54 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "SectorOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "niches": {
+            "items": {
+              "$ref": "#/components/schemas/NicheSummary"
+            },
+            "type": "array",
+            "title": "Niches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "niches"
+        ],
+        "title": "SectorOut"
+      },
+      "SupplierOut": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "value_usd": {
+            "type": "number",
+            "title": "Value Usd"
+          },
+          "share_start": {
+            "type": "number",
+            "title": "Share Start"
+          },
+          "share_end": {
+            "type": "number",
+            "title": "Share End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "value_usd",
+          "share_start",
+          "share_end"
+        ],
+        "title": "SupplierOut"
       },
       "UserOut": {
         "properties": {

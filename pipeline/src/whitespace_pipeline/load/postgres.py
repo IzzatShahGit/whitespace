@@ -16,7 +16,12 @@ import polars as pl
 import psycopg
 
 from whitespace_pipeline.config import PipelineSettings
-from whitespace_shared.gold import COUNTRY_TABLE, MARKET_OPPORTUNITY_TABLE, PRODUCT_TABLE
+from whitespace_shared.gold import (
+    COUNTRY_TABLE,
+    MARKET_OPPORTUNITY_TABLE,
+    MARKET_SUPPLIER_TABLE,
+    PRODUCT_TABLE,
+)
 
 log = logging.getLogger(__name__)
 
@@ -39,15 +44,19 @@ def _copy(cur: psycopg.Cursor[Any], table: str, frame: pl.DataFrame) -> None:
 
 
 def tables(gold_dir: Path) -> dict[str, pl.DataFrame]:
-    countries = pl.read_parquet(gold_dir / "countries.parquet").select(
-        pl.col("iso3").alias("code"), pl.col("name").str.slice(0, 120)
+    # Silver sorts current entries before historic ones, so "first" is the current name.
+    countries = (
+        pl.read_parquet(gold_dir / "countries.parquet")
+        .unique("iso3", keep="first", maintain_order=True)
+        .select(pl.col("iso3").alias("code"), pl.col("name").str.slice(0, 120))
     )
-    products = pl.read_parquet(gold_dir / "products.parquet").unique("hs6")
-    opportunities = pl.read_parquet(gold_dir / "market_opportunity.parquet")
     return {
-        COUNTRY_TABLE: countries.unique("code"),
-        PRODUCT_TABLE: products,
-        MARKET_OPPORTUNITY_TABLE: opportunities,
+        COUNTRY_TABLE: countries,
+        PRODUCT_TABLE: pl.read_parquet(gold_dir / "products.parquet").unique(
+            "hs6", keep="first", maintain_order=True
+        ),
+        MARKET_OPPORTUNITY_TABLE: pl.read_parquet(gold_dir / "market_opportunity.parquet"),
+        MARKET_SUPPLIER_TABLE: pl.read_parquet(gold_dir / "market_supplier.parquet"),
     }
 
 

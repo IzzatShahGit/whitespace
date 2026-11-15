@@ -18,7 +18,9 @@ from pathlib import Path
 import polars as pl
 
 from whitespace_pipeline.config import PipelineSettings
+from whitespace_pipeline.io import write_parquet_atomic
 from whitespace_pipeline.sources import baci as source
+from whitespace_shared.countries import display_name
 
 log = logging.getLogger(__name__)
 
@@ -39,15 +41,27 @@ def silver_root(settings: PipelineSettings) -> Path:
 
 
 def countries(bronze: Path) -> pl.DataFrame:
+    """BACI numeric code -> ISO code and display name.
+
+    Several numeric codes can share one ISO code (e.g. a historic and a current
+    entry); `historic` lets later stages prefer the current one deterministically.
+    """
+    raw = pl.read_parquet(bronze / "countries.parquet").select(
+        pl.col("country_code").alias("code"),
+        pl.col("country_iso3").str.strip_chars().str.to_uppercase().alias("iso3"),
+        pl.col("country_name").str.strip_chars().alias("raw_name"),
+    )
     return (
-        pl.read_parquet(bronze / "countries.parquet")
-        .select(
-            pl.col("country_code").alias("code"),
-            pl.col("country_iso3").str.strip_chars().str.to_uppercase().alias("iso3"),
-            pl.col("country_name").str.strip_chars().alias("name"),
+        raw.filter(pl.col("iso3").str.len_chars() == 3)
+        .unique("code", keep="first", maintain_order=True)
+        .with_columns(
+            pl.struct("iso3", "raw_name")
+            .map_elements(lambda r: display_name(r["iso3"], r["raw_name"]), return_dtype=pl.Utf8)
+            .alias("name"),
+            pl.col("raw_name").str.contains(r"\(\.\.\.\d{4}\)$").alias("historic"),
         )
-        .filter(pl.col("iso3").str.len_chars() == 3)
-        .unique("code")
+        .select("code", "iso3", "name", "historic")
+        .sort("iso3", "historic", "code")
     )
 
 
@@ -82,18 +96,15 @@ def run(settings: PipelineSettings) -> Path:
     if source.bronze_years(settings) is None:
         raise RuntimeError("Bronze is missing; run `ws-pipeline bronze` first")
     out = silver_root(settings)
-    out.mkdir(parents=True, exist_ok=True)
 
     country_codes = countries(bronze)
-    country_codes.write_parquet(out / "countries.parquet")
-    products(bronze, settings.baci_hs_revision).write_parquet(out / "products.parquet")
+    write_parquet_atomic(country_codes, out / "countries.parquet")
+    write_parquet_atomic(products(bronze, settings.baci_hs_revision), out / "products.parquet")
 
     raw = pl.scan_parquet(bronze / "flows" / "year=*" / "part-0.parquet")
     flows = clean_flows(raw, country_codes).collect()
     if flows.schema != FLOWS_SCHEMA:
         raise RuntimeError(f"Silver flows schema drifted: {flows.schema}")
-    tmp = out / "flows.parquet.tmp"
-    flows.write_parquet(tmp, compression="zstd")
-    tmp.rename(out / "flows.parquet")
+    write_parquet_atomic(flows, out / "flows.parquet")
     log.info("silver: %s flows, %s countries", f"{flows.height:,}", country_codes.height)
     return out

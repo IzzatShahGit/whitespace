@@ -5,11 +5,20 @@ Table names come from the shared contract, so neither side hard-codes them.
 
 from __future__ import annotations
 
-from sqlalchemy import CHAR, Float, Index, Integer, SmallInteger, String, Text
+from sqlalchemy import CHAR, Float, Index, Integer, SmallInteger, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from whitespace_api.models.base import Base
-from whitespace_shared.gold import COUNTRY_TABLE, MARKET_OPPORTUNITY_TABLE, PRODUCT_TABLE
+from whitespace_shared.gold import (
+    COUNTRY_TABLE,
+    MARKET_OPPORTUNITY_TABLE,
+    MARKET_SUPPLIER_TABLE,
+    PRODUCT_TABLE,
+)
+
+# Word search uses Postgres' English config, which stems words ("sheets" -> "sheet").
+# Queries must use this exact expression for the index to apply.
+PRODUCT_TSVECTOR_SQL = "to_tsvector('english', description)"
 
 
 class Country(Base):
@@ -27,7 +36,13 @@ class Product(Base):
     hs_revision: Mapped[str] = mapped_column(String(8))
 
     __table_args__ = (
-        # Fuzzy search on product names ("towels" -> "Towels, terry...").
+        # Word search ("cotton bed sheets" -> "Bed linen: of cotton").
+        Index(
+            "ix_ref_product_description_fts",
+            text(PRODUCT_TSVECTOR_SQL),
+            postgresql_using="gin",
+        ),
+        # Typo-tolerant fallback ("towles" -> "towels").
         Index(
             "ix_ref_product_description_trgm",
             "description",
@@ -58,3 +73,14 @@ class MarketOpportunity(Base):
         # The main query: "ranked markets for this exporter and product".
         Index("ix_gold_mo_exporter_hs6_rank", "exporter", "hs6", "rank"),
     )
+
+
+class MarketSupplier(Base):
+    __tablename__ = MARKET_SUPPLIER_TABLE
+
+    market: Mapped[str] = mapped_column(CHAR(3), primary_key=True)
+    hs6: Mapped[str] = mapped_column(CHAR(6), primary_key=True)
+    supplier: Mapped[str] = mapped_column(CHAR(3), primary_key=True)
+    value_usd: Mapped[float] = mapped_column(Float)
+    share_start: Mapped[float] = mapped_column(Float)
+    share_end: Mapped[float] = mapped_column(Float)

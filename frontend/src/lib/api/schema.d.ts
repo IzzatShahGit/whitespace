@@ -189,10 +189,234 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/countries/exporters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exporters
+         * @description Exporter countries we have ranked markets for.
+         */
+        get: operations["exporters_api_v1_countries_exporters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Countries
+         * @description Every country in the trade data (e.g. for "where do you already sell?").
+         */
+        get: operations["countries_api_v1_countries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Products
+         * @description Products matching everyday words, limited to ones with markets for this exporter.
+         */
+        get: operations["search_products_api_v1_products_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ranked Markets
+         * @description Markets ranked by opportunity, each with a label and three reasons.
+         */
+        get: operations["ranked_markets_api_v1_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/markets/{market}/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recent Movement
+         * @description Monthly imports since the annual data ends (EU members and the US only).
+         */
+        get: operations["recent_movement_api_v1_markets__market__recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/markets/{market}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Market Detail
+         * @description One market in depth: the scores, the reasons, and who supplies it.
+         */
+        get: operations["market_detail_api_v1_markets__market__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/niches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Niches
+         * @description Plain-language product groups (e.g. "Socks & hosiery"), by sector.
+         */
+        get: operations["niches_api_v1_niches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/niches/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Niche Detail
+         * @description A niche's products for this exporter, each with its best market.
+         */
+        get: operations["niche_detail_api_v1_niches__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_v1_me_profile_get"];
+        /**
+         * Save Profile
+         * @description Create or replace the profile (onboarding and "edit preferences" both use this).
+         */
+        put: operations["save_profile_api_v1_me_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard
+         * @description The best new markets for each of the user's products.
+         */
+        get: operations["dashboard_api_v1_me_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CountryOut */
+        CountryOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+        };
+        /** Dashboard */
+        Dashboard: {
+            profile: components["schemas"]["ProfileOut"];
+            data: components["schemas"]["DataWindow"] | null;
+            /** Products */
+            products: components["schemas"]["ProductOpportunities"][];
+        };
+        /** DataWindow */
+        DataWindow: {
+            /** Start Year */
+            start_year: number;
+            /** End Year */
+            end_year: number;
+            /** Version */
+            version: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -218,6 +442,181 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MarketDetail */
+        MarketDetail: {
+            exporter: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            data: components["schemas"]["DataWindow"];
+            market: components["schemas"]["MarketItem"];
+            /** Suppliers */
+            suppliers: components["schemas"]["SupplierOut"][];
+        };
+        /** MarketItem */
+        MarketItem: {
+            /** Rank */
+            rank: number;
+            market: components["schemas"]["CountryOut"];
+            /**
+             * Label
+             * @enum {string}
+             */
+            label: "Strong" | "Good" | "Watch";
+            /** Score */
+            score: number;
+            /** Market Imports Usd */
+            market_imports_usd: number;
+            /** Import Growth 3Y */
+            import_growth_3y: number;
+            /** Exporter Share */
+            exporter_share: number;
+            top_rival: components["schemas"]["CountryOut"] | null;
+            /** Top Rival Share Change */
+            top_rival_share_change: number | null;
+            /**
+             * Reasons
+             * @description Three plain-language reasons, from the data
+             */
+            reasons: string[];
+            /**
+             * Already Selling
+             * @description The user said they already sell to this market
+             * @default false
+             */
+            already_selling: boolean;
+        };
+        /** MarketsPage */
+        MarketsPage: {
+            exporter: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            /** @description None when there are no ranked markets */
+            data: components["schemas"]["DataWindow"] | null;
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Items */
+            items: components["schemas"]["MarketItem"][];
+        };
+        /** MonthPoint */
+        MonthPoint: {
+            /**
+             * Month
+             * @description YYYY-MM
+             */
+            month: string;
+            /**
+             * Total
+             * @description Imports from all suppliers
+             */
+            total: number;
+            /**
+             * Exporter
+             * @description Imports from the exporter country
+             */
+            exporter: number;
+        };
+        /** NicheDetail */
+        NicheDetail: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Sector */
+            sector: string;
+            exporter: components["schemas"]["CountryOut"];
+            /** Products */
+            products: components["schemas"]["NicheProduct"][];
+        };
+        /** NicheProduct */
+        NicheProduct: {
+            product: components["schemas"]["ProductOut"];
+            /** Markets */
+            markets: number;
+            /** @description The top-ranked market for this product */
+            best: components["schemas"]["MarketItem"];
+        };
+        /** NicheSummary */
+        NicheSummary: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /**
+             * Products
+             * @description Products in this niche with ranked markets
+             */
+            products: number;
+        };
+        /** ProductMatch */
+        ProductMatch: {
+            /** Hs6 */
+            hs6: string;
+            /** Description */
+            description: string;
+            /**
+             * Markets
+             * @description Ranked markets available for this exporter
+             */
+            markets: number;
+        };
+        /** ProductOpportunities */
+        ProductOpportunities: {
+            product: components["schemas"]["ProductOut"];
+            /**
+             * Total Markets
+             * @description All ranked markets for this product
+             */
+            total_markets: number;
+            /**
+             * Top
+             * @description Best new markets (excluding current ones)
+             */
+            top: components["schemas"]["MarketItem"][];
+        };
+        /** ProductOut */
+        ProductOut: {
+            /** Hs6 */
+            hs6: string;
+            /** Description */
+            description: string;
+        };
+        /** ProfileIn */
+        ProfileIn: {
+            /** Exporter */
+            exporter: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "exporter" | "consultant" | "agency" | "other";
+            /** Products */
+            products: string[];
+            /**
+             * Current Markets
+             * @default []
+             */
+            current_markets: string[];
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            exporter: components["schemas"]["CountryOut"];
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "exporter" | "consultant" | "agency" | "other";
+            /** Products */
+            products: components["schemas"]["ProductOut"][];
+            /** Current Markets */
+            current_markets: components["schemas"]["CountryOut"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** ProvidersOut */
         ProvidersOut: {
             /** Password */
@@ -238,6 +637,70 @@ export interface components {
              */
             database: "up" | "down";
         };
+        /**
+         * RecentMovement
+         * @description Monthly customs data newer than the annual rankings, for EU and US markets.
+         */
+        RecentMovement: {
+            /**
+             * Source
+             * @description Human-readable source name
+             */
+            source: string;
+            /** Currency */
+            currency: string;
+            /** Latest Month */
+            latest_month: string;
+            /**
+             * Months
+             * @description Up to 24 months, oldest first
+             */
+            months: components["schemas"]["MonthPoint"][];
+            /**
+             * Change 12M
+             * @description Last 12 months vs the 12 before (None if fewer than 24 months)
+             */
+            change_12m: number | null;
+            /** Exporter Share Recent */
+            exporter_share_recent: number;
+            /** Exporter Share Before */
+            exporter_share_before: number | null;
+            /**
+             * Suppliers
+             * @description Largest suppliers, last 12 months
+             */
+            suppliers: components["schemas"]["RecentSupplier"][];
+            /**
+             * Note
+             * @description How this source differs from the annual data
+             */
+            note: string | null;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /**
+             * Stale
+             * @description True if the source was unreachable and this is older
+             */
+            stale: boolean;
+        };
+        /** RecentSupplier */
+        RecentSupplier: {
+            /** Name */
+            name: string;
+            /**
+             * Share Recent
+             * @description Share of the last 12 months
+             */
+            share_recent: number;
+            /**
+             * Share Before
+             * @description Share of the 12 months before
+             */
+            share_before: number | null;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /**
@@ -249,6 +712,23 @@ export interface components {
             full_name: string;
             /** Password */
             password: string;
+        };
+        /** SectorOut */
+        SectorOut: {
+            /** Name */
+            name: string;
+            /** Niches */
+            niches: components["schemas"]["NicheSummary"][];
+        };
+        /** SupplierOut */
+        SupplierOut: {
+            country: components["schemas"]["CountryOut"];
+            /** Value Usd */
+            value_usd: number;
+            /** Share Start */
+            share_start: number;
+            /** Share End */
+            share_end: number;
         };
         /** UserOut */
         UserOut: {
@@ -563,6 +1043,408 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exporters_api_v1_countries_exporters_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    countries_api_v1_countries_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_products_api_v1_products_search_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Words or an HS code */
+                q: string;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductMatch"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ranked_markets_api_v1_markets_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Six-digit product code */
+                hs6: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recent_movement_api_v1_markets__market__recent_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Six-digit product code */
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentMovement"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    market_detail_api_v1_markets__market__get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Six-digit product code */
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    niches_api_v1_niches_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectorOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    niche_detail_api_v1_niches__slug__get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_me_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_profile_api_v1_me_profile_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_api_v1_me_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
             };
             /** @description Validation Error */
             422: {

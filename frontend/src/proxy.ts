@@ -6,7 +6,8 @@ export function proxy(request: NextRequest) {
   const signedIn = request.cookies.has("ws_session");
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/app") && !signedIn) {
+  const protectedPath = pathname.startsWith("/app") || pathname.startsWith("/onboarding");
+  if (protectedPath && !signedIn) {
     const url = new URL("/login", request.url);
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
@@ -18,5 +19,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/login", "/signup"],
+  matcher: ["/app/:path*", "/onboarding", "/login", "/signup"],
 };

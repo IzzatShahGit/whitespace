@@ -27,16 +27,16 @@ from pathlib import Path
 import polars as pl
 
 from whitespace_pipeline.config import PipelineSettings
+from whitespace_pipeline.io import validate_against, write_parquet_atomic
 from whitespace_pipeline.silver import baci as silver
-from whitespace_shared.gold import MarketOpportunity
+from whitespace_shared.gold import MarketOpportunity, MarketSupplier
 
 log = logging.getLogger(__name__)
 
 MIN_MARKET_IMPORTS_USD = 10_000_000
 MIN_RCA = 1.0
 GROWTH_YEARS = 3
-
-GOLD_COLUMNS = list(MarketOpportunity.model_fields)
+TOP_SUPPLIERS = 6
 
 
 def _pct(col: str) -> pl.Expr:
@@ -172,12 +172,42 @@ def compute(flows: pl.DataFrame, exporters: list[str], data_version: str) -> pl.
     ).sort("exporter", "hs6", "rank")
 
 
-def validate(frame: pl.DataFrame, sample: int = 2000) -> None:
-    """Check columns, then a sample of rows, against the shared contract."""
-    if frame.columns != GOLD_COLUMNS:
-        raise ValueError(f"Gold columns {frame.columns} != contract {GOLD_COLUMNS}")
-    for row in frame.sample(min(sample, frame.height), seed=0).iter_rows(named=True):
-        MarketOpportunity(**row)
+def compute_suppliers(
+    flows: pl.DataFrame, opportunities: pl.DataFrame, top_n: int = TOP_SUPPLIERS
+) -> pl.DataFrame:
+    """The largest suppliers (last year) of each ranked market, with start and end shares.
+
+    Only (market, product) pairs that appear in `opportunities` are computed.
+    """
+    t3 = int(opportunities["data_year"].max())  # type: ignore[arg-type]
+    t0 = t3 - GROWTH_YEARS
+    pairs = opportunities.select(pl.col("market").alias("importer"), "hs6").unique()
+    window = flows.filter(pl.col("year").is_in([t0, t3])).join(
+        pairs, on=["importer", "hs6"], how="semi"
+    )
+    by_supplier = window.group_by("importer", "hs6", "exporter").agg(
+        pl.col("value_usd").filter(pl.col("year") == t0).sum().alias("v_t0"),
+        pl.col("value_usd").filter(pl.col("year") == t3).sum().alias("v_t3"),
+    )
+    return (
+        by_supplier.with_columns(
+            share_start=pl.col("v_t0") / pl.col("v_t0").sum().over("importer", "hs6"),
+            share_end=pl.col("v_t3") / pl.col("v_t3").sum().over("importer", "hs6"),
+        )
+        .filter(pl.col("v_t3") > 0)
+        .sort("v_t3", descending=True)
+        .group_by("importer", "hs6", maintain_order=True)
+        .head(top_n)
+        .select(
+            pl.col("importer").alias("market"),
+            "hs6",
+            pl.col("exporter").alias("supplier"),
+            pl.col("v_t3").alias("value_usd"),
+            pl.col("share_start").fill_nan(0).fill_null(0).clip(0, 1),
+            pl.col("share_end").clip(0, 1),
+        )
+        .sort("market", "hs6", "value_usd", descending=[False, False, True])
+    )
 
 
 def run(settings: PipelineSettings) -> Path:
@@ -185,19 +215,20 @@ def run(settings: PipelineSettings) -> Path:
     flows = pl.read_parquet(src / "flows.parquet")
     version = f"BACI-{settings.baci_hs_revision}-V{settings.baci_version}"
     gold = compute(flows, settings.exporters, version)
-    validate(gold)
+    validate_against(gold, MarketOpportunity)
+    suppliers = compute_suppliers(flows, gold)
+    validate_against(suppliers, MarketSupplier)
 
     out = settings.gold_dir / f"V{settings.baci_version}"
-    out.mkdir(parents=True, exist_ok=True)
-    tmp = out / "market_opportunity.parquet.tmp"
-    gold.write_parquet(tmp, compression="zstd")
-    tmp.rename(out / "market_opportunity.parquet")
+    write_parquet_atomic(gold, out / "market_opportunity.parquet")
+    write_parquet_atomic(suppliers, out / "market_supplier.parquet")
     for name in ("countries", "products"):
-        pl.read_parquet(src / f"{name}.parquet").write_parquet(out / f"{name}.parquet")
+        write_parquet_atomic(pl.read_parquet(src / f"{name}.parquet"), out / f"{name}.parquet")
     log.info(
-        "gold: %s ranked markets for %s exporters, %s products",
+        "gold: %s ranked markets for %s exporters, %s products; %s supplier rows",
         f"{gold.height:,}",
         gold["exporter"].n_unique(),
         gold["hs6"].n_unique(),
+        f"{suppliers.height:,}",
     )
     return out

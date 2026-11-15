@@ -9,9 +9,9 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden">
       {/* soft ember glow behind the grid */}
-      <div className="pointer-events-none absolute -right-40 top-10 h-[520px] w-[520px] rounded-full bg-ember/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-10 -right-40 h-[520px] w-[520px] rounded-full bg-ember/10 blur-[120px]" />
 
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pb-24 pt-16 md:grid-cols-[1.1fr_1fr] md:pt-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-16 pb-24 md:grid-cols-[1.1fr_1fr] md:pt-24">
         <div className="flex flex-col gap-7">
           <p
             className="rise-in w-fit rounded-full border border-ink-line px-3 py-1 text-xs text-sage"
@@ -20,7 +20,7 @@ export function Hero() {
             Free global trade data · AI market briefs
           </p>
           <h1
-            className="rise-in text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl"
+            className="rise-in text-4xl leading-[1.08] font-semibold tracking-tight sm:text-6xl"
             style={delay(120)}
           >
             Find the market <br className="hidden sm:block" />

@@ -7,8 +7,10 @@ import math
 import polars as pl
 import pytest
 
-from whitespace_pipeline.gold.opportunity import GOLD_COLUMNS, compute, validate
+from whitespace_pipeline.gold.opportunity import compute, compute_suppliers
+from whitespace_pipeline.io import validate_against
 from whitespace_pipeline.silver.baci import FLOWS_SCHEMA
+from whitespace_shared.gold import MarketOpportunity, MarketSupplier
 
 TOWELS = "630260"
 OTHER = "999999"  # everything else the world trades, so RCA has a baseline
@@ -48,8 +50,19 @@ def gold() -> pl.DataFrame:
 
 
 def test_columns_match_shared_contract(gold: pl.DataFrame) -> None:
-    assert gold.columns == GOLD_COLUMNS
-    validate(gold)
+    validate_against(gold, MarketOpportunity)
+
+
+def test_suppliers_for_ranked_markets(gold: pl.DataFrame) -> None:
+    suppliers = compute_suppliers(world(), gold)
+    validate_against(suppliers, MarketSupplier)
+    de = suppliers.filter(market="DEU", hs6=TOWELS).sort("value_usd", descending=True)
+    # Germany 2024: China 10M and Pakistan 10M of 20M; in 2021 China 8M of 10M.
+    assert de["supplier"].to_list() == ["CHN", "PAK"] or de["supplier"].to_list() == ["PAK", "CHN"]
+    china = de.filter(supplier="CHN").row(0, named=True)
+    assert china["share_start"] == pytest.approx(0.8)
+    assert china["share_end"] == pytest.approx(0.5)
+    assert "NOR" not in suppliers["market"].to_list()  # not a ranked market
 
 
 def test_growth_is_compound_annual(gold: pl.DataFrame) -> None:

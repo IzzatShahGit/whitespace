@@ -56,11 +56,13 @@ web: ## Run the frontend with hot reload on :3400
 lint: ## Lint and format-check everything
 	uv run ruff check .
 	uv run ruff format --check .
+	$(FRONTEND) pnpm format:check
 	$(FRONTEND) pnpm lint
 
-format: ## Auto-format Python code
+format: ## Auto-format Python and frontend code
 	uv run ruff format .
 	uv run ruff check --fix .
+	$(FRONTEND) pnpm format
 
 typecheck: ## Type-check Python and TypeScript
 	uv run mypy
@@ -71,9 +73,12 @@ test: ## Run Python tests
 
 check: lint typecheck test ## Everything CI runs
 
+check-keys: ## Test every API key in .env (prints pass/fail per slot, never the key)
+	cd backend && uv run python -m whitespace_api.tools.check_keys
+
 # ---------- codegen ----------
 gen-client: ## Regenerate frontend API types from the backend
 	uv run python -c "import json; from whitespace_api.main import app; print(json.dumps(app.openapi(), indent=2))" > frontend/openapi.json
 	$(FRONTEND) pnpm gen:api
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check gen-client
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys gen-client

@@ -13,11 +13,13 @@ from whitespace_api.api.v1.router import api_router
 from whitespace_api.core.config import get_settings
 from whitespace_api.core.db import get_engine
 from whitespace_api.core.logging import configure_logging
+from whitespace_api.services.recent import http_client
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
+    await http_client().aclose()
     await get_engine().dispose()
 
 

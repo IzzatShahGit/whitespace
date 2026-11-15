@@ -8,9 +8,12 @@
     "start": "next start --port ${WEB_PORT:-3400}",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "gen:api": "openapi-typescript openapi.json -o src/lib/api/schema.d.ts"
+    "gen:api": "openapi-typescript openapi.json -o src/lib/api/schema.d.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
     "next": "16.4.6",
     "openapi-fetch": "^0.17.0",
     "react": "19.3.0",
@@ -24,6 +27,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "openapi-typescript": "^7.13.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   },

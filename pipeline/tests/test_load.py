@@ -45,7 +45,11 @@ def write_gold(root: Path, version: str, rows: int) -> None:
     out = root / "gold" / f"V{version}"
     out.mkdir(parents=True)
     pl.DataFrame(
-        {"code": [586, 276], "iso3": ["PAK", "DEU"], "name": ["Pakistan", "Germany"]}
+        {
+            "code": [586, 276, 280],
+            "iso3": ["PAK", "DEU", "DEU"],
+            "name": ["Pakistan", "Germany", "Old Germany"],  # current entry first, as silver sorts
+        }
     ).write_parquet(out / "countries.parquet")
     pl.DataFrame(
         {"hs6": ["630260"], "description": ["Towels, terry, of cotton"], "hs_revision": ["HS17"]}
@@ -68,6 +72,16 @@ def write_gold(root: Path, version: str, rows: int) -> None:
         },
         schema_overrides={"data_year": pl.Int32, "rank": pl.Int32},
     ).write_parquet(out / "market_opportunity.parquet")
+    pl.DataFrame(
+        {
+            "market": ["M00", "M00"],
+            "hs6": ["630260", "630260"],
+            "supplier": ["CHN", "PAK"],
+            "value_usd": [10e6, 10e6],
+            "share_start": [0.8, 0.2],
+            "share_end": [0.5, 0.5],
+        }
+    ).write_parquet(out / "market_supplier.parquet")
 
 
 def test_load_replaces_tables(db: str, tmp_path: Path) -> None:
@@ -83,9 +97,11 @@ def test_load_replaces_tables(db: str, tmp_path: Path) -> None:
     postgres.run(settings)
     with psycopg.connect(db) as conn:
         count = conn.execute(f"SELECT count(*) FROM {MARKET_OPPORTUNITY_TABLE}").fetchone()
-        name = conn.execute("SELECT name FROM ref_country WHERE code='PAK'").fetchone()
+        names = conn.execute("SELECT code, name FROM ref_country ORDER BY code").fetchall()
+        suppliers = conn.execute("SELECT count(*) FROM gold_market_supplier").fetchone()
     assert count == (3,)
-    assert name == ("Pakistan",)
+    assert names == [("DEU", "Germany"), ("PAK", "Pakistan")]  # one row per ISO code
+    assert suppliers == (2,)
 
 
 def test_libpq_url_strips_sqlalchemy_driver() -> None:

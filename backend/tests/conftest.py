@@ -16,10 +16,13 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from whitespace_api.core.config import Settings, get_settings
+from whitespace_api.core.config import KEY_POOLS, Settings, get_settings
 from whitespace_api.core.db import get_session
 from whitespace_api.main import app
 from whitespace_api.models import Base
+
+# Shared fixtures (seeded trade data, a signed-in user) for every test module.
+pytest_plugins = ["tests.seed"]
 
 ADMIN_DSN = os.getenv(
     "TEST_DATABASE_ADMIN_DSN", "postgresql://whitespace:whitespace@localhost:5440/whitespace"
@@ -45,6 +48,9 @@ def _isolated_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Settings never come from the developer's shell: drop any exported app variables."""
     for name in Settings.model_fields:
         monkeypatch.delenv(name.upper(), raising=False)
+    for name in list(os.environ):  # numbered keys: GOOGLE_API_KEY_1, GROQ_API_KEY_2, ...
+        if name.startswith(tuple(KEY_POOLS.values())):
+            monkeypatch.delenv(name, raising=False)
 
 
 @pytest.fixture

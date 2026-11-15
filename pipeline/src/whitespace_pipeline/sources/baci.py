@@ -23,6 +23,7 @@ import httpx
 import polars as pl
 
 from whitespace_pipeline.config import PipelineSettings
+from whitespace_pipeline.io import write_parquet_atomic
 
 log = logging.getLogger(__name__)
 
@@ -118,10 +119,7 @@ def _csv_to_parquet(archive: zipfile.ZipFile, member: str, schema: pl.Schema, ou
         )
     if frame.columns != schema.names():
         raise BaciError(f"{member}: unexpected columns {frame.columns}")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_suffix(".parquet.tmp")
-    frame.write_parquet(tmp, compression="zstd")
-    tmp.rename(out)  # atomic: a crash never leaves a half-written file behind
+    write_parquet_atomic(frame, out)
     return frame.height
 
 

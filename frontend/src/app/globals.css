@@ -2,20 +2,28 @@
 
 /* ---------- Brand palette (from the Whitespace logo) ---------- */
 :root {
-  --ink: #121d18;          /* page background */
-  --ink-raised: #18261f;   /* cards */
-  --ink-line: #2a3d33;     /* borders */
-  --cream: #f2eee5;        /* primary text, "white" */
-  --sage: #a8c0aa;         /* secondary text, "space" */
-  --sage-dim: #7a937f;     /* tertiary text */
-  --tile-1: #8fa98f;       /* tile tops, light to dark */
+  --ink: #121d18; /* page background */
+  --ink-raised: #18261f; /* cards */
+  --ink-line: #2a3d33; /* borders */
+  --cream: #f2eee5; /* primary text, "white" */
+  --sage: #a8c0aa; /* secondary text, "space" */
+  --sage-dim: #7a937f; /* tertiary text */
+  --tile-1: #8fa98f; /* tile tops, light to dark */
   --tile-2: #739379;
   --tile-3: #5b7a63;
   --tile-side-l: #3f5a48;
   --tile-side-r: #344b3c;
-  --ember: #e27c4c;        /* the opportunity: accent */
+  --ember: #e27c4c; /* the opportunity: accent */
   --ember-deep: #b65e37;
   --ember-side: #9a4f2e;
+  /* Before/after chart marks: one hue, two shades, validated against --ink-raised
+     (lightness band, chroma floor, colour-blind and normal-vision separation). */
+  --chart-start: #1c7246;
+  --chart-end: #48a870;
+  /* Second series beside --chart-end: deeper than --ember to stay in the dark-mode
+     lightness band. Colour-blind separation is borderline, so it is always drawn
+     dashed and labelled directly (never colour alone). */
+  --chart-exporter: #d9703f;
 }
 
 @theme inline {
@@ -54,8 +62,14 @@ body {
 
 /* Text and blocks rising into place, staggered with --delay. */
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .rise-in {
   opacity: 0;
@@ -65,8 +79,14 @@ body {
 
 /* Grid tiles dropping into place. */
 @keyframes tile-in {
-  from { opacity: 0; transform: translateY(-28px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .tile-in {
   opacity: 0;
@@ -76,8 +96,13 @@ body {
 
 /* The orange tile: lands, then keeps hovering over its gap. */
 @keyframes ember-hover {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-7px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
 }
 .ember-hover {
   animation: ember-hover 3.2s ease-in-out infinite;
@@ -86,14 +111,21 @@ body {
 
 /* The dashed gap breathing. */
 @keyframes gap-pulse {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 .gap-pulse {
   animation: gap-pulse 2.4s ease-in-out infinite;
 }
 @keyframes dash-march {
-  to { stroke-dashoffset: -24; }
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 .dash-march {
   animation: dash-march 1.6s linear infinite;
@@ -101,8 +133,12 @@ body {
 
 /* Bars growing from zero. */
 @keyframes grow-x {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 .grow-x {
   transform-origin: left;
@@ -112,7 +148,19 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise-in, .tile-in, .grow-x { animation: none; opacity: 1; transform: none; }
-  .ember-hover, .gap-pulse, .dash-march { animation: none; }
-  html { scroll-behavior: auto; }
+  .rise-in,
+  .tile-in,
+  .grow-x {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .ember-hover,
+  .gap-pulse,
+  .dash-march {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

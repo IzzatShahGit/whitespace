@@ -45,9 +45,7 @@ export function SampleMarket() {
                     style={{ width: `${m.score * 100}%`, ...delay(200 + i * 150) }}
                   />
                 </div>
-                <span
-                  className={`w-14 text-right text-xs ${i === 0 ? "text-ember" : "text-sage"}`}
-                >
+                <span className={`w-14 text-right text-xs ${i === 0 ? "text-ember" : "text-sage"}`}>
                   {m.label}
                 </span>
               </li>

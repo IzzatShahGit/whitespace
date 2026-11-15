@@ -25,6 +25,10 @@ def configure_logging(level: str) -> None:
         level=level.upper(),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    # httpx logs every outbound URL at INFO, and some APIs (Census) take their key as a
+    # query parameter: keep outbound request lines out of the logs entirely.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     access = logging.getLogger("uvicorn.access")
     if not any(isinstance(f, RedactQueryFilter) for f in access.filters):
         access.addFilter(RedactQueryFilter())

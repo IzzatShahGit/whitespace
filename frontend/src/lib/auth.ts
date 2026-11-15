@@ -1,7 +1,6 @@
+// Sign-in, sign-up and sign-out for the auth forms (outside the signed-in area).
 import { api } from "@/lib/api/client";
-import type { components } from "@/lib/api/schema";
-
-export type User = components["schemas"]["UserOut"];
+import type { User } from "@/lib/api/queries";
 
 type Result = { user: User; error?: never } | { user?: never; error: string };
 
@@ -29,9 +28,4 @@ export async function signIn(body: { email: string; password: string }): Promise
 
 export async function signOut(): Promise<void> {
   await api.POST("/api/v1/auth/logout");
-}
-
-export async function currentUser(): Promise<User | null> {
-  const { data } = await api.GET("/api/v1/auth/me");
-  return data ?? null;
 }

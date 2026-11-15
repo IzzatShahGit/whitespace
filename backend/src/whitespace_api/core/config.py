@@ -6,13 +6,63 @@ only in these values, never in code.
 
 from __future__ import annotations
 
+import os
+import re
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Annotated, Literal
+from pathlib import Path
+from typing import Annotated, Any, Literal
 
+from dotenv import dotenv_values
 from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic.fields import FieldInfo
+from pydantic_settings import (
+    BaseSettings,
+    DotEnvSettingsSource,
+    NoDecode,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 LLMProvider = Literal["gemini", "groq", "ollama"]
+
+# Field -> variable prefix. GOOGLE_API_KEY, GOOGLE_API_KEY_1, GOOGLE_API_KEY_2, ... all count.
+KEY_POOLS = {"google_api_keys": "GOOGLE_API_KEY", "groq_api_keys": "GROQ_API_KEY"}
+
+
+def collect_numbered(values: Mapping[str, str | None], prefix: str) -> list[str]:
+    """`PREFIX` then `PREFIX_1`, `PREFIX_2`, ... in numeric order; blanks and repeats dropped."""
+    pattern = re.compile(rf"^{prefix}(?:_(\d+))?$")
+    found = sorted(
+        (int(m.group(1) or 0), value.strip())
+        for name, value in values.items()
+        if (m := pattern.match(name)) and value and value.strip()
+    )
+    return list(dict.fromkeys(value for _, value in found))
+
+
+class NumberedKeysSource(PydanticBaseSettingsSource):
+    """Collects numbered API keys (from .env files and the environment) into lists."""
+
+    def __init__(self, settings_cls: type[BaseSettings], dotenv: DotEnvSettingsSource) -> None:
+        super().__init__(settings_cls)
+        files = dotenv.env_file
+        self._files = [] if files is None else [files] if isinstance(files, str | Path) else files
+
+    def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
+        return None, field_name, False  # values come from __call__
+
+    def __call__(self) -> dict[str, Any]:
+        values: dict[str, str | None] = {}
+        for file in self._files:  # later files and the environment take precedence
+            if Path(file).is_file():
+                values.update(dotenv_values(file))
+        values.update(os.environ)
+        return {
+            field: keys
+            for field, prefix in KEY_POOLS.items()
+            if (keys := collect_numbered(values, prefix))
+        }
 
 
 class Settings(BaseSettings):
@@ -59,11 +109,36 @@ class Settings(BaseSettings):
     llm_model: str = "gemini-flash-latest"
     llm_fallback_provider: LLMProvider | None = "groq"
     llm_fallback_model: str = "llama-3.3-70b-versatile"
-    google_api_key: SecretStr | None = None
-    groq_api_key: SecretStr | None = None
+    # One or many keys per provider (GOOGLE_API_KEY_1, _2, ...), used in rotation.
+    google_api_keys: list[SecretStr] = Field(default_factory=list)
+    groq_api_keys: list[SecretStr] = Field(default_factory=list)
+    llm_keys_per_request: int = Field(
+        default=2, ge=1, description="Keys of the main provider tried before falling back"
+    )
+    llm_key_rest_seconds: float = Field(
+        default=60, gt=0, description="How long a rate-limited key sits out"
+    )
+    # Web research for briefs ("what's driving this").
+    tavily_api_key: SecretStr | None = None
+    # Monthly US imports (Census Bureau). EU monthly data (Eurostat) needs no key.
+    census_api_key: SecretStr | None = None
+    monthly_cache_days: int = Field(default=7, ge=1, description="Refresh monthly data after")
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        numbered = NumberedKeysSource(settings_cls, dotenv_settings)
+        return init_settings, env_settings, dotenv_settings, numbered, file_secret_settings
 
     @property
     def is_deployed(self) -> bool:
