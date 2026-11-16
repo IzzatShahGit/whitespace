@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import type { CSSProperties } from "react";
 
 import { perKg } from "@/lib/money";
 
@@ -10,107 +10,121 @@ export type PriceRow = {
   price: number; // USD per kg
   you?: boolean; // the user's own price: highlighted
   note?: string; // shown at the row end, e.g. "≈ 2.1 t" for a budget
-  detail?: string; // extra tooltip text
+  detail?: string; // a second line under the name, e.g. "25% of imports"
 };
 
+const grow = (i: number): CSSProperties =>
+  ({ "--delay": `${Math.min(i * 30, 240)}ms`, animationDuration: "500ms" }) as CSSProperties;
+
 /**
- * Price per kg, one bar per country, cheapest first, with a reference line
- * (the median or the market's average). Values are printed on every row, so the
- * chart doubles as its own table.
+ * Price per kg, one bar per country, cheapest first, with a reference line (the median
+ * or the market's average). Every value is printed, so the chart is also its own table.
+ * `highlight` marks the user's country ("you", in orange) as well as rows with `you`.
  */
 export function PriceBars({
   rows,
   reference,
   noteHeader,
+  highlight,
 }: {
   rows: PriceRow[];
   reference?: { label: string; value: number };
   noteHeader?: string;
+  highlight?: string;
 }) {
-  const [hovered, setHovered] = useState<string>();
   const sorted = [...rows].sort((a, b) => a.price - b.price);
   const max = Math.max(...sorted.map((r) => r.price), reference?.value ?? 0) * 1.08 || 1;
-  const at = (price: number) => `${(price / max) * 100}%`;
+  const at = (price: number) => (price / max) * 100;
   const columns = noteHeader
-    ? "grid-cols-[7rem_1fr_4.5rem_4rem] sm:grid-cols-[9rem_1fr_5rem_5rem]"
-    : "grid-cols-[7rem_1fr_4.5rem] sm:grid-cols-[9rem_1fr_5rem]";
+    ? "grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)_4.75rem_4rem] sm:grid-cols-[10rem_minmax(0,1fr)_5.5rem_5rem]"
+    : "grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)_4.75rem] sm:grid-cols-[10rem_minmax(0,1fr)_5.5rem]";
+  const refAt = reference ? at(reference.value) : 0;
 
   return (
     <div>
-      {noteHeader && (
-        <div className={`grid ${columns} gap-3 px-2 pb-1 text-[11px] text-sage-dim`}>
-          <span />
-          <span />
-          <span className="text-right">Per kg</span>
-          <span className="text-right">{noteHeader}</span>
-        </div>
-      )}
-      <ul className="flex flex-col">
-        {sorted.map((row) => {
-          const active = hovered === row.code;
+      <div className={`grid ${columns} gap-3 pb-1 text-xs text-subtle`}>
+        <span />
+        <span className="relative h-4">
+          {reference && (
+            <span
+              className="absolute whitespace-nowrap tabular-nums"
+              style={{
+                left: `${refAt}%`,
+                transform: refAt > 60 ? "translateX(calc(-100% - 4px))" : "translateX(4px)",
+              }}
+            >
+              {reference.label}: {perKg(reference.value)}
+            </span>
+          )}
+        </span>
+        <span className="text-right">Per kg</span>
+        {noteHeader && <span className="text-right">{noteHeader}</span>}
+      </div>
+      <ul className="flex flex-col" aria-label="Price per kg by country">
+        {sorted.map((row, i) => {
+          const mine = row.you || (highlight !== undefined && row.code === highlight);
           const vsRef = reference ? row.price / reference.value - 1 : undefined;
           return (
             <li
               key={row.code}
-              tabIndex={0}
-              onMouseEnter={() => setHovered(row.code)}
-              onMouseLeave={() => setHovered(undefined)}
-              onFocus={() => setHovered(row.code)}
-              onBlur={() => setHovered(undefined)}
-              aria-label={`${row.name}: ${perKg(row.price)}${row.note ? `, ${row.note}` : ""}`}
-              className={`relative grid ${columns} items-center gap-3 rounded-lg px-2 py-1.5 outline-none ${
-                active ? "bg-ink-line/40" : ""
+              className={`grid ${columns} items-center gap-3 rounded-lg py-1.5 ${
+                mine ? "-mx-2 bg-accent-soft/60 px-2" : ""
               }`}
             >
-              <span className={`truncate text-sm ${row.you ? "font-medium text-ember" : ""}`}>
-                {row.name}
+              <span className="min-w-0">
+                <span
+                  className={`flex items-center gap-1.5 text-sm ${mine ? "font-medium text-accent-strong" : "text-fg"}`}
+                >
+                  <span className="truncate">{row.name}</span>
+                  {mine && !row.you && (
+                    <span className="shrink-0 rounded-full bg-accent-soft px-1.5 text-xs font-medium text-accent-strong">
+                      You
+                    </span>
+                  )}
+                </span>
+                {row.detail && (
+                  <span className="block truncate text-xs text-subtle">{row.detail}</span>
+                )}
               </span>
-              <span className="relative h-5">
+              <span className="relative h-7">
                 <span
                   aria-hidden
-                  className="grow-x absolute top-1/2 left-0 h-2.5 -translate-y-1/2 rounded-r-[4px]"
+                  className="grow-x absolute top-1/2 left-0 h-3 -translate-y-1/2 rounded-r-md"
                   style={{
-                    width: at(row.price),
-                    background: row.you ? "var(--chart-exporter)" : "var(--chart-start)",
+                    ...grow(i),
+                    width: `${at(row.price)}%`,
+                    background: mine ? "var(--chart-exporter)" : "var(--chart-end)",
+                    opacity: mine ? 1 : 0.85,
                   }}
                 />
                 {reference && (
                   <span
                     aria-hidden
-                    className="absolute -inset-y-1.5 border-l border-dashed border-sage/60"
-                    style={{ left: at(reference.value) }}
+                    className="absolute inset-y-0 border-l border-dashed border-line-strong"
+                    style={{ left: `${refAt}%` }}
                   />
                 )}
               </span>
-              <span className="text-right text-sm text-cream tabular-nums">{perKg(row.price)}</span>
+              <span className="text-right">
+                <span className="block text-sm font-medium tabular-nums">{perKg(row.price)}</span>
+                {vsRef !== undefined && reference && (
+                  <span className="block text-xs text-subtle tabular-nums">
+                    {Math.abs(vsRef) < 0.02
+                      ? "≈ 0%"
+                      : `${vsRef < 0 ? "−" : "+"}${Math.round(Math.abs(vsRef) * 100)}%`}
+                    <span className="sr-only"> compared with the {reference.label}</span>
+                  </span>
+                )}
+              </span>
               {noteHeader && (
-                <span className="text-right text-sm text-sage tabular-nums">{row.note ?? "–"}</span>
-              )}
-              {active && (vsRef !== undefined || row.detail) && (
-                <span
-                  role="tooltip"
-                  className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-lg border border-ink-line bg-ink px-3 py-1.5 text-xs whitespace-nowrap shadow-lg"
-                >
-                  {vsRef !== undefined && reference && (
-                    <span className="font-medium text-cream">
-                      {Math.abs(vsRef) < 0.02
-                        ? `About the ${reference.label}`
-                        : `${Math.round(Math.abs(vsRef) * 100)}% ${vsRef < 0 ? "below" : "above"} the ${reference.label}`}
-                    </span>
-                  )}
-                  {row.detail && <span className="text-sage"> · {row.detail}</span>}
+                <span className="text-right text-sm text-muted tabular-nums">
+                  {row.note ?? "–"}
                 </span>
               )}
             </li>
           );
         })}
       </ul>
-      {reference && (
-        <p className="mt-2 flex items-center gap-2 px-2 text-xs text-sage-dim">
-          <span aria-hidden className="h-3 border-l border-dashed border-sage/60" />
-          {reference.label[0].toUpperCase() + reference.label.slice(1)}: {perKg(reference.value)}
-        </p>
-      )}
     </div>
   );
 }

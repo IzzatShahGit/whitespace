@@ -25,7 +25,25 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: str
     email_verified: bool
+    has_password: bool
     created_at: datetime
+
+
+class UpdateMeRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str | None = Field(
+        default=None, max_length=128, description="Required when the account has a password"
+    )
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str | None = Field(
+        default=None, max_length=128, description="Required when the account has a password"
+    )
 
 
 class ProvidersOut(BaseModel):

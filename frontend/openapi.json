@@ -308,6 +308,224 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update Me",
+        "operationId": "update_me_api_v1_auth_me_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change Password",
+        "description": "Change (or, for Google-only accounts, set) the password. Other sessions are signed out.",
+        "operationId": "change_password_api_v1_auth_password_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/delete-account": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete Account",
+        "description": "Permanently delete the account, its profile, conversations and watches.",
+        "operationId": "delete_account_api_v1_auth_delete_account_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/auth/google/start": {
@@ -1158,6 +1376,270 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NicheDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets/{market}/duties": {
+      "get": {
+        "tags": [
+          "landed cost"
+        ],
+        "summary": "Duties",
+        "description": "Import duty on a product from your country and from the market's main suppliers.",
+        "operationId": "duties_api_v1_markets__market__duties_get",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. DEU",
+              "title": "Market"
+            },
+            "description": "ISO code, e.g. DEU"
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DutyComparison"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets/{market}/landed-cost": {
+      "get": {
+        "tags": [
+          "landed cost"
+        ],
+        "summary": "Landed Cost",
+        "description": "Delivered cost per kg (price + freight + duty): yours against your rivals'.",
+        "operationId": "landed_cost_api_v1_markets__market__landed_cost_get",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. DEU",
+              "title": "Market"
+            },
+            "description": "ISO code, e.g. DEU"
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. PAK",
+              "title": "Exporter"
+            },
+            "description": "ISO code, e.g. PAK"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "cost_usd_kg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 10000,
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Your cost per kg, USD, FOB",
+              "title": "Cost Usd Kg"
+            },
+            "description": "Your cost per kg, USD, FOB"
+          },
+          {
+            "name": "freight_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Freight and insurance, percent of the FOB value",
+              "title": "Freight Pct"
+            },
+            "description": "Freight and insurance, percent of the FOB value"
+          },
+          {
+            "name": "freight_usd_kg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Freight and insurance, USD per kg",
+              "title": "Freight Usd Kg"
+            },
+            "description": "Freight and insurance, USD per kg"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandedCost"
                 }
               }
             }
@@ -2177,6 +2659,546 @@
           }
         }
       }
+    },
+    "/api/v1/watches": {
+      "get": {
+        "tags": [
+          "watches"
+        ],
+        "summary": "List Watches",
+        "description": "Your watched product-markets, newest first.",
+        "operationId": "list_watches_api_v1_watches_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WatchOut"
+                  },
+                  "title": "Response List Watches Api V1 Watches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "watches"
+        ],
+        "summary": "Add Watch",
+        "description": "Watch a product in a market, to be notified when monthly data shows a big move.",
+        "operationId": "add_watch_api_v1_watches_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchOut"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Already watching: the existing watch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Watch limit reached"
+          },
+          "422": {
+            "description": "Not a ranked market for this product and exporter"
+          }
+        }
+      }
+    },
+    "/api/v1/watches/check": {
+      "get": {
+        "tags": [
+          "watches"
+        ],
+        "summary": "Check Watch",
+        "description": "Whether you watch this product-market (for a watch toggle).",
+        "operationId": "check_watch_api_v1_watches_check_get",
+        "parameters": [
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "description": "Six-digit product code",
+              "title": "Hs6"
+            },
+            "description": "Six-digit product code"
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "ISO code, e.g. DEU",
+              "title": "Market"
+            },
+            "description": "ISO code, e.g. DEU"
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9]{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Defaults to your country",
+              "title": "Exporter"
+            },
+            "description": "Defaults to your country"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/watches/{watch_id}": {
+      "delete": {
+        "tags": [
+          "watches"
+        ],
+        "summary": "Delete Watch",
+        "description": "Stop watching.",
+        "operationId": "delete_watch_api_v1_watches__watch_id__delete",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such watch (or not yours)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "List Notifications",
+        "description": "Your newest notifications, and how many are unread in all.",
+        "operationId": "list_notifications_api_v1_notifications_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark Read",
+        "description": "Mark notifications read (`ids`, or `all: true`). Returns the new unread count.",
+        "operationId": "mark_read_api_v1_notifications_read_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkReadIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCount"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/preview": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Preview",
+        "description": "Top markets for a product typed in plain words, e.g. \"towels\" from PAK.",
+        "operationId": "preview_api_v1_public_preview_get",
+        "parameters": [
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Exporter"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2579,6 +3601,34 @@
         ],
         "title": "CardMarket"
       },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Password",
+            "description": "Required when the account has a password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest"
+      },
       "ChatEvent": {
         "properties": {
           "event": {
@@ -2652,11 +3702,15 @@
                   },
                   {
                     "$ref": "#/components/schemas/MoneyCard"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DutyCard"
                   }
                 ],
                 "discriminator": {
                   "propertyName": "type",
                   "mapping": {
+                    "duty": "#/components/schemas/DutyCard",
                     "market": "#/components/schemas/MarketCard",
                     "markets": "#/components/schemas/MarketsCard",
                     "money": "#/components/schemas/MoneyCard",
@@ -2785,11 +3839,15 @@
                 },
                 {
                   "$ref": "#/components/schemas/MoneyCard"
+                },
+                {
+                  "$ref": "#/components/schemas/DutyCard"
                 }
               ],
               "discriminator": {
                 "propertyName": "type",
                 "mapping": {
+                  "duty": "#/components/schemas/DutyCard",
                   "market": "#/components/schemas/MarketCard",
                   "markets": "#/components/schemas/MarketsCard",
                   "money": "#/components/schemas/MoneyCard",
@@ -3030,6 +4088,252 @@
         ],
         "title": "DataWindow"
       },
+      "DeleteAccountRequest": {
+        "properties": {
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Required when the account has a password"
+          }
+        },
+        "type": "object",
+        "title": "DeleteAccountRequest"
+      },
+      "DutyCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "duty",
+            "title": "Type",
+            "default": "duty"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "yours": {
+            "$ref": "#/components/schemas/DutyRate"
+          },
+          "standard_pct": {
+            "type": "number",
+            "title": "Standard Pct"
+          },
+          "rivals": {
+            "items": {
+              "$ref": "#/components/schemas/RivalDuty"
+            },
+            "type": "array",
+            "title": "Rivals"
+          },
+          "advantage_pts": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advantage Pts",
+            "description": "vs the main rival (positive: you pay less)"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "exporter",
+          "market",
+          "yours",
+          "standard_pct",
+          "rivals",
+          "advantage_pts",
+          "summary",
+          "source_url"
+        ],
+        "title": "DutyCard"
+      },
+      "DutyComparison": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "yours": {
+            "$ref": "#/components/schemas/DutyRate"
+          },
+          "standard": {
+            "$ref": "#/components/schemas/StandardRate"
+          },
+          "rivals": {
+            "items": {
+              "$ref": "#/components/schemas/RivalDuty"
+            },
+            "type": "array",
+            "title": "Rivals",
+            "description": "The market's largest other suppliers"
+          },
+          "main_rival": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountryOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The largest supplier other than you"
+          },
+          "advantage_pts": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advantage Pts",
+            "description": "vs the main rival, in percentage points (positive: you pay less)"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "One sentence with the figures"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "What the rates leave out"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "description": "Where to check the figures"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True if the source was unreachable and this is older"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "market",
+          "product",
+          "yours",
+          "standard",
+          "rivals",
+          "main_rival",
+          "advantage_pts",
+          "summary",
+          "notes",
+          "source_url",
+          "fetched_at",
+          "stale"
+        ],
+        "title": "DutyComparison"
+      },
+      "DutyRate": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "rate_pct": {
+            "type": "number",
+            "title": "Rate Pct",
+            "description": "Ad valorem duty, percent of the customs value"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preference",
+              "standard"
+            ],
+            "title": "Kind",
+            "description": "\"preference\": a trade agreement or scheme; \"standard\": the MFN rate"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheme",
+            "description": "The preference, when known, e.g. \"EU GSP+\""
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year",
+            "description": "Year the source recorded the rate"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Caveats, e.g. \"a trade preference may apply\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "rate_pct",
+          "kind",
+          "scheme",
+          "year",
+          "source",
+          "note"
+        ],
+        "title": "DutyRate",
+        "description": "One country's import duty on the product, and where the figure comes from."
+      },
       "FxRates": {
         "properties": {
           "base": {
@@ -3097,6 +4401,202 @@
         ],
         "title": "HealthResponse"
       },
+      "LandedCost": {
+        "properties": {
+          "duties": {
+            "$ref": "#/components/schemas/DutyComparison"
+          },
+          "duty_base": {
+            "type": "string",
+            "enum": [
+              "CIF",
+              "FOB"
+            ],
+            "title": "Duty Base",
+            "description": "What the market charges duty on: goods plus freight (CIF) or goods (FOB)"
+          },
+          "freight_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Pct",
+            "description": "As given: percent of the FOB value"
+          },
+          "freight_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Usd Kg",
+            "description": "As given: USD per kg"
+          },
+          "yours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LandedLine"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None without your cost per kg"
+          },
+          "rivals": {
+            "items": {
+              "$ref": "#/components/schemas/LandedLine"
+            },
+            "type": "array",
+            "title": "Rivals",
+            "description": "Rivals with a known price into this market"
+          },
+          "market_price_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Price Usd Kg",
+            "description": "What the market paid per kg on average, FOB (value / weight)"
+          },
+          "price_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Year",
+            "description": "Year of the market and rival prices"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin",
+            "description": "Share of the market's average price left after your cost"
+          },
+          "tone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "neutral",
+                  "negative"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tone"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict",
+            "description": "Your cost against what the market pays"
+          },
+          "explanation": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Explanation",
+            "description": "Two or three sentences with the figures"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "duties",
+          "duty_base",
+          "freight_pct",
+          "freight_usd_kg",
+          "yours",
+          "rivals",
+          "market_price_usd_kg",
+          "price_year",
+          "margin",
+          "tone",
+          "verdict",
+          "explanation",
+          "notes"
+        ],
+        "title": "LandedCost"
+      },
+      "LandedLine": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "fob_usd_kg": {
+            "type": "number",
+            "title": "Fob Usd Kg",
+            "description": "Price at the port of export: your cost, or the rival's average price here"
+          },
+          "freight_usd_kg": {
+            "type": "number",
+            "title": "Freight Usd Kg",
+            "description": "Freight and insurance (0 when not given)"
+          },
+          "duty_pct": {
+            "type": "number",
+            "title": "Duty Pct"
+          },
+          "duty_usd_kg": {
+            "type": "number",
+            "title": "Duty Usd Kg"
+          },
+          "landed_usd_kg": {
+            "type": "number",
+            "title": "Landed Usd Kg",
+            "description": "FOB + freight + duty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "fob_usd_kg",
+          "freight_usd_kg",
+          "duty_pct",
+          "duty_usd_kg",
+          "landed_usd_kg"
+        ],
+        "title": "LandedLine",
+        "description": "Cost per kg delivered to the market: price, freight, then duty."
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -3117,6 +4617,35 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "MarkReadIn": {
+        "properties": {
+          "ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 100,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ids"
+          },
+          "all": {
+            "type": "boolean",
+            "title": "All",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "MarkReadIn",
+        "description": "Either the notifications to mark read, or `all: true`."
       },
       "MarketCard": {
         "properties": {
@@ -3616,6 +5145,197 @@
           "products"
         ],
         "title": "NicheSummary"
+      },
+      "NotificationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "imports_up",
+              "imports_down",
+              "share_up",
+              "share_down",
+              "rival_slipping"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "Plain sentences with the figures"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link",
+            "description": "In-app path to open, e.g. /app/markets/630260/DEU?exporter=PAK"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data",
+            "description": "The figures behind the message, and its tone"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "body",
+          "link",
+          "data",
+          "created_at",
+          "read_at"
+        ],
+        "title": "NotificationOut"
+      },
+      "NotificationsPage": {
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "title": "Unread",
+            "description": "All unread notifications, not just the ones listed"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Newest first"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unread",
+          "items"
+        ],
+        "title": "NotificationsPage"
+      },
+      "Preview": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "markets": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewMarket"
+            },
+            "type": "array",
+            "title": "Markets"
+          },
+          "data_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "product",
+          "total",
+          "markets",
+          "data_year"
+        ],
+        "title": "Preview",
+        "description": "A taste of the product for signed-out visitors: the top markets for one product."
+      },
+      "PreviewMarket": {
+        "properties": {
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "go",
+              "test",
+              "grow",
+              "defend",
+              "care",
+              "hard"
+            ],
+            "title": "Action"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "neutral",
+              "negative"
+            ],
+            "title": "Tone"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd"
+          },
+          "growth": {
+            "type": "number",
+            "title": "Growth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "market",
+          "action",
+          "headline",
+          "tone",
+          "imports_usd",
+          "growth"
+        ],
+        "title": "PreviewMarket"
       },
       "PriceCard": {
         "properties": {
@@ -4136,6 +5856,83 @@
         ],
         "title": "RegisterRequest"
       },
+      "RivalDuty": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "rate_pct": {
+            "type": "number",
+            "title": "Rate Pct",
+            "description": "Ad valorem duty, percent of the customs value"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preference",
+              "standard"
+            ],
+            "title": "Kind",
+            "description": "\"preference\": a trade agreement or scheme; \"standard\": the MFN rate"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheme",
+            "description": "The preference, when known, e.g. \"EU GSP+\""
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year",
+            "description": "Year the source recorded the rate"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Caveats, e.g. \"a trade preference may apply\""
+          },
+          "share": {
+            "type": "number",
+            "title": "Share",
+            "description": "The rival's share of the market's imports, last year"
+          },
+          "advantage_pts": {
+            "type": "number",
+            "title": "Advantage Pts",
+            "description": "The rival's rate minus yours, in percentage points (positive: you pay less)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "rate_pct",
+          "kind",
+          "scheme",
+          "year",
+          "source",
+          "note",
+          "share",
+          "advantage_pts"
+        ],
+        "title": "RivalDuty"
+      },
       "SectorOut": {
         "properties": {
           "name": {
@@ -4390,6 +6187,30 @@
         ],
         "title": "SourcingPick"
       },
+      "StandardRate": {
+        "properties": {
+          "rate_pct": {
+            "type": "number",
+            "title": "Rate Pct"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rate_pct",
+          "year",
+          "source"
+        ],
+        "title": "StandardRate",
+        "description": "The MFN rate: what countries without a preference pay."
+      },
       "SupplierOption": {
         "properties": {
           "country": {
@@ -4577,6 +6398,34 @@
         ],
         "title": "TrendCard"
       },
+      "UnreadCount": {
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "title": "Unread"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unread"
+        ],
+        "title": "UnreadCount"
+      },
+      "UpdateMeRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name"
+        ],
+        "title": "UpdateMeRequest"
+      },
       "UserOut": {
         "properties": {
           "id": {
@@ -4597,6 +6446,10 @@
             "type": "boolean",
             "title": "Email Verified"
           },
+          "has_password": {
+            "type": "boolean",
+            "title": "Has Password"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -4609,6 +6462,7 @@
           "email",
           "full_name",
           "email_verified",
+          "has_password",
           "created_at"
         ],
         "title": "UserOut"
@@ -4701,6 +6555,111 @@
         ],
         "title": "Verdict",
         "description": "The recommended action, derived from the signals by fixed rules."
+      },
+      "WatchIn": {
+        "properties": {
+          "exporter": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z][A-Z0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter",
+            "description": "Exporter country; defaults to the one in your profile"
+          },
+          "hs6": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "pattern": "^\\d{6}$",
+            "title": "Hs6"
+          },
+          "market": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Market"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "market"
+        ],
+        "title": "WatchIn"
+      },
+      "WatchOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "market": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "alerts_available": {
+            "type": "boolean",
+            "title": "Alerts Available",
+            "description": "Monthly customs data covers this market (EU members, and the US when configured), so alerts can be sent"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "exporter",
+          "product",
+          "market",
+          "alerts_available",
+          "created_at"
+        ],
+        "title": "WatchOut"
+      },
+      "WatchStatus": {
+        "properties": {
+          "watching": {
+            "type": "boolean",
+            "title": "Watching"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "The watch, to stop watching it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "watching",
+          "id"
+        ],
+        "title": "WatchStatus",
+        "description": "Whether the user watches a product-market, for a watch toggle."
       }
     }
   }

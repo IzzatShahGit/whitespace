@@ -1,22 +1,30 @@
 "use client";
 
+import { CircleAlert, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { GoogleButton } from "@/components/auth/google-button";
+import { PasswordField } from "@/components/auth/password-field";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { signIn, signUp } from "@/lib/auth";
 
 type Mode = "login" | "signup";
 
-const copy: Record<Mode, { title: string; subtitle: string; submit: string }> = {
-  login: { title: "Welcome back", subtitle: "Sign in to your markets.", submit: "Sign in" },
+const copy: Record<Mode, { title: string; subtitle: string; submit: string; pending: string }> = {
+  login: {
+    title: "Welcome back",
+    subtitle: "Sign in to see your markets.",
+    submit: "Sign in",
+    pending: "Signing in…",
+  },
   signup: {
-    title: "Create your account",
-    subtitle: "Free. No card needed.",
+    title: "Create your free account",
+    subtitle: "Free to start. No card needed.",
     submit: "Create account",
+    pending: "Creating your account…",
   },
 };
 
@@ -58,31 +66,40 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   const text = copy[mode];
+  // Switching between sign-in and sign-up keeps where the visitor was heading.
+  const carry = next === "/app" ? "" : `?next=${encodeURIComponent(next)}`;
   return (
-    <div className="rise-in w-full max-w-sm rounded-2xl border border-ink-line bg-ink-raised p-8 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]">
-      <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
-      <p className="mt-1 text-sm text-sage">{text.subtitle}</p>
+    <div className="rise-in w-full max-w-sm">
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{text.title}</h1>
+      <p className="mt-2 text-muted">{text.subtitle}</p>
 
-      <div className="mt-7">
+      <div className="mt-8">
         <GoogleButton next={next} />
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-busy={pending}>
         {mode === "signup" && (
           <Field
             id="full_name"
             name="full_name"
-            label="Full name"
+            label="Your name"
             autoComplete="name"
             required
             maxLength={120}
           />
         )}
-        <Field id="email" name="email" type="email" label="Email" autoComplete="email" required />
         <Field
+          id="email"
+          name="email"
+          type="email"
+          label="Email"
+          autoComplete="email"
+          inputMode="email"
+          required
+        />
+        <PasswordField
           id="password"
           name="password"
-          type="password"
           label="Password"
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           hint={mode === "signup" ? "At least 8 characters." : undefined}
@@ -92,28 +109,39 @@ export function AuthForm({ mode }: { mode: Mode }) {
         />
 
         {error && (
-          <p role="alert" className="rounded-lg bg-ember/10 px-3 py-2 text-sm text-ember">
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-xl bg-negative-soft px-3.5 py-3 text-sm leading-5 text-negative"
+          >
+            <CircleAlert aria-hidden className="mt-px h-4 w-4 shrink-0" />
             {error}
-          </p>
+          </div>
         )}
 
-        <Button type="submit" disabled={pending} className="mt-2 w-full">
-          {pending ? "One moment…" : text.submit}
+        <Button type="submit" size="lg" disabled={pending} className="mt-2 w-full">
+          {pending && <LoaderCircle aria-hidden className="animate-spin" />}
+          {pending ? text.pending : text.submit}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-sage">
+      <p className="mt-8 text-center text-sm text-muted">
         {mode === "login" ? (
           <>
-            New here?{" "}
-            <Link href="/signup" className="text-cream underline-offset-4 hover:underline">
-              Create an account
+            New to Whitespace?{" "}
+            <Link
+              href={`/signup${carry}`}
+              className="font-medium text-brand underline-offset-4 hover:underline"
+            >
+              Create a free account
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link href="/login" className="text-cream underline-offset-4 hover:underline">
+            <Link
+              href={`/login${carry}`}
+              className="font-medium text-brand underline-offset-4 hover:underline"
+            >
               Sign in
             </Link>
           </>

@@ -41,7 +41,7 @@ export function CurrencySelect({
       aria-label="Currency"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`bg-ink-raised px-3 text-sm text-sage outline-none ${className}`}
+      className={`bg-surface-2/60 px-3 text-sm font-medium text-fg outline-none ${className}`}
     >
       <optgroup label="Suggested">
         {suggested.map((code) => (
@@ -64,13 +64,13 @@ export function CurrencySelect({
 }
 
 const fieldClass =
-  "flex h-11 items-stretch overflow-hidden rounded-xl border border-ink-line bg-ink transition-colors " +
-  "focus-within:border-ember/70 focus-within:ring-2 focus-within:ring-ember/20";
+  "flex h-11 items-stretch overflow-hidden rounded-xl border border-line bg-surface shadow-card transition-colors " +
+  "focus-within:border-brand/60 focus-within:ring-4 focus-within:ring-brand/10";
 
 function Echo({ text, children }: { text: string; children: string | null }) {
   // Repeats back how we read the input, so "18 lakh" never silently becomes 18.
   return (
-    <span aria-live="polite" className="min-h-4 text-xs text-sage-dim">
+    <span aria-live="polite" className="min-h-4 text-xs text-subtle">
       {text.trim() && (children ?? "Try a number like 18 lakh, 2.5 crore or 1,250,000")}
     </span>
   );
@@ -98,7 +98,7 @@ export function AmountField({
   const value = parseAmount(text);
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm text-cream">
+      <label htmlFor={id} className="text-sm font-medium text-fg">
         {label}
       </label>
       <div className={fieldClass}>
@@ -109,13 +109,13 @@ export function AmountField({
           value={text}
           placeholder={placeholder}
           onChange={(e) => onText(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-4 text-cream outline-none placeholder:text-sage-dim/70"
+          className="min-w-0 flex-1 bg-transparent px-4 text-fg outline-none placeholder:text-subtle"
         />
         <CurrencySelect
           value={currency}
           onChange={onCurrency}
           suggested={currencies}
-          className="w-24 border-l border-ink-line"
+          className="w-24 border-l border-line"
         />
       </div>
       <Echo text={text}>{value === null ? null : localMoney(value, currency)}</Echo>
@@ -137,8 +137,8 @@ export function WeightField({
   const kg = parseKg(text);
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm text-cream">
-        {label} <span className="text-sage-dim">(optional)</span>
+      <label htmlFor={id} className="text-sm font-medium text-fg">
+        {label} <span className="font-normal text-subtle">(optional)</span>
       </label>
       <div className={fieldClass}>
         <input
@@ -148,10 +148,10 @@ export function WeightField({
           value={text}
           placeholder="e.g. 5 tons or 800 kg"
           onChange={(e) => onText(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-4 text-cream outline-none placeholder:text-sage-dim/70"
+          className="min-w-0 flex-1 bg-transparent px-4 text-fg outline-none placeholder:text-subtle"
         />
       </div>
-      <span aria-live="polite" className="min-h-4 text-xs text-sage-dim">
+      <span aria-live="polite" className="min-h-4 text-xs text-subtle">
         {text.trim() && (kg === null ? "Try 5 tons, 5000 kg or 2.5 t" : weight(kg))}
       </span>
     </div>
@@ -163,17 +163,17 @@ export function RateNote({ currency }: { currency: string }) {
   const { rates, perUsd, failed } = useConverter(currency);
   if (currency === "USD") return null;
   if (failed) {
-    return <p className="text-xs text-caution">No exchange rate for {currency} right now.</p>;
+    return <p className="text-xs text-negative">No exchange rate for {currency} right now.</p>;
   }
   if (!rates || !perUsd) return null;
   return (
-    <p className="text-xs text-sage-dim">
+    <p className="text-xs text-subtle">
       1 USD = {perUsd.toLocaleString("en", { maximumFractionDigits: 2 })} {currency} ·{" "}
       <a
         href="https://www.exchangerate-api.com"
         target="_blank"
         rel="noreferrer"
-        className="underline-offset-4 hover:text-sage hover:underline"
+        className="rounded underline-offset-4 hover:text-muted hover:underline focus-visible:outline-2 focus-visible:outline-brand"
       >
         Rates by {rates.source}
       </a>

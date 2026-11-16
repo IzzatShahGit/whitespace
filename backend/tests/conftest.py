@@ -27,7 +27,8 @@ pytest_plugins = ["tests.seed"]
 ADMIN_DSN = os.getenv(
     "TEST_DATABASE_ADMIN_DSN", "postgresql://whitespace:whitespace@localhost:5440/whitespace"
 )
-TEST_DB = "whitespace_test"
+# Parallel runs (e.g. several agents or CI shards) each use their own database name.
+TEST_DB = os.getenv("TEST_DB_NAME", "whitespace_test")
 TEST_URL = ADMIN_DSN.rsplit("/", 1)[0].replace("postgresql://", "postgresql+asyncpg://") + (
     f"/{TEST_DB}"
 )

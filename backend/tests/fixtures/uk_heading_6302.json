@@ -1,0 +1,132 @@
+{
+ "data": {
+  "id": "43645",
+  "type": "heading",
+  "attributes": {
+   "goods_nomenclature_item_id": "6302000000",
+   "description": "Bed linen, table linen, toilet linen and kitchen linen",
+   "bti_url": "https://www.gov.uk/guidance/check-what-youll-need-to-get-a-legally-binding-decision-on-a-commodity-code",
+   "formatted_description": "Bed linen, table linen, toilet linen and kitchen linen",
+   "description_plain": "Bed linen, table linen, toilet linen and kitchen linen",
+   "validity_start_date": "1972-01-01T00:00:00.000Z",
+   "validity_end_date": null,
+   "declarable": false
+  },
+  "relationships": {
+   "commodities": {
+    "data": [
+     {
+      "id": "43695",
+      "type": "commodity"
+     },
+     {
+      "id": "43696",
+      "type": "commodity"
+     },
+     {
+      "id": "43697",
+      "type": "commodity"
+     }
+    ]
+   }
+  }
+ },
+ "included": [
+  {
+   "id": "43695",
+   "type": "commodity",
+   "attributes": {
+    "description": "Toilet linen and kitchen linen, of terry towelling or similar terry fabrics, of cotton",
+    "number_indents": 1,
+    "goods_nomenclature_item_id": "6302600000",
+    "leaf": false,
+    "producline_suffix": "80",
+    "goods_nomenclature_sid": 43695,
+    "formatted_description": "Toilet linen and kitchen linen, of terry towelling or similar terry fabrics, of cotton",
+    "description_plain": "Toilet linen and kitchen linen, of terry towelling or similar terry fabrics, of cotton",
+    "parent_sid": null,
+    "validity_start_date": "1972-01-01T00:00:00.000Z",
+    "validity_end_date": null,
+    "declarable": false
+   },
+   "relationships": {
+    "overview_measures": {
+     "data": [
+      {
+       "id": "20008483",
+       "type": "measure"
+      },
+      {
+       "id": "-1012545466",
+       "type": "measure"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "43696",
+   "type": "commodity",
+   "attributes": {
+    "description": "Knitted or crocheted",
+    "number_indents": 2,
+    "goods_nomenclature_item_id": "6302600010",
+    "leaf": true,
+    "producline_suffix": "80",
+    "goods_nomenclature_sid": 43696,
+    "formatted_description": "Knitted or crocheted",
+    "description_plain": "Knitted or crocheted",
+    "parent_sid": 43695,
+    "validity_start_date": "1989-01-01T00:00:00.000Z",
+    "validity_end_date": null,
+    "declarable": true
+   },
+   "relationships": {
+    "overview_measures": {
+     "data": [
+      {
+       "id": "20008483",
+       "type": "measure"
+      },
+      {
+       "id": "-1012545466",
+       "type": "measure"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "43697",
+   "type": "commodity",
+   "attributes": {
+    "description": "Other",
+    "number_indents": 2,
+    "goods_nomenclature_item_id": "6302600090",
+    "leaf": true,
+    "producline_suffix": "80",
+    "goods_nomenclature_sid": 43697,
+    "formatted_description": "Other",
+    "description_plain": "Other",
+    "parent_sid": 43695,
+    "validity_start_date": "1989-01-01T00:00:00.000Z",
+    "validity_end_date": null,
+    "declarable": true
+   },
+   "relationships": {
+    "overview_measures": {
+     "data": [
+      {
+       "id": "20008483",
+       "type": "measure"
+      },
+      {
+       "id": "-1012545466",
+       "type": "measure"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

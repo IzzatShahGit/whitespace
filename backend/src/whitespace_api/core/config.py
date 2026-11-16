@@ -135,6 +135,8 @@ class Settings(BaseSettings):
     # Monthly US imports (Census Bureau). EU monthly data (Eurostat) needs no key.
     census_api_key: SecretStr | None = None
     monthly_cache_days: int = Field(default=7, ge=1, description="Refresh monthly data after")
+    # Import duties (WITS-TRAINS, UK Trade Tariff: free, no key) change a few times a year.
+    tariff_cache_days: int = Field(default=30, ge=1, description="Refresh import duties after")
 
     # --- AI briefs and the guide ---
     brief_cache_days: int = Field(default=7, ge=1)
@@ -143,6 +145,12 @@ class Settings(BaseSettings):
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
+
+    # --- watchlists and alerts ---
+    watch_limit: int = Field(default=50, ge=1, description="Watched product-markets per user")
+    # Off until an email account exists: while off, alerts are in-app only and the job
+    # never reads an address. Turning it on alone still sends nothing (see notify/).
+    alerts_email_enabled: bool = False
 
     @classmethod
     def settings_customise_sources(

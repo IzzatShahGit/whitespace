@@ -146,6 +146,47 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Update Me */
+        patch: operations["update_me_api_v1_auth_me_patch"];
+        trace?: never;
+    };
+    "/api/v1/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Password
+         * @description Change (or, for Google-only accounts, set) the password. Other sessions are signed out.
+         */
+        post: operations["change_password_api_v1_auth_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/delete-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Delete Account
+         * @description Permanently delete the account, its profile, conversations and watches.
+         */
+        post: operations["delete_account_api_v1_auth_delete_account_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -341,6 +382,46 @@ export interface paths {
          * @description A niche's products for this exporter, each with its best market.
          */
         get: operations["niche_detail_api_v1_niches__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/markets/{market}/duties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Duties
+         * @description Import duty on a product from your country and from the market's main suppliers.
+         */
+        get: operations["duties_api_v1_markets__market__duties_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/markets/{market}/landed-cost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Landed Cost
+         * @description Delivered cost per kg (price + freight + duty): yours against your rivals'.
+         */
+        get: operations["landed_cost_api_v1_markets__market__landed_cost_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -546,6 +627,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/watches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Watches
+         * @description Your watched product-markets, newest first.
+         */
+        get: operations["list_watches_api_v1_watches_get"];
+        put?: never;
+        /**
+         * Add Watch
+         * @description Watch a product in a market, to be notified when monthly data shows a big move.
+         */
+        post: operations["add_watch_api_v1_watches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watches/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Watch
+         * @description Whether you watch this product-market (for a watch toggle).
+         */
+        get: operations["check_watch_api_v1_watches_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watches/{watch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Watch
+         * @description Stop watching.
+         */
+        delete: operations["delete_watch_api_v1_watches__watch_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notifications
+         * @description Your newest notifications, and how many are unread in all.
+         */
+        get: operations["list_notifications_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description Mark notifications read (`ids`, or `all: true`). Returns the new unread count.
+         */
+        post: operations["mark_read_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview
+         * @description Top markets for a product typed in plain words, e.g. "towels" from PAK.
+         */
+        get: operations["preview_api_v1_public_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -713,6 +918,16 @@ export interface components {
             /** Already Selling */
             already_selling: boolean;
         };
+        /** ChangePasswordRequest */
+        ChangePasswordRequest: {
+            /**
+             * Current Password
+             * @description Required when the account has a password
+             */
+            current_password?: string | null;
+            /** New Password */
+            new_password: string;
+        };
         /**
          * ChatEvent
          * @description One server-sent event while a reply is produced (documented for clients).
@@ -730,7 +945,7 @@ export interface components {
             /** Text */
             text?: string | null;
             /** Card */
-            card?: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"]) | null;
+            card?: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"] | components["schemas"]["DutyCard"]) | null;
             /** Follow Ups */
             follow_ups?: string[] | null;
             /** Grounded */
@@ -766,7 +981,7 @@ export interface components {
             /** Content */
             content: string;
             /** Cards */
-            cards: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"])[];
+            cards: (components["schemas"]["MarketsCard"] | components["schemas"]["MarketCard"] | components["schemas"]["SourcingCard"] | components["schemas"]["PriceCard"] | components["schemas"]["TrendCard"] | components["schemas"]["NewsCard"] | components["schemas"]["MoneyCard"] | components["schemas"]["DutyCard"])[];
             /** Follow Ups */
             follow_ups: string[];
             /** Grounded */
@@ -855,6 +1070,119 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** DeleteAccountRequest */
+        DeleteAccountRequest: {
+            /**
+             * Password
+             * @description Required when the account has a password
+             */
+            password?: string | null;
+        };
+        /** DutyCard */
+        DutyCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "duty";
+            product: components["schemas"]["ProductOut"];
+            exporter: components["schemas"]["CountryOut"];
+            market: components["schemas"]["CountryOut"];
+            yours: components["schemas"]["DutyRate"];
+            /** Standard Pct */
+            standard_pct: number;
+            /** Rivals */
+            rivals: components["schemas"]["RivalDuty"][];
+            /**
+             * Advantage Pts
+             * @description vs the main rival (positive: you pay less)
+             */
+            advantage_pts: number | null;
+            /** Summary */
+            summary: string;
+            /** Source Url */
+            source_url: string;
+        };
+        /** DutyComparison */
+        DutyComparison: {
+            exporter: components["schemas"]["CountryOut"];
+            market: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            yours: components["schemas"]["DutyRate"];
+            standard: components["schemas"]["StandardRate"];
+            /**
+             * Rivals
+             * @description The market's largest other suppliers
+             */
+            rivals: components["schemas"]["RivalDuty"][];
+            /** @description The largest supplier other than you */
+            main_rival: components["schemas"]["CountryOut"] | null;
+            /**
+             * Advantage Pts
+             * @description vs the main rival, in percentage points (positive: you pay less)
+             */
+            advantage_pts: number | null;
+            /**
+             * Summary
+             * @description One sentence with the figures
+             */
+            summary: string;
+            /**
+             * Notes
+             * @description What the rates leave out
+             */
+            notes: string[];
+            /**
+             * Source Url
+             * @description Where to check the figures
+             */
+            source_url: string;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /**
+             * Stale
+             * @description True if the source was unreachable and this is older
+             */
+            stale: boolean;
+        };
+        /**
+         * DutyRate
+         * @description One country's import duty on the product, and where the figure comes from.
+         */
+        DutyRate: {
+            country: components["schemas"]["CountryOut"];
+            /**
+             * Rate Pct
+             * @description Ad valorem duty, percent of the customs value
+             */
+            rate_pct: number;
+            /**
+             * Kind
+             * @description "preference": a trade agreement or scheme; "standard": the MFN rate
+             * @enum {string}
+             */
+            kind: "preference" | "standard";
+            /**
+             * Scheme
+             * @description The preference, when known, e.g. "EU GSP+"
+             */
+            scheme: string | null;
+            /**
+             * Year
+             * @description Year the source recorded the rate
+             */
+            year: number;
+            /** Source */
+            source: string;
+            /**
+             * Note
+             * @description Caveats, e.g. "a trade preference may apply"
+             */
+            note: string | null;
+        };
         /**
          * FxRates
          * @description Today's exchange rates against the US dollar (updated daily).
@@ -898,6 +1226,88 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** LandedCost */
+        LandedCost: {
+            duties: components["schemas"]["DutyComparison"];
+            /**
+             * Duty Base
+             * @description What the market charges duty on: goods plus freight (CIF) or goods (FOB)
+             * @enum {string}
+             */
+            duty_base: "CIF" | "FOB";
+            /**
+             * Freight Pct
+             * @description As given: percent of the FOB value
+             */
+            freight_pct: number | null;
+            /**
+             * Freight Usd Kg
+             * @description As given: USD per kg
+             */
+            freight_usd_kg: number | null;
+            /** @description None without your cost per kg */
+            yours: components["schemas"]["LandedLine"] | null;
+            /**
+             * Rivals
+             * @description Rivals with a known price into this market
+             */
+            rivals: components["schemas"]["LandedLine"][];
+            /**
+             * Market Price Usd Kg
+             * @description What the market paid per kg on average, FOB (value / weight)
+             */
+            market_price_usd_kg: number | null;
+            /**
+             * Price Year
+             * @description Year of the market and rival prices
+             */
+            price_year: number | null;
+            /**
+             * Margin
+             * @description Share of the market's average price left after your cost
+             */
+            margin: number | null;
+            /** Tone */
+            tone: ("positive" | "neutral" | "negative") | null;
+            /**
+             * Verdict
+             * @description Your cost against what the market pays
+             */
+            verdict: string | null;
+            /**
+             * Explanation
+             * @description Two or three sentences with the figures
+             */
+            explanation: string[];
+            /** Notes */
+            notes: string[];
+        };
+        /**
+         * LandedLine
+         * @description Cost per kg delivered to the market: price, freight, then duty.
+         */
+        LandedLine: {
+            country: components["schemas"]["CountryOut"];
+            /**
+             * Fob Usd Kg
+             * @description Price at the port of export: your cost, or the rival's average price here
+             */
+            fob_usd_kg: number;
+            /**
+             * Freight Usd Kg
+             * @description Freight and insurance (0 when not given)
+             */
+            freight_usd_kg: number;
+            /** Duty Pct */
+            duty_pct: number;
+            /** Duty Usd Kg */
+            duty_usd_kg: number;
+            /**
+             * Landed Usd Kg
+             * @description FOB + freight + duty
+             */
+            landed_usd_kg: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -907,6 +1317,19 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * MarkReadIn
+         * @description Either the notifications to mark read, or `all: true`.
+         */
+        MarkReadIn: {
+            /** Ids */
+            ids?: string[] | null;
+            /**
+             * All
+             * @default false
+             */
+            all: boolean;
         };
         /** MarketCard */
         MarketCard: {
@@ -1097,6 +1520,92 @@ export interface components {
              * @description Products in this niche with ranked markets
              */
             products: number;
+        };
+        /** NotificationOut */
+        NotificationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "imports_up" | "imports_down" | "share_up" | "share_down" | "rival_slipping";
+            /** Title */
+            title: string;
+            /**
+             * Body
+             * @description Plain sentences with the figures
+             */
+            body: string;
+            /**
+             * Link
+             * @description In-app path to open, e.g. /app/markets/630260/DEU?exporter=PAK
+             */
+            link: string | null;
+            /**
+             * Data
+             * @description The figures behind the message, and its tone
+             */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Read At */
+            read_at: string | null;
+        };
+        /** NotificationsPage */
+        NotificationsPage: {
+            /**
+             * Unread
+             * @description All unread notifications, not just the ones listed
+             */
+            unread: number;
+            /**
+             * Items
+             * @description Newest first
+             */
+            items: components["schemas"]["NotificationOut"][];
+        };
+        /**
+         * Preview
+         * @description A taste of the product for signed-out visitors: the top markets for one product.
+         */
+        Preview: {
+            exporter: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            /** Total */
+            total: number;
+            /** Markets */
+            markets: components["schemas"]["PreviewMarket"][];
+            /** Data Year */
+            data_year: number | null;
+        };
+        /** PreviewMarket */
+        PreviewMarket: {
+            market: components["schemas"]["CountryOut"];
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "go" | "test" | "grow" | "defend" | "care" | "hard";
+            /** Headline */
+            headline: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /** Imports Usd */
+            imports_usd: number;
+            /** Growth */
+            growth: number;
         };
         /** PriceCard */
         PriceCard: {
@@ -1320,6 +1829,48 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RivalDuty */
+        RivalDuty: {
+            country: components["schemas"]["CountryOut"];
+            /**
+             * Rate Pct
+             * @description Ad valorem duty, percent of the customs value
+             */
+            rate_pct: number;
+            /**
+             * Kind
+             * @description "preference": a trade agreement or scheme; "standard": the MFN rate
+             * @enum {string}
+             */
+            kind: "preference" | "standard";
+            /**
+             * Scheme
+             * @description The preference, when known, e.g. "EU GSP+"
+             */
+            scheme: string | null;
+            /**
+             * Year
+             * @description Year the source recorded the rate
+             */
+            year: number;
+            /** Source */
+            source: string;
+            /**
+             * Note
+             * @description Caveats, e.g. "a trade preference may apply"
+             */
+            note: string | null;
+            /**
+             * Share
+             * @description The rival's share of the market's imports, last year
+             */
+            share: number;
+            /**
+             * Advantage Pts
+             * @description The rival's rate minus yours, in percentage points (positive: you pay less)
+             */
+            advantage_pts: number;
+        };
         /** SectorOut */
         SectorOut: {
             /** Name */
@@ -1438,6 +1989,18 @@ export interface components {
             reason: string;
         };
         /**
+         * StandardRate
+         * @description The MFN rate: what countries without a preference pay.
+         */
+        StandardRate: {
+            /** Rate Pct */
+            rate_pct: number;
+            /** Year */
+            year: number;
+            /** Source */
+            source: string;
+        };
+        /**
          * SupplierOption
          * @description One country you could buy from, with the measured facts behind it.
          */
@@ -1503,6 +2066,16 @@ export interface components {
             /** Exporter Share Before */
             exporter_share_before: number | null;
         };
+        /** UnreadCount */
+        UnreadCount: {
+            /** Unread */
+            unread: number;
+        };
+        /** UpdateMeRequest */
+        UpdateMeRequest: {
+            /** Full Name */
+            full_name: string;
+        };
         /** UserOut */
         UserOut: {
             /**
@@ -1519,6 +2092,8 @@ export interface components {
             full_name: string;
             /** Email Verified */
             email_verified: boolean;
+            /** Has Password */
+            has_password: boolean;
             /**
              * Created At
              * Format: date-time
@@ -1565,6 +2140,52 @@ export interface components {
             summary: string;
             /** Next Step */
             next_step: string;
+        };
+        /** WatchIn */
+        WatchIn: {
+            /**
+             * Exporter
+             * @description Exporter country; defaults to the one in your profile
+             */
+            exporter?: string | null;
+            /** Hs6 */
+            hs6: string;
+            /** Market */
+            market: string;
+        };
+        /** WatchOut */
+        WatchOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            exporter: components["schemas"]["CountryOut"];
+            product: components["schemas"]["ProductOut"];
+            market: components["schemas"]["CountryOut"];
+            /**
+             * Alerts Available
+             * @description Monthly customs data covers this market (EU members, and the US when configured), so alerts can be sent
+             */
+            alerts_available: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * WatchStatus
+         * @description Whether the user watches a product-market, for a watch toggle.
+         */
+        WatchStatus: {
+            /** Watching */
+            watching: boolean;
+            /**
+             * Id
+             * @description The watch, to stop watching it
+             */
+            id: string | null;
         };
     };
     responses: never;
@@ -1782,6 +2403,115 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_me_api_v1_auth_me_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_api_v1_auth_password_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_account_api_v1_auth_delete_account_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -2142,6 +2872,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NicheDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    duties_api_v1_markets__market__duties_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Six-digit product code */
+                hs6: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                /** @description ISO code, e.g. DEU */
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DutyComparison"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    landed_cost_api_v1_markets__market__landed_cost_get: {
+        parameters: {
+            query: {
+                /** @description ISO code, e.g. PAK */
+                exporter: string;
+                /** @description Six-digit product code */
+                hs6: string;
+                /** @description Your cost per kg, USD, FOB */
+                cost_usd_kg?: number | null;
+                /** @description Freight and insurance, percent of the FOB value */
+                freight_pct?: number | null;
+                /** @description Freight and insurance, USD per kg */
+                freight_usd_kg?: number | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                /** @description ISO code, e.g. DEU */
+                market: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LandedCost"];
                 };
             };
             /** @description Validation Error */
@@ -2630,6 +3448,274 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_watches_api_v1_watches_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_watch_api_v1_watches_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchIn"];
+            };
+        };
+        responses: {
+            /** @description Already watching: the existing watch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchOut"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchOut"];
+                };
+            };
+            /** @description Watch limit reached */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a ranked market for this product and exporter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    check_watch_api_v1_watches_check_get: {
+        parameters: {
+            query: {
+                /** @description Six-digit product code */
+                hs6: string;
+                /** @description ISO code, e.g. DEU */
+                market: string;
+                /** @description Defaults to your country */
+                exporter?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_watch_api_v1_watches__watch_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                watch_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such watch (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_public_preview_get: {
+        parameters: {
+            query: {
+                exporter: string;
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

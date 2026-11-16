@@ -1,9 +1,10 @@
 "use client";
 
+import { PackageSearch, Search } from "lucide-react";
 import { type KeyboardEvent, useId, useState } from "react";
 
 import { type Mode, type ProductOption, useProductSearch } from "@/lib/api/queries";
-import { shortProductName } from "@/lib/format";
+import { capitalize, shortProductName } from "@/lib/format";
 import { useDebounced } from "@/lib/use-debounced";
 
 /**
@@ -18,6 +19,9 @@ export function ProductPicker({
   exclude = [],
   placeholder = "Describe your product, e.g. cotton towels",
   disabled = false,
+  label,
+  id,
+  autoFocus = false,
 }: {
   mode?: Mode;
   exporter: string | undefined;
@@ -25,6 +29,10 @@ export function ProductPicker({
   exclude?: string[];
   placeholder?: string;
   disabled?: boolean;
+  /** Accessible name when there's no visible <label for={id}>. */
+  label?: string;
+  id?: string;
+  autoFocus?: boolean;
 }) {
   const listId = useId();
   const [text, setText] = useState("");
@@ -36,6 +44,7 @@ export function ProductPicker({
   const options = (search.data ?? []).filter((p) => !exclude.includes(p.hs6));
   const showList = open && query.trim().length >= 2;
   const waiting = search.isFetching && !search.data;
+  const off = disabled || (mode === "sell" && !exporter);
 
   function pick(product: ProductOption) {
     onSelect(product);
@@ -64,15 +73,23 @@ export function ProductPicker({
     // Own stacking layer above later page sections: animated sections (transform) each
     // create a stacking context, which would otherwise paint over the open list.
     <div className="relative z-40">
+      <Search
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-subtle"
+      />
       <input
+        id={id}
         type="search"
         role="combobox"
+        aria-label={label ?? (id ? undefined : placeholder)}
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={showList && options[active] ? `${listId}-${active}` : undefined}
+        autoComplete="off"
+        autoFocus={autoFocus}
         value={text}
-        disabled={disabled || (mode === "sell" && !exporter)}
+        disabled={off}
         placeholder={placeholder}
         onChange={(e) => {
           setText(e.target.value);
@@ -82,18 +99,27 @@ export function ProductPicker({
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={onKeyDown}
-        className="h-12 w-full rounded-xl border border-ink-line bg-ink-raised px-4 text-cream transition-colors outline-none placeholder:text-sage-dim/70 focus:border-ember/70 focus:ring-2 focus:ring-ember/20 disabled:opacity-50"
+        className="h-12 w-full rounded-xl border border-line bg-surface pr-4 pl-11 text-base text-fg shadow-card transition-colors outline-none placeholder:text-subtle focus:border-brand/60 focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed disabled:opacity-60"
       />
       {showList && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-30 mt-2 max-h-80 w-full overflow-auto rounded-xl border border-ink-line bg-ink-raised p-1 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.7)]"
+          aria-label="Matching products"
+          className="pop-in absolute z-30 mt-2 max-h-96 w-full overflow-auto rounded-2xl border border-line bg-surface p-1.5 shadow-pop"
         >
-          {waiting && <li className="px-3 py-2.5 text-sm text-sage-dim">Searching…</li>}
+          {waiting && (
+            <li role="presentation" className="px-3 py-3 text-sm text-muted">
+              Searching…
+            </li>
+          )}
           {!waiting && options.length === 0 && (
-            <li className="px-3 py-2.5 text-sm text-sage-dim">
-              No products match. Try simpler words like “towels”, or a code like 6302.
+            <li role="presentation" className="flex items-start gap-3 px-3 py-3 text-sm text-muted">
+              <PackageSearch aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-subtle" />
+              <span>
+                No products match “{query.trim()}”. Try simpler words like “towels”, or a code like
+                6302.
+              </span>
             </li>
           )}
           {options.map((product, i) => (
@@ -108,13 +134,24 @@ export function ProductPicker({
                 pick(product);
               }}
               onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer rounded-lg px-3 py-2.5 ${i === active ? "bg-ink-line/60" : ""}`}
+              className={`flex cursor-pointer items-start justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                i === active ? "bg-surface-2" : ""
+              }`}
             >
-              <p className="text-sm text-cream">{shortProductName(product.description)}</p>
-              <p className="mt-0.5 text-xs text-sage-dim">
-                HS {product.hs6} · {product.count}{" "}
-                {mode === "buy" ? "supplier countries" : "ranked markets"}
-              </p>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-fg">
+                  {capitalize(product.name)}
+                </span>
+                <span className="mt-0.5 line-clamp-2 block text-xs text-muted">
+                  {shortProductName(product.description)}
+                </span>
+              </span>
+              <span className="shrink-0 pt-0.5 text-right text-xs text-subtle tabular-nums">
+                HS {product.hs6}
+                <span className="block">
+                  {product.count} {mode === "buy" ? "suppliers" : "markets"}
+                </span>
+              </span>
             </li>
           ))}
         </ul>

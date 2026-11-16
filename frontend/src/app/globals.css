@@ -1,69 +1,219 @@
 @import "tailwindcss";
 
-/* ---------- Brand palette (from the Whitespace logo) ---------- */
+/* ---------- Design tokens ----------
+   Semantic names (canvas, surface, fg, muted, brand, accent, positive…) so every
+   component works in both themes. Brand colours come from the logo: green tiles,
+   one orange "opportunity" tile. Light is the default; dark follows the device
+   unless the user picks one (data-theme on <html>, set before paint). */
 :root {
-  --ink: #121d18; /* page background */
-  --ink-raised: #18261f; /* cards */
-  --ink-line: #2a3d33; /* borders */
-  --cream: #f2eee5; /* primary text, "white" */
-  --sage: #a8c0aa; /* secondary text, "space" */
-  --sage-dim: #7a937f; /* tertiary text */
-  --tile-1: #8fa98f; /* tile tops, light to dark */
+  color-scheme: light;
+  --canvas: #f5f7f4; /* page */
+  --surface: #ffffff; /* cards */
+  --surface-2: #eef2ed; /* wells, hover */
+  --line: #e0e6de; /* borders */
+  --line-strong: #87948b;
+  --fg: #13211a; /* primary text */
+  --muted: #4b5b51; /* secondary text */
+  --subtle: #627166; /* tertiary text, icons */
+  --brand: #2d6a4c; /* actions, active nav */
+  --brand-strong: #1f4d37;
+  --brand-soft: #e7f0ea;
+  --on-brand: #ffffff;
+  --accent: #e27c4c; /* the opportunity: highlights, "go" */
+  --accent-strong: #b4501f; /* accent as small text on light */
+  --accent-soft: #fdebe1;
+  --on-accent: #ffffff;
+  --action: #bf5524; /* primary buttons: white text passes 4.5:1 */
+  --positive: #17663b;
+  --positive-soft: #e3f3e8;
+  --negative: #b3261e;
+  --negative-soft: #fde7e5;
+  --caution: #8a5300;
+  --caution-soft: #fdf1d6;
+  /* Logo tiles: the same in both themes. */
+  --tile-1: #8fa98f;
   --tile-2: #739379;
   --tile-3: #5b7a63;
   --tile-side-l: #3f5a48;
   --tile-side-r: #344b3c;
-  --ember: #e27c4c; /* the opportunity: accent */
-  --ember-deep: #b65e37;
-  --ember-side: #9a4f2e;
-  /* Before/after chart marks: one hue, two shades, validated against --ink-raised
-     (lightness band, chroma floor, colour-blind and normal-vision separation). */
-  --chart-start: #1c7246;
-  --chart-end: #48a870;
-  /* Second series beside --chart-end: deeper than --ember to stay in the dark-mode
-     lightness band. Colour-blind separation is borderline, so it is always drawn
-     dashed and labelled directly (never colour alone). */
+  --accent-side: #9a4f2e; /* the logo's orange tile, side face */
+  /* Chart marks: before/after shades of one hue, and the user's own series. */
+  --chart-start: #9cc9ae;
+  --chart-end: #2c7a52;
+  --chart-exporter: #e5733a;
+  --chart-grid: #e6ebe3;
+  /* World map: no data, then five steps of opportunity (light -> strong). */
+  --map-empty: #e9ede7;
+  --map-1: #dcebe0;
+  --map-2: #b3d5bf;
+  --map-3: #7fb796;
+  --map-4: #4f9670;
+  --map-5: #2b7552;
+  --shadow-card: 0 1px 2px rgb(22 33 27 / 0.04), 0 2px 6px -2px rgb(22 33 27 / 0.06);
+  --shadow-pop: 0 18px 40px -12px rgb(22 33 27 / 0.22), 0 4px 10px -4px rgb(22 33 27 / 0.08);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0f1713;
+  --surface: #16201b;
+  --surface-2: #1a2520;
+  --line: #2b3a32;
+  --line-strong: #62756a;
+  --fg: #edf2ec;
+  --muted: #a9b8ad;
+  --subtle: #93a498;
+  --brand: #86c29e;
+  --brand-strong: #a6d6b9;
+  --brand-soft: #1c3327;
+  --on-brand: #0f1713;
+  --accent: #e27c4c;
+  --accent-strong: #f0925f;
+  --accent-soft: #3a2318;
+  --on-accent: #ffffff;
+  --positive: #5fcf8a;
+  --positive-soft: #143322;
+  --negative: #ff8a80;
+  --negative-soft: #3b1d1b;
+  --caution: #f2c14e;
+  --caution-soft: #33290f;
+  --chart-start: #2f6b4b;
+  --chart-end: #6fd39c;
   --chart-exporter: #d9703f;
-  /* Cautionary signals (hard to enter, shrinking demand): muted coral, always with words */
-  --caution: #e8a08a;
-  --caution-bg: #3a2622;
+  --chart-grid: #223027;
+  --map-empty: #1d2722;
+  --map-1: #1b4330;
+  --map-2: #2c724e;
+  --map-3: #3f9064;
+  --map-4: #62b083;
+  --map-5: #93cfa8;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 20px 44px -12px rgb(0 0 0 / 0.6), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0f1713;
+    --surface: #16201b;
+    --surface-2: #1a2520;
+    --line: #2b3a32;
+    --line-strong: #62756a;
+    --fg: #edf2ec;
+    --muted: #a9b8ad;
+    --subtle: #93a498;
+    --brand: #86c29e;
+    --brand-strong: #a6d6b9;
+    --brand-soft: #1c3327;
+    --on-brand: #0f1713;
+    --accent: #e27c4c;
+    --accent-strong: #f0925f;
+    --accent-soft: #3a2318;
+    --on-accent: #ffffff;
+    --positive: #5fcf8a;
+    --positive-soft: #143322;
+    --negative: #ff8a80;
+    --negative-soft: #3b1d1b;
+    --caution: #f2c14e;
+    --caution-soft: #33290f;
+    --chart-start: #2f6b4b;
+    --chart-end: #6fd39c;
+    --chart-exporter: #d9703f;
+    --chart-grid: #223027;
+    --map-empty: #1d2722;
+    --map-1: #1b4330;
+    --map-2: #2c724e;
+    --map-3: #3f9064;
+    --map-4: #62b083;
+    --map-5: #93cfa8;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-pop: 0 20px 44px -12px rgb(0 0 0 / 0.6), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+  }
 }
 
 @theme inline {
-  --color-ink: var(--ink);
-  --color-ink-raised: var(--ink-raised);
-  --color-ink-line: var(--ink-line);
-  --color-cream: var(--cream);
-  --color-sage: var(--sage);
-  --color-sage-dim: var(--sage-dim);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-action: var(--action);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
   --color-tile-1: var(--tile-1);
   --color-tile-2: var(--tile-2);
   --color-tile-3: var(--tile-3);
-  --color-ember: var(--ember);
-  --color-ember-deep: var(--ember-deep);
-  --color-caution: var(--caution);
-  --color-caution-bg: var(--caution-bg);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 html {
-  color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--canvas);
+  color: var(--fg);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
 }
 
 ::selection {
-  background: var(--ember);
-  color: var(--ink);
+  background: var(--brand);
+  color: var(--on-brand);
 }
 
-/* ---------- Motion ---------- */
+/* ---------- Motion ----------
+   Quick and quiet: 150–250ms for UI feedback, up to 700ms for content arriving.
+   Everything is disabled under prefers-reduced-motion (bottom of this file). */
+
+/* Menus and dialogs opening. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-in {
+  animation: pop-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Loading placeholders. */
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
 
 /* Text and blocks rising into place, staggered with --delay. */
 @keyframes rise-in {
@@ -155,14 +305,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rise-in,
   .tile-in,
-  .grow-x {
+  .grow-x,
+  .pop-in {
     animation: none;
     opacity: 1;
     transform: none;
   }
   .ember-hover,
   .gap-pulse,
-  .dash-march {
+  .dash-march,
+  .skeleton {
     animation: none;
   }
   html {

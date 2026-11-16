@@ -101,7 +101,7 @@ export function IsoGrid({
                 [cx - W / 2, cy + D * 0.6],
               ])}
               fill="#2c2a22"
-              stroke="var(--ember)"
+              stroke="var(--accent)"
               strokeWidth={2}
               strokeDasharray="7 5"
               strokeOpacity={0.85}
@@ -122,9 +122,9 @@ export function IsoGrid({
           <Tile
             cx={gx}
             cy={gy - LIFT}
-            top="var(--ember)"
-            left="var(--ember-deep)"
-            right="var(--ember-side)"
+            top="var(--accent)"
+            left="var(--accent-strong)"
+            right="var(--accent-side)"
           />
         </g>
       </g>

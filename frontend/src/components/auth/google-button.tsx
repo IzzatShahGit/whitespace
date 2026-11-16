@@ -42,15 +42,15 @@ export function GoogleButton({ next = "/app" }: { next?: string }) {
     <>
       <a
         href={`/api/v1/auth/google/start?next=${encodeURIComponent(next)}`}
-        className={buttonClass("secondary", "w-full")}
+        className={buttonClass("secondary", "w-full", "lg")}
       >
         <GoogleIcon />
         Continue with Google
       </a>
-      <div className="my-5 flex items-center gap-3 text-xs text-sage-dim">
-        <span className="h-px flex-1 bg-ink-line" />
+      <div className="my-6 flex items-center gap-3 text-xs text-subtle">
+        <span className="h-px flex-1 bg-line" />
         or with email
-        <span className="h-px flex-1 bg-ink-line" />
+        <span className="h-px flex-1 bg-line" />
       </div>
     </>
   );

@@ -1,157 +1,382 @@
 "use client";
 
+import {
+  ArrowLeft,
+  BarChart3,
+  CalendarClock,
+  Footprints,
+  Globe2,
+  LayoutGrid,
+  MapPinOff,
+  Scale,
+  Sparkles,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type CSSProperties, use } from "react";
+import { type CSSProperties, type ReactNode, use } from "react";
 
 import { BriefPanel } from "@/components/markets/brief-panel";
+import { LoadError } from "@/components/markets/load-error";
 import { RecentPanel } from "@/components/markets/recent-panel";
 import { SupplierChart } from "@/components/markets/supplier-chart";
-import { HowWeDecide, SellingBadge, SignalGrid, VerdictPanel } from "@/components/markets/verdict";
+import { replaceSearchParams } from "@/components/markets/url-state";
+import { HowWeDecide, SellingBadge, SignalGrid, VerdictBadge } from "@/components/markets/verdict";
+import { DutyAdvantage } from "@/components/money/landed-cost";
 import { PriceCheck } from "@/components/money/price-check";
-import { DataNote, Loading, Problem } from "@/components/views/states";
-import { ApiError, useMarketDetail } from "@/lib/api/queries";
-import { money, percent, points, shortProductName, signedPercent } from "@/lib/format";
+import { ButtonLink } from "@/components/ui/button";
+import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
+import { EmptyState, Skeleton } from "@/components/ui/empty";
+import { Stat } from "@/components/ui/stat";
+import { type TabItem, Tabs } from "@/components/ui/tabs";
+import { DataNote } from "@/components/views/states";
+import { WatchButton } from "@/components/watch/watch-button";
+import {
+  ApiError,
+  type MarketDetail,
+  type Signal,
+  useMarketDetail,
+  useRecentMovement,
+} from "@/lib/api/queries";
+import { money, percent, points, signedPercent } from "@/lib/format";
 import { useExporter, withExporter } from "@/lib/use-exporter";
 
-function StatTile({ label, value, note }: { label: string; value: string; note?: string }) {
+const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
+
+type TabKey = "overview" | "competitors" | "prices" | "recent";
+
+const TABS: Record<TabKey, { short: string; long: string; icon: ReactNode }> = {
+  overview: { short: "Overview", long: "Overview", icon: <LayoutGrid /> },
+  competitors: { short: "Rivals", long: "Competitors", icon: <Users /> },
+  prices: { short: "Prices", long: "Prices & costs", icon: <Scale /> },
+  recent: { short: "Monthly", long: "Latest months", icon: <CalendarClock /> },
+};
+
+function BackLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-ink-line bg-ink-raised p-5">
-      <p className="text-xs text-sage-dim">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-      {note && <p className="mt-1 text-xs text-sage">{note}</p>}
-    </div>
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1.5 rounded-lg text-sm text-muted transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-brand"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden />
+      {children}
+    </Link>
   );
 }
 
-/** One market in depth: the numbers, why it ranks here, and who supplies it. */
+function DetailSkeleton() {
+  return (
+    <Page aria-busy className="gap-6">
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-5 w-72 max-w-full" />
+      </div>
+      <Skeleton className="h-44 rounded-2xl" />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 rounded-2xl" />
+        ))}
+      </div>
+      <Skeleton className="h-11" />
+      <Skeleton className="h-72 rounded-2xl" />
+    </Page>
+  );
+}
+
+/** One market in depth: the verdict and next step, four numbers, then the evidence in tabs. */
 export function MarketDetailView({ params }: { params: Promise<{ hs6: string; market: string }> }) {
   const { hs6, market } = use(params);
-  const override = useSearchParams().get("exporter");
+  const search = useSearchParams();
+  const override = search.get("exporter");
   const exporter = useExporter();
-  const detail = useMarketDetail(exporter.code, hs6, market.toUpperCase());
+  const code = market.toUpperCase();
+  const detail = useMarketDetail(exporter.code, hs6, code);
+  const recent = useRecentMovement(exporter.code, hs6, code);
   const back = withExporter(`/app/markets/${hs6}`, override);
 
-  if (exporter.pending || (exporter.code && detail.isPending)) return <Loading />;
+  if (exporter.pending || (exporter.code && detail.isPending)) return <DetailSkeleton />;
   if (!exporter.code) {
     return (
-      <Problem
-        title="Pick your country first"
-        action={{ href: "/onboarding", label: "Set up your markets →" }}
-      />
+      <Page>
+        <EmptyState
+          icon={<Globe2 />}
+          title="Pick your country first"
+          action={<ButtonLink href="/onboarding">Set up your business</ButtonLink>}
+        >
+          Markets are ranked for exporters in a specific country.
+        </EmptyState>
+      </Page>
     );
   }
-  if (detail.isError) {
+  if (!detail.data) {
     const missing = detail.error instanceof ApiError && detail.error.status === 404;
     return (
-      <Problem
-        title={missing ? "Not a ranked market" : "Couldn’t load this market"}
-        action={{ href: back, label: "Back to the ranking" }}
-      >
-        {missing ? detail.error.message : "Please refresh the page."}
-      </Problem>
+      <Page>
+        {missing ? (
+          <EmptyState
+            icon={<MapPinOff />}
+            title="Not a ranked market for this product"
+            action={
+              <ButtonLink href={back} variant="secondary">
+                See the ranked markets
+              </ButtonLink>
+            }
+          >
+            {detail.error?.message}. Markets are ranked when they import enough and you have a real
+            chance there.
+          </EmptyState>
+        ) : (
+          <LoadError
+            title="Couldn’t load this market"
+            onRetry={() => void detail.refetch()}
+            retrying={detail.isFetching}
+            action={
+              <ButtonLink href={back} variant="ghost">
+                Back to the ranking
+              </ButtonLink>
+            }
+          >
+            Check your connection and try again.
+          </LoadError>
+        )}
+      </Page>
     );
   }
 
-  if (!detail.data) return <Loading />;
-
-  const { exporter: exp, product, data, market: m, suppliers } = detail.data;
-  const rival = m.top_rival;
+  // The monthly tab appears for markets with a monthly source (EU members and the US).
+  const keys: TabKey[] = ["overview", "competitors", "prices"];
+  const requested = search.get("tab") as TabKey | null;
+  if (recent.data || (requested === "recent" && recent.isPending)) keys.push("recent");
+  const tab: TabKey = requested && keys.includes(requested) ? requested : "overview";
+  const items: TabItem<TabKey>[] = keys.map((key) => ({
+    value: key,
+    label: (
+      <>
+        <span className="hidden sm:inline-flex [&>svg]:h-4 [&>svg]:w-4">{TABS[key].icon}</span>
+        <span className="sm:hidden">{TABS[key].short}</span>
+        <span className="hidden sm:inline">{TABS[key].long}</span>
+      </>
+    ),
+  }));
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
-      <div className="rise-in">
-        <Link href={back} className="text-sm text-sage hover:text-cream">
-          ← All markets for {product.name}
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{m.market.name}</h1>
-          {m.already_selling && <SellingBadge />}
-        </div>
-        <p className="mt-2 text-sage">
-          Ranked #{m.rank} for {product.name} from {exp.name} · opportunity score: {m.label}
+    <Detail
+      data={detail.data}
+      back={back}
+      tab={tab}
+      tabs={items}
+      onTab={(next) => replaceSearchParams({ tab: next === "overview" ? null : next })}
+      ownCountry={!override}
+    />
+  );
+}
+
+function Detail({
+  data,
+  back,
+  tab,
+  tabs,
+  onTab,
+  ownCountry,
+}: {
+  data: MarketDetail;
+  back: string;
+  tab: TabKey;
+  tabs: TabItem<TabKey>[];
+  onTab: (tab: TabKey) => void;
+  ownCountry: boolean;
+}) {
+  const { exporter: exp, product, data: years, market: m, suppliers } = data;
+  const signal = (kind: Signal["kind"]) => m.signals.find((s) => s.kind === kind);
+  const tone = (s?: Signal) => s?.tone ?? "neutral";
+  const own = suppliers.find((s) => s.country.code === exp.code);
+  const ownChange = own ? own.share_end - own.share_start : undefined;
+  const rival = m.top_rival;
+  const shareLabel = ownCountry ? "Your share" : `${exp.name}’s share`;
+  const ask = `/app/ask?q=${encodeURIComponent(
+    `Tell me about ${m.market.name} for my ${product.name}`,
+  )}`;
+  const since = `since ${years.start_year}`;
+
+  return (
+    <Page className="gap-6">
+      <PageHeader
+        eyebrow={<BackLink href={back}>All markets for {product.name}</BackLink>}
+        title={m.market.name}
+        description={
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            For {product.name} from {exp.name} · ranked #{m.rank}
+            {m.already_selling && <SellingBadge />}
+          </span>
+        }
+        actions={
+          <>
+            <WatchButton exporter={exp.code} hs6={product.hs6} market={m.market.code} />
+            <ButtonLink href={ask} variant="accent">
+              <Sparkles /> Ask about this
+            </ButtonLink>
+          </>
+        }
+      />
+
+      <Card className="rise-in p-5 sm:p-6" style={delay(60)}>
+        <VerdictBadge verdict={m.verdict} large />
+        <p
+          dir="auto"
+          className="mt-3 max-w-3xl text-lg leading-7 text-pretty sm:text-xl sm:leading-8"
+        >
+          {m.verdict.summary}
         </p>
-      </div>
+        <div className="mt-5 flex items-start gap-3 rounded-xl bg-surface-2/70 p-3.5 sm:p-4">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
+            <Footprints className="h-4 w-4" aria-hidden />
+          </span>
+          <div>
+            <p className="text-xs font-medium text-muted">Your next step</p>
+            <p dir="auto" className="mt-0.5 text-[15px] leading-6 text-fg">
+              {m.verdict.next_step}
+            </p>
+          </div>
+        </div>
+      </Card>
 
-      <section
-        className="rise-in rounded-2xl border border-ink-line bg-ink-raised p-6"
-        style={{ "--delay": "60ms" } as CSSProperties}
-      >
-        <VerdictPanel verdict={m.verdict} />
-      </section>
-
-      <div
-        className="rise-in grid grid-cols-2 gap-4 md:grid-cols-4"
-        style={{ "--delay": "100ms" } as CSSProperties}
-      >
-        <StatTile label={`Market size, ${data.end_year}`} value={money(m.market_imports_usd)} />
-        <StatTile
-          label="Import growth / yr"
+      <div className="rise-in grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" style={delay(100)}>
+        <Stat
+          icon={<BarChart3 />}
+          label="Market size"
+          value={money(m.market_imports_usd)}
+          note={`imports in ${years.end_year}`}
+          explain={`What ${m.market.name} imported of ${product.name} in ${years.end_year}, from every country, at customs value in US dollars.`}
+        />
+        <Stat
+          icon={m.import_growth_3y < 0 ? <TrendingDown /> : <TrendingUp />}
+          label="Growth a year"
           value={signedPercent(m.import_growth_3y)}
-          note={`${data.start_year}–${data.end_year}`}
+          change={signal("demand")?.title}
+          changeTone={tone(signal("demand"))}
+          note={`${years.start_year}–${years.end_year}`}
+          explain={`The average yearly change in ${m.market.name}'s imports from ${years.start_year} to ${years.end_year}.`}
         />
-        <StatTile
-          label={`${exp.name}'s share`}
+        <Stat
+          icon={<Target />}
+          label={shareLabel}
           value={percent(m.exporter_share, { floor: true })}
+          change={ownChange !== undefined ? points(ownChange) : undefined}
+          changeTone={
+            ownChange === undefined || Math.round(ownChange * 100) === 0
+              ? "neutral"
+              : ownChange > 0
+                ? "positive"
+                : "negative"
+          }
+          note={ownChange !== undefined ? since : `of imports in ${years.end_year}`}
+          explain={`How much of ${m.market.name}'s imports came from ${exp.name} in ${years.end_year}.`}
         />
-        <StatTile
+        <Stat
+          icon={<Users />}
           label="Main rival"
-          value={rival ? rival.name : "None"}
-          note={
+          value={
+            rival ? (
+              <span className={rival.name.length > 12 ? "text-xl" : undefined}>{rival.name}</span>
+            ) : (
+              "None"
+            )
+          }
+          change={
             rival && m.top_rival_share_change !== null
-              ? `${points(m.top_rival_share_change)} since ${data.start_year}`
+              ? points(m.top_rival_share_change)
               : undefined
           }
+          changeTone={tone(signal("competition"))}
+          note={
+            rival && m.top_rival_share !== null
+              ? `${since} · holds ${percent(m.top_rival_share, { floor: true })}`
+              : "no other big supplier"
+          }
+          explain={`The biggest other supplier, its share of imports in ${years.end_year} and how it moved ${since}. A rival losing share leaves room for you.`}
         />
       </div>
 
-      <div className="rise-in" style={{ "--delay": "140ms" } as CSSProperties}>
-        <BriefPanel exporter={exp.code} hs6={product.hs6} market={m.market.code} />
-      </div>
-
-      <section
-        className="rise-in rounded-2xl border border-ink-line bg-ink-raised p-6"
-        style={{ "--delay": "180ms" } as CSSProperties}
-      >
-        <h2 className="text-lg font-medium">The signals behind it</h2>
-        <div className="mt-4">
-          <SignalGrid signals={m.signals} />
+      <div className="rise-in flex flex-col gap-4" style={delay(140)}>
+        <Tabs label="Market evidence" items={tabs} value={tab} onChange={onTab} />
+        <div
+          key={tab}
+          role="tabpanel"
+          aria-label={TABS[tab].long}
+          className="flex flex-col gap-4 transition-[opacity,translate] duration-200 motion-reduce:transition-none starting:translate-y-1 starting:opacity-0"
+        >
+          {tab === "overview" && (
+            <>
+              <Card className="p-5 sm:p-6">
+                <CardHeader
+                  icon={<LayoutGrid />}
+                  title={`Why we say “${m.verdict.headline}”`}
+                  description={`Four signals from customs data, ${years.start_year}–${years.end_year}.`}
+                />
+                <div className="mt-5">
+                  <SignalGrid signals={m.signals} />
+                </div>
+              </Card>
+              <BriefPanel
+                exporter={exp.code}
+                hs6={product.hs6}
+                market={m.market.code}
+                marketName={m.market.name}
+              />
+              <HowWeDecide />
+            </>
+          )}
+          {tab === "competitors" &&
+            (suppliers.length > 0 ? (
+              <SupplierChart
+                suppliers={suppliers}
+                startYear={years.start_year}
+                endYear={years.end_year}
+                highlight={exp.code}
+                marketName={m.market.name}
+                exporterName={exp.name}
+              />
+            ) : (
+              <EmptyState icon={<Users />} title="No supplier breakdown">
+                Customs data for {m.market.name} doesn’t list its suppliers for this product.
+              </EmptyState>
+            ))}
+          {tab === "prices" && (
+            <>
+              <DutyAdvantage
+                exporter={exp.code}
+                hs6={product.hs6}
+                market={m.market.code}
+                marketName={m.market.name}
+              />
+              <PriceCheck
+                exporter={exp.code}
+                exporterName={exp.name}
+                hs6={product.hs6}
+                market={m.market.code}
+                marketName={m.market.name}
+                averagePrice={m.market_unit_price_usd_kg ?? null}
+                suppliers={suppliers}
+              />
+            </>
+          )}
+          {tab === "recent" && (
+            <RecentPanel
+              exporter={exp.code}
+              exporterName={exp.name}
+              hs6={product.hs6}
+              market={m.market.code}
+              annualEndYear={years.end_year}
+            />
+          )}
         </div>
-      </section>
-
-      <div className="rise-in" style={{ "--delay": "220ms" } as CSSProperties}>
-        <PriceCheck
-          exporter={exp.code}
-          market={m.market.code}
-          marketName={m.market.name}
-          averagePrice={m.market_unit_price_usd_kg ?? null}
-          suppliers={suppliers}
-        />
       </div>
 
-      {suppliers.length > 0 && (
-        <div className="rise-in" style={{ "--delay": "260ms" } as CSSProperties}>
-          <SupplierChart
-            suppliers={suppliers}
-            startYear={data.start_year}
-            endYear={data.end_year}
-            highlight={exp.code}
-          />
-        </div>
-      )}
-
-      <div className="rise-in" style={{ "--delay": "340ms" } as CSSProperties}>
-        <RecentPanel
-          exporter={exp.code}
-          exporterName={exp.name}
-          hs6={product.hs6}
-          market={m.market.code}
-          annualEndYear={data.end_year}
-        />
-      </div>
-
-      <HowWeDecide />
-      <DataNote start={data.start_year} end={data.end_year} />
-    </main>
+      <DataNote start={years.start_year} end={years.end_year} />
+    </Page>
   );
 }

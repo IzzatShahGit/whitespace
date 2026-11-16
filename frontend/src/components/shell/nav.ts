@@ -1,0 +1,42 @@
+import {
+  Bell,
+  Compass,
+  Home,
+  type LucideIcon,
+  PackageSearch,
+  Settings,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  hint: string; // shown in search and tooltips
+};
+
+/** Every section, in one place: the sidebar, phone tabs and ⌘K search all read this. */
+export const NAV: NavItem[] = [
+  { href: "/app", label: "Home", icon: Home, hint: "Your overview" },
+  { href: "/app/markets", label: "Sell", icon: TrendingUp, hint: "Where to sell" },
+  { href: "/app/buy", label: "Buy", icon: PackageSearch, hint: "Where to buy" },
+  { href: "/app/ask", label: "Ask", icon: Sparkles, hint: "Ask the AI guide" },
+  { href: "/app/watchlist", label: "Watchlist", icon: Bell, hint: "Markets you follow" },
+  { href: "/app/browse", label: "Explore", icon: Compass, hint: "Browse niches" },
+];
+
+export const SETTINGS: NavItem = {
+  href: "/app/settings",
+  label: "Settings",
+  icon: Settings,
+  hint: "Profile, business and appearance",
+};
+
+/** The section a path belongs to ("/app/markets/630260/DEU" -> Sell). */
+export function activeHref(path: string): string | undefined {
+  const match = [...NAV, SETTINGS]
+    .filter((item) => item.href !== "/app" && path.startsWith(item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  return match?.href ?? (path === "/app" ? "/app" : undefined);
+}

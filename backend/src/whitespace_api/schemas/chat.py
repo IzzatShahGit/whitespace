@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from whitespace_api.schemas.landed_cost import DutyRate, RivalDuty
 from whitespace_api.schemas.sourcing import SourcingPick
 from whitespace_api.schemas.trade import Action, CountryOut, ProductOut, Tone, Verdict
 
@@ -104,8 +105,28 @@ class MoneyCard(BaseModel):
     result: float
 
 
+class DutyCard(BaseModel):
+    type: Literal["duty"] = "duty"
+    product: ProductOut
+    exporter: CountryOut
+    market: CountryOut
+    yours: DutyRate
+    standard_pct: float
+    rivals: list[RivalDuty]
+    advantage_pts: float | None = Field(description="vs the main rival (positive: you pay less)")
+    summary: str
+    source_url: str
+
+
 Card = Annotated[
-    MarketsCard | MarketCard | SourcingCard | PriceCard | TrendCard | NewsCard | MoneyCard,
+    MarketsCard
+    | MarketCard
+    | SourcingCard
+    | PriceCard
+    | TrendCard
+    | NewsCard
+    | MoneyCard
+    | DutyCard,
     Field(discriminator="type"),
 ]
 

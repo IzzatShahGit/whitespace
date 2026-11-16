@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useState } from "react";
 
-import { AppHeader } from "@/components/app/app-header";
+import { CommandPalette } from "@/components/shell/command-palette";
+import { MobileTabs, Sidebar } from "@/components/shell/sidebar";
+import { Topbar } from "@/components/shell/topbar";
+import { NotificationsBell } from "@/components/watch/notifications-bell";
 import { Loading } from "@/components/views/states";
 import { ApiError, useMe } from "@/lib/api/queries";
 
@@ -38,11 +41,18 @@ function SessionGate({ children }: { children: ReactNode }) {
       />
     );
   }
+  // Onboarding is a focused, full-screen flow: no navigation around it.
+  if (pathname.startsWith("/onboarding")) return <>{children}</>;
   return (
-    <>
-      <AppHeader user={me.data} />
-      {children}
-    </>
+    <div className="flex min-h-dvh">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Topbar user={me.data} actions={<NotificationsBell />} />
+        <div className="flex flex-1 flex-col pb-20 lg:pb-0">{children}</div>
+      </div>
+      <MobileTabs />
+      <CommandPalette />
+    </div>
   );
 }
 

@@ -60,7 +60,7 @@ function detail(error: unknown): string | undefined {
 }
 
 /** Turn an openapi-fetch result into data, or throw an ApiError with the server's message. */
-async function unwrap<T>(
+export async function unwrap<T>(
   request: Promise<{ data?: T; error?: unknown; response: Response }>,
 ): Promise<T> {
   const { data, error, response } = await request;
@@ -68,7 +68,7 @@ async function unwrap<T>(
   throw new ApiError(response.status, detail(error) ?? "Something went wrong. Please try again.");
 }
 
-const isMissing = (e: unknown) => e instanceof ApiError && e.status === 404;
+export const isMissing = (e: unknown) => e instanceof ApiError && e.status === 404;
 
 // ---------- cache keys: one place, so invalidation can't drift ----------
 export const keys = {
@@ -138,6 +138,38 @@ export function useDashboard(enabled: boolean) {
     queryKey: keys.dashboard,
     queryFn: () => unwrap(api.GET("/api/v1/me/dashboard")),
     enabled,
+  });
+}
+
+// ---------- account ----------
+export function useUpdateMe() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (full_name: string) =>
+      unwrap(api.PATCH("/api/v1/auth/me", { body: { full_name } })),
+    onSuccess: (user) => client.setQueryData(keys.me, user),
+  });
+}
+
+export function useChangePassword() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { current_password: string | null; new_password: string }) =>
+      unwrap(api.POST("/api/v1/auth/password", { body })),
+    onSuccess: (user) => client.setQueryData(keys.me, user),
+  });
+}
+
+export function useDeleteAccount() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (password: string | null) => {
+      const { response, error } = await api.POST("/api/v1/auth/delete-account", {
+        body: { password },
+      });
+      if (!response.ok) throw new ApiError(response.status, detail(error) ?? "Couldn’t delete");
+    },
+    onSuccess: () => client.clear(),
   });
 }
 

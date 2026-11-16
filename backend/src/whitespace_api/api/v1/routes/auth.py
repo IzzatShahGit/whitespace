@@ -9,7 +9,15 @@ from fastapi.responses import JSONResponse
 
 from whitespace_api.api.cookies import clear_session_cookies, set_session_cookies
 from whitespace_api.api.deps import AppSettings, CurrentUser, DbSession
-from whitespace_api.schemas.auth import LoginRequest, ProvidersOut, RegisterRequest, UserOut
+from whitespace_api.schemas.auth import (
+    ChangePasswordRequest,
+    DeleteAccountRequest,
+    LoginRequest,
+    ProvidersOut,
+    RegisterRequest,
+    UpdateMeRequest,
+    UserOut,
+)
 from whitespace_api.services import auth as auth_service
 
 router = APIRouter(prefix="/auth")
@@ -85,3 +93,45 @@ async def providers(settings: AppSettings) -> ProvidersOut:
 @router.get("/me", response_model=UserOut)
 async def me(user: CurrentUser) -> UserOut:
     return UserOut.model_validate(user)
+
+
+@router.patch("/me", response_model=UserOut)
+async def update_me(body: UpdateMeRequest, user: CurrentUser, db: DbSession) -> UserOut:
+    return UserOut.model_validate(
+        await auth_service.update_name(db, user, full_name=body.full_name)
+    )
+
+
+@router.post("/password", response_model=UserOut)
+async def change_password(
+    body: ChangePasswordRequest,
+    response: Response,
+    user: CurrentUser,
+    db: DbSession,
+    settings: AppSettings,
+) -> UserOut:
+    """Change (or, for Google-only accounts, set) the password. Other sessions are signed out."""
+    try:
+        session = await auth_service.change_password(
+            db,
+            user,
+            current_password=body.current_password,
+            new_password=body.new_password,
+            settings=settings,
+        )
+    except auth_service.AuthError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    set_session_cookies(response, session, settings)
+    return UserOut.model_validate(session.user)
+
+
+@router.post("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    body: DeleteAccountRequest, response: Response, user: CurrentUser, db: DbSession
+) -> None:
+    """Permanently delete the account, its profile, conversations and watches."""
+    try:
+        await auth_service.delete_account(db, user, password=body.password)
+    except auth_service.AuthError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    clear_session_cookies(response)

@@ -125,15 +125,17 @@ async def refresh(db: AsyncSession, *, refresh_token: str, settings: Settings) -
     stored = await repo.get_refresh_token(db, security.hash_token(refresh_token))
     if stored is None or stored.expires_at <= now:
         raise AuthError("Session expired, please sign in again")
-    if stored.revoked_at is not None:
-        # A revoked token was reused: it may have been stolen. End every session.
+    if stored.rotated_at is not None:
+        # A token that was already swapped was used again: it was copied. End every session.
         await repo.revoke_all_refresh_tokens(db, stored.user_id, now)
         await db.commit()
+        raise AuthError("Session expired, please sign in again")
+    if stored.revoked_at is not None:  # signed out, or ended by a password change
         raise AuthError("Session expired, please sign in again")
     user = await repo.get_user(db, stored.user_id)
     if user is None or not user.is_active:
         raise AuthError("Session expired, please sign in again")
-    stored.revoked_at = now
+    stored.revoked_at = stored.rotated_at = now
     session = await _start_session(db, user, settings)
     await db.commit()
     return session
@@ -158,3 +160,42 @@ async def user_from_access_token(
         return None
     user = await repo.get_user(db, user_id)
     return user if user and user.is_active else None
+
+
+# ---------- account ----------
+def _check_password(user: User, password: str | None) -> None:
+    """Accounts with a password must confirm it; Google-only accounts have none to give."""
+    if user.password_hash is not None and not security.verify_password(
+        password or "", user.password_hash
+    ):
+        raise AuthError("Your current password is incorrect")
+
+
+async def update_name(db: AsyncSession, user: User, *, full_name: str) -> User:
+    user.full_name = full_name.strip()
+    await db.commit()
+    return user
+
+
+async def change_password(
+    db: AsyncSession,
+    user: User,
+    *,
+    current_password: str | None,
+    new_password: str,
+    settings: Settings,
+) -> Session:
+    """Set a new password, sign out every other session, and start a fresh one here."""
+    _check_password(user, current_password)
+    user.password_hash = security.hash_password(new_password)
+    await repo.revoke_all_refresh_tokens(db, user.id, datetime.now(UTC))
+    session = await _start_session(db, user, settings)
+    await db.commit()
+    return session
+
+
+async def delete_account(db: AsyncSession, user: User, *, password: str | None) -> None:
+    """Delete the user and everything that belongs to them (cascades in the database)."""
+    _check_password(user, password)
+    await db.delete(user)
+    await db.commit()

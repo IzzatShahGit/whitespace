@@ -7,7 +7,8 @@
       "Bash(curl -sS -I --max-time 40 \"https://www.cepii.fr/DATA_DOWNLOAD/baci/data/BACI_HS17_V202601.zip\")",
       "Bash(uv run *)",
       "Bash(docker exec *)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(TEST_DB_NAME=whitespace_test_watches timeout 300 uv run pytest -q backend/tests/test_alerts.py)"
     ]
   }
 }

@@ -5,8 +5,8 @@ import { IsoGrid } from "./iso-grid";
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`tracking-tight ${className}`}>
-      <span className="font-bold text-cream">white</span>
-      <span className="font-light text-sage">space</span>
+      <span className="font-bold text-fg">white</span>
+      <span className="font-light text-muted">space</span>
     </span>
   );
 }

@@ -5,6 +5,7 @@ from whitespace_api.models.brief import MarketBrief
 from whitespace_api.models.chat import ChatMessage, ChatThread
 from whitespace_api.models.profile import UserProfile
 from whitespace_api.models.recent import MonthlyTradeCache
+from whitespace_api.models.tariff import TariffCache
 from whitespace_api.models.trade import (
     Country,
     MarketOpportunity,
@@ -14,6 +15,7 @@ from whitespace_api.models.trade import (
 )
 from whitespace_api.models.usage import UsageCounter
 from whitespace_api.models.user import RefreshToken, User
+from whitespace_api.models.watch import Notification, Watch
 
 __all__ = [
     "Base",
@@ -24,10 +26,13 @@ __all__ = [
     "MarketOpportunity",
     "MarketSupplier",
     "MonthlyTradeCache",
+    "Notification",
     "Product",
     "RefreshToken",
     "SupplierLandscape",
+    "TariffCache",
     "UsageCounter",
     "User",
     "UserProfile",
+    "Watch",
 ]

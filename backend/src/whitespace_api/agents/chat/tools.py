@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -25,6 +26,7 @@ from whitespace_api.integrations import fx, tavily
 from whitespace_api.repositories import trade as trade_repo
 from whitespace_api.schemas.chat import (
     CardMarket,
+    DutyCard,
     MarketCard,
     MarketsCard,
     MoneyCard,
@@ -34,8 +36,9 @@ from whitespace_api.schemas.chat import (
     SourcingCard,
     TrendCard,
 )
+from whitespace_api.schemas.landed_cost import DutyComparison
 from whitespace_api.schemas.trade import CountryOut, ProductOut
-from whitespace_api.services import pricing, sourcing, trade
+from whitespace_api.services import landed_cost, pricing, sourcing, trade
 from whitespace_api.services import recent as recent_service
 from whitespace_api.services.explain import money, percent
 
@@ -276,6 +279,47 @@ async def monthly_trend(ctx: ChatContext, args: MarketArgs) -> ToolResult:
     return ToolResult(text, card, f"product {product.hs6}; market {market.code}; monthly data")
 
 
+async def _duties(ctx: ChatContext, product: ProductOut, market: CountryOut) -> DutyComparison:
+    try:
+        return await landed_cost.duties(
+            ctx.db, ctx.http, exporter=_need_country(ctx).code, market=market.code,
+            hs6=product.hs6, settings=ctx.settings,
+        )  # fmt: skip
+    except (
+        trade.NotFoundError,
+        landed_cost.NotCoveredError,
+        landed_cost.UnavailableError,
+    ) as exc:
+        raise ToolError(str(exc)) from exc
+
+
+async def duty_check(ctx: ChatContext, args: MarketArgs) -> ToolResult:
+    exporter = _need_country(ctx)
+    product = await _product(ctx, args.product, "sell")
+    market = await _country(ctx, args.market)
+    d = await _duties(ctx, product, market)
+    rate = landed_cost.rate_text
+    rivals = "; ".join(
+        f"{r.country.name} ({percent(r.share)} share) {rate(r.rate_pct)} ({landed_cost.basis(r)})"
+        for r in d.rivals
+    )
+    text = (
+        f"Import duty on {product.name} (HS {product.hs6}) into {market.name}, source "
+        f"{d.yours.source}. {exporter.name}: {rate(d.yours.rate_pct)} "
+        f"({landed_cost.basis(d.yours)}){f'. {d.yours.note}' if d.yours.note else ''}. "
+        f"Standard (MFN) rate: {rate(d.standard.rate_pct)} ({d.standard.year}). "
+        + (f"Main suppliers: {rivals}. " if rivals else "")
+        + f"{d.summary} {' '.join(d.notes)}"
+        + (" (Source unreachable; this is the last saved copy.)" if d.stale else "")
+    )
+    card = DutyCard(
+        product=product, exporter=exporter, market=market, yours=d.yours,
+        standard_pct=d.standard.rate_pct, rivals=d.rivals, advantage_pts=d.advantage_pts,
+        summary=d.summary, source_url=d.source_url,
+    )  # fmt: skip
+    return ToolResult(text, card, f"duties on {product.hs6} in {market.code}")
+
+
 async def where_to_buy(ctx: ChatContext, args: ProductArgs) -> ToolResult:
     buyer = _need_country(ctx)
     product = await _product(ctx, args.product, "buy")
@@ -362,6 +406,8 @@ async def price_check(ctx: ChatContext, args: PriceArgs) -> ToolResult:
         parts.append(check.verdict)
     elif not kg:
         parts.append("Ask for the quantity to work out the cost per kg.")
+    with suppress(ToolError):  # duties add context; the price check stands without them
+        parts.append(f"Import duty: {(await _duties(ctx, product, market)).summary}")
     card = PriceCard(
         product=product, market=market, currency=currency, stock_value=value,
         value_usd=value_usd, quantity_kg=kg, cost_usd_kg=check.cost_usd_kg,
@@ -442,6 +488,10 @@ TOOLS: dict[str, Tool] = {
         Tool("monthly_trend", "Checking the latest monthly figures",
              "Recent monthly imports (EU countries and the United States only).",
              MarketArgs, monthly_trend),
+        Tool("duty_check", "Checking import duties",
+             "Import duty a market charges on a product from the user's country vs its main "
+             "rivals, with source and year.",
+             MarketArgs, duty_check),
         Tool("where_to_buy", "Comparing suppliers",
              "The best countries to buy a product from for the user's country: prices, picks.",
              ProductArgs, where_to_buy),

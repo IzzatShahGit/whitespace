@@ -1,62 +1,104 @@
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Minus } from "lucide-react";
 import Link from "next/link";
 
-import { SellingBadge, SignalChips, VerdictBadge } from "@/components/markets/verdict";
+import { VerdictBadge } from "@/components/markets/verdict";
+import { Badge } from "@/components/ui/badge";
 import type { MarketItem } from "@/lib/api/queries";
 import { money, percent, signedPercent } from "@/lib/format";
 
-function Stat({ label, value }: { label: string; value: string }) {
+/** Columns shared by the list header and every row (phones: rank · market · figures). */
+export const ROW_GRID =
+  "grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 md:grid-cols-[2rem_minmax(0,1fr)_5rem_5rem_5rem_1rem]";
+
+/** Growth with a small arrow, so the direction never relies on colour. */
+export function Growth({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const rounded = Math.round(value * 100);
+  const Icon = rounded > 0 ? ArrowUpRight : rounded < 0 ? ArrowDownRight : Minus;
+  const tone = rounded > 0 ? "text-positive" : rounded < 0 ? "text-negative" : "text-subtle";
   return (
-    <div>
-      <dt className="text-xs text-sage-dim">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium tabular-nums">{value}</dd>
-    </div>
+    <span className="inline-flex items-center justify-end gap-0.5 tabular-nums">
+      <Icon aria-hidden className={`h-3.5 w-3.5 shrink-0 ${tone}`} strokeWidth={2.25} />
+      {signedPercent(value)}
+      {suffix}
+    </span>
   );
 }
 
 /**
- * One ranked market: the verdict first (what to do), then the signals (why), then
- * the key figures. `compact` (dashboard) leaves out the written summary.
+ * One ranked market as a table row: rank, name with its verdict, then imports, growth and
+ * the exporter's share. The whole row opens the market.
  */
-export function MarketCard({
-  item,
-  href,
-  compact = false,
-}: {
-  item: MarketItem;
-  href: string;
-  compact?: boolean;
-}) {
+export function MarketRow({ item, href }: { item: MarketItem; href: string }) {
+  const share = percent(item.exporter_share, { floor: true });
   return (
-    <Link
-      href={href}
-      className="group flex h-full flex-col rounded-2xl border border-ink-line bg-ink-raised p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-dim/60 focus-visible:outline-2 focus-visible:outline-ember"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-sm text-sage-dim">#{item.rank}</span>
-          <h3 className="text-lg font-medium">{item.market.name}</h3>
-        </div>
-        {item.already_selling && <SellingBadge />}
-      </div>
+    <li>
+      <Link
+        href={href}
+        aria-label={`#${item.rank} ${item.market.name}: ${item.verdict.headline}. Imports ${money(
+          item.market_imports_usd,
+        )}, growth ${signedPercent(item.import_growth_3y)} a year, your share ${share}${
+          item.already_selling ? ". You sell here" : ""
+        }`}
+        className={`group ${ROW_GRID} px-4 py-3 transition-colors duration-150 hover:bg-surface-2/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand sm:px-5`}
+      >
+        <span className="self-start pt-0.5 text-sm text-subtle tabular-nums md:self-center md:pt-0">
+          {item.rank}
+        </span>
+        <span className="min-w-0">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-medium text-fg">{item.market.name}</span>
+            {item.already_selling && (
+              <span className="hidden shrink-0 sm:inline-flex">
+                <Badge tone="neutral">You sell here</Badge>
+              </span>
+            )}
+          </span>
+          <span className="mt-1.5 flex">
+            <VerdictBadge verdict={item.verdict} />
+          </span>
+        </span>
 
-      <div className="mt-3">
-        <VerdictBadge verdict={item.verdict} />
-      </div>
-      {!compact && <p className="mt-3 text-sm leading-6 text-sage">{item.verdict.summary}</p>}
+        {/* Phones: the three figures stacked on the right. */}
+        <span className="text-right md:hidden">
+          <span className="block text-sm font-medium tabular-nums">
+            {money(item.market_imports_usd)}
+          </span>
+          <span className="mt-1 flex items-center justify-end gap-1 text-xs text-muted">
+            <Growth value={item.import_growth_3y} suffix="/yr" />
+            <span aria-hidden>·</span>
+            <span className="tabular-nums">{share}</span>
+          </span>
+        </span>
 
-      <div className="mt-4">
-        <SignalChips signals={item.signals} />
-      </div>
+        <span className="hidden text-right text-sm font-medium tabular-nums md:block">
+          {money(item.market_imports_usd)}
+        </span>
+        <span className="hidden justify-end text-sm md:flex">
+          <Growth value={item.import_growth_3y} />
+        </span>
+        <span className="hidden text-right text-sm tabular-nums md:block">{share}</span>
+        <ChevronRight
+          aria-hidden
+          className="hidden h-4 w-4 text-subtle transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-fg md:block"
+        />
+      </Link>
+    </li>
+  );
+}
 
-      <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-ink-line/60 pt-4">
-        <Stat label="Imports" value={money(item.market_imports_usd)} />
-        <Stat label="Growth / yr" value={signedPercent(item.import_growth_3y)} />
-        <Stat label="Your share" value={percent(item.exporter_share, { floor: true })} />
-      </dl>
-
-      <span className="mt-auto pt-4 text-sm text-sage-dim transition-colors group-hover:text-cream">
-        See the market →
+export function MarketRowSkeleton() {
+  return (
+    <li aria-hidden className={`${ROW_GRID} px-4 py-3.5 sm:px-5`}>
+      <span className="skeleton h-4 w-4" />
+      <span className="flex flex-col gap-2">
+        <span className="skeleton h-4 w-32" />
+        <span className="skeleton h-5 w-24 rounded-full" />
       </span>
-    </Link>
+      <span className="skeleton h-8 w-20 md:hidden" />
+      <span className="skeleton hidden h-4 w-14 justify-self-end md:block" />
+      <span className="skeleton hidden h-4 w-12 justify-self-end md:block" />
+      <span className="skeleton hidden h-4 w-10 justify-self-end md:block" />
+      <span className="hidden md:block" />
+    </li>
   );
 }

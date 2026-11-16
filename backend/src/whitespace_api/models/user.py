@@ -29,6 +29,11 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
 
+    @property
+    def has_password(self) -> bool:
+        """False for Google-only accounts (they can set a password without a current one)."""
+        return self.password_hash is not None
+
 
 class RefreshToken(Base):
     """One row per signed-in session. Rotated on every refresh, revoked on logout."""
@@ -42,6 +47,9 @@ class RefreshToken(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set when this token was swapped for a new one. Reusing a rotated token means it
+    # was copied (theft); reusing one ended by sign-out or a password change doesn't.
+    rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="refresh_tokens")
