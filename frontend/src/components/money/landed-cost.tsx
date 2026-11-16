@@ -16,6 +16,11 @@ const rate = (pct: number) => `${Number(pct.toFixed(1))}%`;
  * Import duty: what the exporter pays to enter this market vs its main rival, with the
  * trade scheme behind it. Hidden for markets the tariff data doesn't cover.
  */
+/** The scheme's name, or what kind of rate it is when the source doesn't name one. */
+function rateLabel(rate: { kind: string; scheme?: string | null }): string {
+  return rate.scheme ?? (rate.kind === "preference" ? "Preferential rate" : "Standard rate");
+}
+
 export function DutyAdvantage({
   exporter,
   hs6,
@@ -72,7 +77,7 @@ export function DutyAdvantage({
           </dd>
           <dd className="mt-1.5">
             <Badge tone={d.yours.kind === "preference" ? "brand" : "neutral"}>
-              {d.yours.scheme ?? "Standard rate"}
+              {rateLabel(d.yours)}
             </Badge>
           </dd>
         </div>
@@ -86,7 +91,7 @@ export function DutyAdvantage({
             </dd>
             <dd className="mt-1.5">
               <Badge tone={rival.kind === "preference" ? "brand" : "neutral"}>
-                {rival.scheme ?? "Standard rate"}
+                {rateLabel(rival)}
               </Badge>
             </dd>
           </div>
@@ -204,7 +209,7 @@ export function LandedReceipt({
           %
         </label>
       </div>
-      {!yours ? (
+      {!l || !yours ? (
         <Skeleton className="mt-3 h-24" />
       ) : (
         <>

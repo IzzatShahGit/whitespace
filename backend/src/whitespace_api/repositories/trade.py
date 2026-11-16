@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import Row, and_, exists, func, select, text
+from sqlalchemy import Row, and_, case, desc, exists, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -309,3 +309,54 @@ async def landscape_counts(
 
 async def latest_data_year(session: AsyncSession) -> int | None:
     return await session.scalar(select(func.max(MarketOpportunity.data_year)))
+
+
+async def related_products(
+    session: AsyncSession,
+    *,
+    exporter: str,
+    products: Sequence[str],
+    strong_from: float,
+    limit: int,
+) -> Sequence[Row[Any]]:
+    """Other products in the same customs families that `exporter` ranks for.
+
+    Same 4-digit heading first ("close"), then the same 2-digit chapter; within each,
+    by how many strong markets they have. Ranked products already passed the
+    pipeline's "exports it competitively" test (RCA >= 1), so these are realistic.
+    """
+    if not products:
+        return []
+    heading = func.substr(MarketOpportunity.hs6, 1, 4)
+    chapter = func.substr(MarketOpportunity.hs6, 1, 2)
+    close = func.max(case((heading.in_({p[:4] for p in products}), 1), else_=0)).label("close")
+    strong = func.count().filter(MarketOpportunity.score >= strong_from).label("strong")
+    query = (
+        select(MarketOpportunity.hs6, func.count().label("markets"), strong, close)
+        .where(
+            MarketOpportunity.exporter == exporter,
+            chapter.in_({p[:2] for p in products}),
+            MarketOpportunity.hs6.not_in(products),
+        )
+        .group_by(MarketOpportunity.hs6)
+        .having(func.count().filter(MarketOpportunity.score >= strong_from) > 0)
+        .order_by(desc("close"), desc("strong"), MarketOpportunity.hs6)
+        .limit(limit)
+    )
+    rows: Sequence[Row[Any]] = (await session.execute(query)).all()
+    return rows
+
+
+async def top_market_rows(
+    session: AsyncSession, *, exporter: str, products: Sequence[str]
+) -> Sequence[Row[Any]]:
+    """The #1 market for each product (with names), in one query."""
+    if not products:
+        return []
+    query = _opportunities().where(
+        MarketOpportunity.exporter == exporter,
+        MarketOpportunity.hs6.in_(products),
+        MarketOpportunity.rank == 1,
+    )
+    rows: Sequence[Row[Any]] = (await session.execute(query)).all()
+    return rows

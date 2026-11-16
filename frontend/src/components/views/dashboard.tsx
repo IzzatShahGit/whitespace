@@ -13,6 +13,8 @@ import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { Stat } from "@/components/ui/stat";
 import { BuyView } from "@/components/views/buy-view";
+import { GettingStarted } from "@/components/views/getting-started";
+import { GrowRange } from "@/components/views/grow-range";
 import { DataNote, Problem } from "@/components/views/states";
 import {
   type Dashboard as DashboardData,
@@ -296,6 +298,8 @@ function SellHome() {
         />
       </div>
 
+      <GettingStarted firstProduct={products[0]?.product.hs6} />
+
       <div className="grid gap-4 lg:grid-cols-3">
         <OpportunityMap data={data} />
         <div className="flex flex-col gap-4">
@@ -310,6 +314,8 @@ function SellHome() {
           your products.
         </p>
       )}
+
+      <GrowRange profile={profile} />
 
       <HowWeDecide />
       {data.data && <DataNote start={data.data.start_year} end={data.data.end_year} />}

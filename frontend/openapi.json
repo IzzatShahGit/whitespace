@@ -1862,6 +1862,72 @@
         }
       }
     },
+    "/api/v1/me/grow": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Grow",
+        "description": "Related products the user's country exports competitively: ideas to widen their range.",
+        "operationId": "grow_api_v1_me_grow_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrowRange"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/markets/{market}/brief": {
       "get": {
         "tags": [
@@ -4369,6 +4435,22 @@
         "title": "FxRates",
         "description": "Today's exchange rates against the US dollar (updated daily)."
       },
+      "GrowRange": {
+        "properties": {
+          "ideas": {
+            "items": {
+              "$ref": "#/components/schemas/RangeIdea"
+            },
+            "type": "array",
+            "title": "Ideas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ideas"
+        ],
+        "title": "GrowRange"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -5671,6 +5753,42 @@
           "google"
         ],
         "title": "ProvidersOut"
+      },
+      "RangeIdea": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "same_family": {
+            "type": "boolean",
+            "title": "Same Family",
+            "description": "Same 4-digit heading as one of the user's products"
+          },
+          "markets": {
+            "type": "integer",
+            "title": "Markets",
+            "description": "Ranked markets for it"
+          },
+          "strong_markets": {
+            "type": "integer",
+            "title": "Strong Markets",
+            "description": "Markets with a strong opportunity score"
+          },
+          "top": {
+            "$ref": "#/components/schemas/MarketItem",
+            "description": "Its best market"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "same_family",
+          "markets",
+          "strong_markets",
+          "top"
+        ],
+        "title": "RangeIdea",
+        "description": "A product the user could add: same customs family, already exported competitively."
       },
       "ReadinessResponse": {
         "properties": {

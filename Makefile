@@ -85,4 +85,8 @@ gen-client: ## Regenerate frontend API types from the backend
 	$(FRONTEND) pnpm gen:api
 	uv run python scripts/gen_iso_numeric.py
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts gen-client
+# ---------- deploy ----------
+snapdeploy: ## Build the ARM64 web+API image for SnapDeploy -> dist/whitespace-snapdeploy.tar
+	scripts/snapdeploy-build.sh
+
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts gen-client snapdeploy

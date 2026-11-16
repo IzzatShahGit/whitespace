@@ -11,7 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
-import { NAV, SETTINGS } from "@/components/shell/nav";
+import { LEARN, NAV, SETTINGS } from "@/components/shell/nav";
 import { useProductSearch, useProfile } from "@/lib/api/queries";
 import { capitalize } from "@/lib/format";
 import { useDebounced } from "@/lib/use-debounced";
@@ -64,7 +64,7 @@ export function CommandPalette() {
   }, []);
 
   const lower = query.toLowerCase();
-  const sections = [...NAV, SETTINGS].filter(
+  const sections = [...NAV, LEARN, SETTINGS].filter(
     (n) => !lower || n.label.toLowerCase().includes(lower) || n.hint.toLowerCase().includes(lower),
   );
   const results: Result[] = [

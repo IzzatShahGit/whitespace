@@ -50,3 +50,17 @@ class Dashboard(BaseModel):
         description="Top actionable markets across all products (verdict: go or test)"
     )
     products: list[ProductOpportunities]
+
+
+class RangeIdea(BaseModel):
+    """A product the user could add: same customs family, already exported competitively."""
+
+    product: ProductOut
+    same_family: bool = Field(description="Same 4-digit heading as one of the user's products")
+    markets: int = Field(description="Ranked markets for it")
+    strong_markets: int = Field(description="Markets with a strong opportunity score")
+    top: MarketItem = Field(description="Its best market")
+
+
+class GrowRange(BaseModel):
+    ideas: list[RangeIdea]

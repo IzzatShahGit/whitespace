@@ -1,0 +1,21 @@
+# Build context for deploy/snapdeploy/Dockerfile (repo root). Used instead of the root
+# .dockerignore, which leaves out frontend/ because the API image doesn't need it.
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/node_modules
+**/.next
+**/tests
+**/coverage
+**/*.tsbuildinfo
+.git
+.github
+.claude
+.env
+.env.*
+frontend/.env*
+data
+docs
+dist

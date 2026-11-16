@@ -11,12 +11,15 @@ from whitespace_api.repositories import trade as trade_repo
 from whitespace_api.schemas.profile import (
     BestMove,
     Dashboard,
+    GrowRange,
     ProductOpportunities,
     ProfileIn,
     ProfileOut,
+    RangeIdea,
 )
 from whitespace_api.schemas.trade import CountryOut, MarketItem, ProductOut
 from whitespace_api.services import trade as trade_service
+from whitespace_api.services.explain import STRONG_FROM
 
 TOP_PER_PRODUCT = 3
 BEST_MOVES = 3
@@ -154,4 +157,40 @@ async def dashboard(db: AsyncSession, user: User) -> Dashboard:
             ProductOpportunities(product=p, total_markets=counts.get(p.hs6, 0), top=top[p.hs6])
             for p in out.products
         ],
+    )
+
+
+RANGE_IDEAS = 6
+
+
+async def grow_range(db: AsyncSession, user: User) -> GrowRange:
+    """Products to add next: close relatives of what the user sells, with strong markets."""
+    profile = await _require(db, user)
+    rows = await trade_repo.related_products(
+        db,
+        exporter=profile.exporter,
+        products=profile.products,
+        strong_from=STRONG_FROM,
+        limit=RANGE_IDEAS,
+    )
+    codes = [r.hs6 for r in rows]
+    names = await trade_repo.products_by_code(db, codes)
+    tops = {
+        r.MarketOpportunity.hs6: r
+        for r in await trade_repo.top_market_rows(db, exporter=profile.exporter, products=codes)
+    }
+    exporter = await trade_service.get_exporter(db, profile.exporter)
+    selling = frozenset(profile.current_markets)
+    return GrowRange(
+        ideas=[
+            RangeIdea(
+                product=ProductOut(hs6=r.hs6, description=names[r.hs6].description),
+                same_family=bool(r.close),
+                markets=r.markets,
+                strong_markets=r.strong,
+                top=trade_service.market_item(tops[r.hs6], exporter, selling),
+            )
+            for r in rows
+            if r.hs6 in names and r.hs6 in tops
+        ]
     )

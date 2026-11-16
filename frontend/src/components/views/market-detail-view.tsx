@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   MapPinOff,
   Scale,
+  Columns3,
   Sparkles,
   Target,
   TrendingDown,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type CSSProperties, type ReactNode, use } from "react";
+import { type CSSProperties, type ReactNode, use, useEffect } from "react";
 
 import { BriefPanel } from "@/components/markets/brief-panel";
 import { LoadError } from "@/components/markets/load-error";
@@ -42,6 +43,7 @@ import {
   useRecentMovement,
 } from "@/lib/api/queries";
 import { money, percent, points, signedPercent } from "@/lib/format";
+import { markStep } from "@/lib/steps";
 import { useExporter, withExporter } from "@/lib/use-exporter";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
@@ -94,6 +96,7 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
   const override = search.get("exporter");
   const exporter = useExporter();
   const code = market.toUpperCase();
+  useEffect(() => markStep("market"), []); // getting-started checklist
   const detail = useMarketDetail(exporter.code, hs6, code);
   const recent = useRecentMovement(exporter.code, hs6, code);
   const back = withExporter(`/app/markets/${hs6}`, override);
@@ -216,6 +219,12 @@ function Detail({
         actions={
           <>
             <WatchButton exporter={exp.code} hs6={product.hs6} market={m.market.code} />
+            <ButtonLink
+              href={`/app/markets/${product.hs6}/compare?m=${m.market.code}`}
+              variant="secondary"
+            >
+              <Columns3 /> Compare
+            </ButtonLink>
             <ButtonLink href={ask} variant="accent">
               <Sparkles /> Ask about this
             </ButtonLink>

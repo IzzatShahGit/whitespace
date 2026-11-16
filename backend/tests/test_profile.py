@@ -119,3 +119,12 @@ async def test_buyers_need_supplier_data_not_markets(user: AsyncClient) -> None:
     no_suppliers = await save(user, goal="buy", products=[BED_LINEN])
     assert no_suppliers.status_code == 422 and "supplier" in no_suppliers.json()["detail"]
     assert (await save(user, goal="trade")).status_code == 422
+
+
+async def test_grow_range_suggests_close_relatives(user: AsyncClient) -> None:
+    assert (await user.get("/api/v1/me/grow")).status_code == 404  # no profile yet
+    await save(user, products=[TOWELS], current_markets=[])
+    ideas = (await user.get("/api/v1/me/grow")).json()["ideas"]
+    # Bed linen shares towels' heading (6302) and has a strong market; thread (chapter 52) doesn't.
+    assert [(i["product"]["hs6"], i["same_family"]) for i in ideas] == [(BED_LINEN, True)]
+    assert ideas[0]["top"]["market"]["code"] == "USA" and ideas[0]["strong_markets"] == 1

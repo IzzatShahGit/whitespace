@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/brand/logo";
-import { activeHref, NAV, SETTINGS } from "@/components/shell/nav";
+import { activeHref, LEARN, NAV, SETTINGS } from "@/components/shell/nav";
 import { useChatSuggestions } from "@/lib/api/queries";
 
 function UsageMeter() {
@@ -59,6 +59,16 @@ export function Sidebar() {
       </nav>
       <div className="flex flex-col gap-2">
         <UsageMeter />
+        <Link
+          href={LEARN.href}
+          aria-current={current === LEARN.href ? "page" : undefined}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
+            current === LEARN.href ? "bg-surface text-fg" : "text-muted hover:text-fg"
+          }`}
+        >
+          <LEARN.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
+          {LEARN.label}
+        </Link>
         <Link
           href={SETTINGS.href}
           aria-current={current === SETTINGS.href ? "page" : undefined}

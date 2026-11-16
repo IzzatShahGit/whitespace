@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from whitespace_api.api.deps import CurrentUser, DbSession
-from whitespace_api.schemas.profile import Dashboard, ProfileIn, ProfileOut
+from whitespace_api.schemas.profile import Dashboard, GrowRange, ProfileIn, ProfileOut
 from whitespace_api.services import profile as profile_service
 
 router = APIRouter(prefix="/me", tags=["profile"])
@@ -37,3 +37,12 @@ async def dashboard(user: CurrentUser, db: DbSession) -> Dashboard:
         return await profile_service.dashboard(db, user)
     except profile_service.NoProfileError as exc:
         raise _NO_PROFILE from exc
+
+
+@router.get("/grow", response_model=GrowRange)
+async def grow(db: DbSession, user: CurrentUser) -> GrowRange:
+    """Related products the user's country exports competitively: ideas to widen their range."""
+    try:
+        return await profile_service.grow_range(db, user)
+    except profile_service.NoProfileError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Set up your products first") from exc

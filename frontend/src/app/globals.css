@@ -321,3 +321,16 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* Printing a page (e.g. a market comparison) as a clean report: content only, light. */
+@media print {
+  aside,
+  header.sticky,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}

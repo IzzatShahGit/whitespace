@@ -471,6 +471,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/grow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Grow
+         * @description Related products the user's country exports competitively: ideas to widen their range.
+         */
+        get: operations["grow_api_v1_me_grow_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/markets/{market}/brief": {
         parameters: {
             query?: never;
@@ -1211,6 +1231,11 @@ export interface components {
              */
             source: string;
         };
+        /** GrowRange */
+        GrowRange: {
+            /** Ideas */
+            ideas: components["schemas"]["RangeIdea"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1739,6 +1764,30 @@ export interface components {
             password: boolean;
             /** Google */
             google: boolean;
+        };
+        /**
+         * RangeIdea
+         * @description A product the user could add: same customs family, already exported competitively.
+         */
+        RangeIdea: {
+            product: components["schemas"]["ProductOut"];
+            /**
+             * Same Family
+             * @description Same 4-digit heading as one of the user's products
+             */
+            same_family: boolean;
+            /**
+             * Markets
+             * @description Ranked markets for it
+             */
+            markets: number;
+            /**
+             * Strong Markets
+             * @description Markets with a strong opportunity score
+             */
+            strong_markets: number;
+            /** @description Its best market */
+            top: components["schemas"]["MarketItem"];
         };
         /** ReadinessResponse */
         ReadinessResponse: {
@@ -3063,6 +3112,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    grow_api_v1_me_grow_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GrowRange"];
                 };
             };
             /** @description Validation Error */

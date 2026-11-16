@@ -1,5 +1,6 @@
 import {
   Bell,
+  BookOpen,
   Compass,
   Home,
   type LucideIcon,
@@ -26,6 +27,13 @@ export const NAV: NavItem[] = [
   { href: "/app/browse", label: "Explore", icon: Compass, hint: "Browse niches" },
 ];
 
+export const LEARN: NavItem = {
+  href: "/app/learn",
+  label: "Trade terms",
+  icon: BookOpen,
+  hint: "Duty, FOB, HS code… in plain words",
+};
+
 export const SETTINGS: NavItem = {
   href: "/app/settings",
   label: "Settings",
@@ -35,7 +43,7 @@ export const SETTINGS: NavItem = {
 
 /** The section a path belongs to ("/app/markets/630260/DEU" -> Sell). */
 export function activeHref(path: string): string | undefined {
-  const match = [...NAV, SETTINGS]
+  const match = [...NAV, LEARN, SETTINGS]
     .filter((item) => item.href !== "/app" && path.startsWith(item.href))
     .sort((a, b) => b.href.length - a.href.length)[0];
   return match?.href ?? (path === "/app" ? "/app" : undefined);
