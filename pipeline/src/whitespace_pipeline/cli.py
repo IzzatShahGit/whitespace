@@ -11,6 +11,7 @@ import typer
 
 from whitespace_pipeline.config import get_settings
 from whitespace_pipeline.gold import opportunity
+from whitespace_pipeline.gold import routes as sea_routes
 from whitespace_pipeline.load import postgres
 from whitespace_pipeline.silver import baci as silver_baci
 from whitespace_pipeline.sources import baci
@@ -78,6 +79,16 @@ def gold() -> None:
     """Compute market metrics and opportunity scores into data/gold."""
     path = opportunity.run(get_settings())
     typer.secho(f"gold ready: {path}", fg=typer.colors.GREEN)
+
+
+@app.command()
+def routes() -> None:
+    """Sea distances between our exporters and every market (for freight estimates).
+
+    Slow (~15 min) and independent of the trade data: rerun only when exporters change.
+    """
+    path = sea_routes.run(get_settings())
+    typer.secho(f"routes ready: {path}", fg=typer.colors.GREEN)
 
 
 @app.command()

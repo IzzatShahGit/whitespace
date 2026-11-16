@@ -26,7 +26,20 @@ class PipelineSettings(BaseSettings):
     baci_base_url: str = "https://www.cepii.fr/DATA_DOWNLOAD/baci/data"
     baci_years: int = 4  # the minimum for 3-year growth
     keep_raw_zip: bool = False  # delete the ~800 MB zip once converted, to save disk
-    exporters: list[str] = ["PAK", "BGD", "VNM", "IND", "TUR", "EGY", "MAR", "KEN", "LKA", "ETH"]
+    # Emerging-market exporters we rank markets for. Each adds ~4-5 MB to Postgres; the
+    # whole database must stay well under Neon's free 512 MB (~250 MB with this list).
+    exporters: list[str] = [
+        # South Asia
+        "PAK", "BGD", "IND", "LKA", "NPL",
+        # South-East Asia
+        "VNM", "IDN", "THA", "PHL", "MYS", "KHM",
+        # Middle East, Central Asia and North Africa
+        "TUR", "EGY", "MAR", "TUN", "UZB",
+        # Sub-Saharan Africa
+        "KEN", "ETH", "NGA", "GHA", "ZAF",
+        # Latin America
+        "MEX", "BRA", "COL",
+    ]  # fmt: skip
 
     @property
     def bronze_dir(self) -> Path:

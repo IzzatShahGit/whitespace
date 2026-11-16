@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   BarChart3,
+  Building2,
   CalendarClock,
   Footprints,
   Globe2,
@@ -10,6 +11,7 @@ import {
   MapPinOff,
   Scale,
   Columns3,
+  FileText,
   Sparkles,
   Target,
   TrendingDown,
@@ -20,6 +22,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { type CSSProperties, type ReactNode, use, useEffect } from "react";
 
+import { LeadsPanel } from "@/components/leads/leads-panel";
+import { FreightEstimate } from "@/components/money/freight-estimate";
 import { BriefPanel } from "@/components/markets/brief-panel";
 import { LoadError } from "@/components/markets/load-error";
 import { RecentPanel } from "@/components/markets/recent-panel";
@@ -48,10 +52,11 @@ import { useExporter, withExporter } from "@/lib/use-exporter";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
 
-type TabKey = "overview" | "competitors" | "prices" | "recent";
+type TabKey = "overview" | "buyers" | "competitors" | "prices" | "recent";
 
 const TABS: Record<TabKey, { short: string; long: string; icon: ReactNode }> = {
   overview: { short: "Overview", long: "Overview", icon: <LayoutGrid /> },
+  buyers: { short: "Buyers", long: "Who to contact", icon: <Building2 /> },
   competitors: { short: "Rivals", long: "Competitors", icon: <Users /> },
   prices: { short: "Prices", long: "Prices & costs", icon: <Scale /> },
   recent: { short: "Monthly", long: "Latest months", icon: <CalendarClock /> },
@@ -151,7 +156,7 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
   }
 
   // The monthly tab appears for markets with a monthly source (EU members and the US).
-  const keys: TabKey[] = ["overview", "competitors", "prices"];
+  const keys: TabKey[] = ["overview", "buyers", "competitors", "prices"];
   const requested = search.get("tab") as TabKey | null;
   if (recent.data || (requested === "recent" && recent.isPending)) keys.push("recent");
   const tab: TabKey = requested && keys.includes(requested) ? requested : "overview";
@@ -219,6 +224,12 @@ function Detail({
         actions={
           <>
             <WatchButton exporter={exp.code} hs6={product.hs6} market={m.market.code} />
+            <ButtonLink
+              href={`/app/markets/${product.hs6}/${m.market.code}/deal`}
+              variant="secondary"
+            >
+              <FileText /> Deal sheet
+            </ButtonLink>
             <ButtonLink
               href={`/app/markets/${product.hs6}/compare?m=${m.market.code}`}
               variant="secondary"
@@ -339,6 +350,15 @@ function Detail({
               <HowWeDecide />
             </>
           )}
+          {tab === "buyers" && (
+            <LeadsPanel
+              hs6={product.hs6}
+              country={m.market.code}
+              countryName={m.market.name}
+              productName={product.name}
+              side="buyers"
+            />
+          )}
           {tab === "competitors" &&
             (suppliers.length > 0 ? (
               <SupplierChart
@@ -356,6 +376,7 @@ function Detail({
             ))}
           {tab === "prices" && (
             <>
+              <FreightEstimate origin={exp.code} dest={m.market.code} hs6={product.hs6} />
               <DutyAdvantage
                 exporter={exp.code}
                 hs6={product.hs6}

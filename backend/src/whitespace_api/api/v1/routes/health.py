@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, status
@@ -11,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from whitespace_api import __version__
 from whitespace_api.core.db import get_session
 from whitespace_api.schemas.health import HealthResponse, ReadinessResponse
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health")
 
@@ -29,7 +32,10 @@ async def readiness(
     """The API can serve traffic: the database answers."""
     try:
         await session.execute(text("SELECT 1"))
-    except Exception:
+    except Exception as exc:
+        # The exception text names the cause (refused, bad password, unknown host) and
+        # never contains the connection password.
+        log.warning("database not reachable: %s: %s", type(exc).__name__, exc)
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return ReadinessResponse(status="unavailable", database="down")
     return ReadinessResponse(status="ok", database="up")

@@ -13,6 +13,8 @@ dependencies = [
     "pydantic-settings>=2.6",
     "sqlalchemy>=2.0.36",
     "psycopg[binary]>=3.2",
+    "searoute>=1.6.0",
+    "pycountry>=26.2.16",
 ]
 
 [project.scripts]

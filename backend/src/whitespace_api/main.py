@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -16,9 +17,14 @@ from whitespace_api.core.http import http_client
 from whitespace_api.core.logging import configure_logging
 from whitespace_api.core.tasks import wait_for_jobs
 
+log = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    settings = get_settings()
+    # Shows in the host's logs which database this process uses (never the password).
+    log.info("app_env=%s database=%s", settings.app_env, settings.database_target)
     yield
     await wait_for_jobs()  # let in-flight briefs and replies finish before shutting down
     await http_client().aclose()

@@ -142,6 +142,10 @@ class Settings(BaseSettings):
     brief_cache_days: int = Field(default=7, ge=1)
     brief_daily_limit: int = Field(default=20, ge=1, description="New briefs per user per day")
     chat_daily_limit: int = Field(default=40, ge=1, description="Guide messages per user per day")
+    # Company leads (buyers / suppliers) change slowly; one search serves every user.
+    leads_cache_days: int = Field(default=30, ge=1)
+    leads_daily_limit: int = Field(default=10, ge=1, description="New lead searches per user/day")
+    intro_daily_limit: int = Field(default=20, ge=1, description="Intro emails per user per day")
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
@@ -209,11 +213,31 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _force_async_driver(cls, value: str) -> str:
-        # Hosted providers (Neon, Azure) hand out plain postgres:// URLs.
+        # Hosted providers (Neon, Azure) hand out plain postgres:// URLs written for libpq
+        # (psql). asyncpg takes `ssl` instead of `sslmode` and has no `channel_binding`,
+        # and rejects both as unknown arguments, so translate a pasted URL as-is.
+        value = value.strip().strip("\"'")
         for prefix in ("postgres://", "postgresql://"):
             if value.startswith(prefix):
-                return "postgresql+asyncpg://" + value.removeprefix(prefix)
-        return value
+                value = "postgresql+asyncpg://" + value.removeprefix(prefix)
+                break
+        base, sep, query = value.partition("?")
+        if not sep:
+            return value
+        params = []
+        for pair in query.split("&"):
+            key, _, val = pair.partition("=")
+            if key == "channel_binding" or not key:
+                continue
+            params.append(f"ssl={val}" if key == "sslmode" else pair)
+        return f"{base}?{'&'.join(params)}" if params else base
+
+    @property
+    def database_target(self) -> str:
+        """Where the database URL points, for logs: never the user or password."""
+        base, _, query = self.database_url.partition("?")
+        host = base.rpartition("@")[2]
+        return f"{host}{'?' + query if query else ''}"
 
 
 @lru_cache

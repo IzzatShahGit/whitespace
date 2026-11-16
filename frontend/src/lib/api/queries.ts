@@ -28,6 +28,11 @@ export type Verdict = Schemas["Verdict"];
 export type BestMove = Schemas["BestMove"];
 export type Brief = Schemas["BriefOut"];
 export type BriefContent = Schemas["BriefContent"];
+export type Leads = Schemas["LeadsOut"];
+export type LeadsContent = Schemas["LeadsContent"];
+export type Lead = Schemas["Lead"];
+export type LeadSide = Leads["side"];
+export type IntroDraft = Schemas["IntroOut"];
 export type SourcingPage = Schemas["SourcingPage"];
 export type SupplierOption = Schemas["SupplierOption"];
 export type SourcingPick = Schemas["SourcingPick"];
@@ -72,6 +77,7 @@ export const isMissing = (e: unknown) => e instanceof ApiError && e.status === 4
 
 // ---------- cache keys: one place, so invalidation can't drift ----------
 export const keys = {
+  leads: (hs6: string, country: string, side: string) => ["leads", hs6, country, side] as const,
   me: ["me"] as const,
   profile: ["profile"] as const,
   dashboard: ["dashboard"] as const,
@@ -326,6 +332,43 @@ export function useRequestBrief(exporter: string | undefined, hs6: string, marke
         }),
       ),
     onSuccess: (brief) => client.setQueryData(keys.brief(exporter ?? "", hs6, market), brief),
+  });
+}
+
+// ---------- company leads ----------
+/** Companies found for a product in a country; polls while the search runs. */
+export function useLeads(hs6: string, country: string | undefined, side: LeadSide) {
+  return useQuery({
+    queryKey: keys.leads(hs6, country ?? "", side),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/countries/{country}/leads", {
+          params: { path: { country: country! }, query: { hs6, side } },
+        }),
+      ),
+    enabled: Boolean(country),
+    refetchInterval: (query) => (query.state.data?.status === "pending" ? BRIEF_POLL_MS : false),
+  });
+}
+
+/** Start a company search. Credits are only spent on this action, and shared by everyone. */
+export function useRequestLeads(hs6: string, country: string | undefined, side: LeadSide) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST("/api/v1/countries/{country}/leads", {
+          params: { path: { country: country! }, query: { hs6, side } },
+        }),
+      ),
+    onSuccess: (leads) => client.setQueryData(keys.leads(hs6, country ?? "", side), leads),
+  });
+}
+
+/** A first-contact email to one company, to edit and send from the user's own inbox. */
+export function useDraftIntro() {
+  return useMutation({
+    mutationFn: (body: Schemas["IntroIn"]) => unwrap(api.POST("/api/v1/leads/intro", { body })),
   });
 }
 

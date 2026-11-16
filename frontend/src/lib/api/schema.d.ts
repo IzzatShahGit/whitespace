@@ -430,6 +430,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/freight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estimate
+         * @description One container's cost by stage (low / typical / high), the route and transit time.
+         */
+        get: operations["estimate_api_v1_freight_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/profile": {
         parameters: {
             query?: never;
@@ -549,6 +569,50 @@ export interface paths {
         get: operations["search_products_api_v1_sourcing_products_search_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/countries/{country}/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Leads
+         * @description The company list if one exists ("missing" otherwise), or its progress.
+         */
+        get: operations["get_leads_api_v1_countries__country__leads_get"];
+        put?: never;
+        /**
+         * Request Leads
+         * @description Search for companies (in the background) unless a fresh list already exists.
+         */
+        post: operations["request_leads_api_v1_countries__country__leads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leads/intro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft Intro
+         * @description A first-contact email to one company, ready to edit and send from your own inbox.
+         */
+        post: operations["draft_intro_api_v1_leads_intro_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1054,6 +1118,30 @@ export interface components {
              */
             updated_at: string;
         };
+        /** CostLine */
+        CostLine: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Stage
+             * @description to_port: up to the market's port (CIF); after: beyond
+             * @enum {string}
+             */
+            stage: "to_port" | "after_arrival";
+            /** @description Per container */
+            usd: components["schemas"]["CostRange"];
+        };
+        /** CostRange */
+        CostRange: {
+            /** Low */
+            low: number;
+            /** Typical */
+            typical: number;
+            /** High */
+            high: number;
+        };
         /** CountryOut */
         CountryOut: {
             /** Code */
@@ -1203,6 +1291,88 @@ export interface components {
              */
             note: string | null;
         };
+        /** FreightEstimate */
+        FreightEstimate: {
+            origin: components["schemas"]["CountryOut"];
+            dest: components["schemas"]["CountryOut"];
+            route: components["schemas"]["FreightRoute"];
+            /**
+             * Container
+             * @enum {string}
+             */
+            container: "20ft" | "40ft" | "40hc";
+            /** Kg Per Container */
+            kg_per_container: number;
+            /**
+             * Kg Basis
+             * @description Where the load figure comes from
+             */
+            kg_basis: string;
+            /**
+             * Value Usd Kg
+             * @description Goods value used for insurance
+             */
+            value_usd_kg: number | null;
+            /** Value Basis */
+            value_basis: string | null;
+            fuel: components["schemas"]["FuelPrice"];
+            /** Lines */
+            lines: components["schemas"]["CostLine"][];
+            /** @description Per container, to the market's port (CIF) */
+            to_port: components["schemas"]["CostRange"];
+            /** @description Per container, port to buyer */
+            after_arrival: components["schemas"]["CostRange"];
+            total: components["schemas"]["CostRange"];
+            to_port_usd_kg: components["schemas"]["CostRange"];
+            total_usd_kg: components["schemas"]["CostRange"];
+            lane: components["schemas"]["LaneInfo"];
+            /**
+             * Rates As Of
+             * @description Month the base container rates were last set
+             */
+            rates_as_of: string;
+            /** Notes */
+            notes: string[];
+        };
+        /** FreightRoute */
+        FreightRoute: {
+            /** Origin Port */
+            origin_port: string;
+            /** Dest Port */
+            dest_port: string;
+            /** Sea Nm */
+            sea_nm: number;
+            /** Sea Km */
+            sea_km: number;
+            /**
+             * Origin Inland Km
+             * @description Road/rail to the origin port (landlocked)
+             */
+            origin_inland_km: number;
+            /**
+             * Dest Inland Km
+             * @description Road/rail from the destination port
+             */
+            dest_inland_km: number;
+            /** Days Low */
+            days_low: number;
+            /** Days High */
+            days_high: number;
+        };
+        /** FuelPrice */
+        FuelPrice: {
+            /** Brent Usd */
+            brent_usd: number;
+            /** As Of */
+            as_of: string | null;
+            /** Source */
+            source: string;
+            /**
+             * Factor
+             * @description Sea freight multiplier vs the reference fuel price
+             */
+            factor: number;
+        };
         /**
          * FxRates
          * @description Today's exchange rates against the US dollar (updated daily).
@@ -1250,6 +1420,43 @@ export interface components {
             status: "ok";
             /** Version */
             version: string;
+        };
+        /** IntroIn */
+        IntroIn: {
+            /** Hs6 */
+            hs6: string;
+            /** Country */
+            country: string;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "buyers" | "suppliers";
+            /** Company */
+            company: string;
+            /**
+             * Kind
+             * @default other
+             * @enum {string}
+             */
+            kind: "importer" | "distributor" | "wholesaler" | "retailer" | "brand" | "manufacturer" | "exporter" | "agent" | "other";
+            /**
+             * Handles
+             * @default
+             */
+            handles: string;
+        };
+        /** IntroOut */
+        IntroOut: {
+            /** Subject */
+            subject: string;
+            /** Body */
+            body: string;
+            /**
+             * Drafted By
+             * @enum {string}
+             */
+            drafted_by: "ai" | "template";
         };
         /** LandedCost */
         LandedCost: {
@@ -1332,6 +1539,137 @@ export interface components {
              * @description FOB + freight + duty
              */
             landed_usd_kg: number;
+        };
+        /** LaneInfo */
+        LaneInfo: {
+            /**
+             * Direction
+             * @description backhaul: against the main flow of containers, so cheaper
+             * @enum {string}
+             */
+            direction: "headhaul" | "backhaul" | "balanced";
+            /**
+             * Factor
+             * @description Sea rate multiplier for this direction
+             */
+            factor: number;
+        };
+        /** Lead */
+        Lead: {
+            /** Name */
+            name: string;
+            /** City */
+            city?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "importer" | "distributor" | "wholesaler" | "retailer" | "brand" | "manufacturer" | "exporter" | "agent" | "other";
+            /**
+             * Handles
+             * @description What they deal in, in a few words
+             */
+            handles: string;
+            /**
+             * Website
+             * @description Only when seen on the source page
+             */
+            website?: string | null;
+            /**
+             * Source
+             * @description The source id this company was found on
+             */
+            source: string;
+        };
+        /** LeadEvent */
+        LeadEvent: {
+            /** Name */
+            name: string;
+            /** City */
+            city?: string | null;
+            /**
+             * When
+             * @description As written on the source, if given
+             */
+            when?: string | null;
+            /** Source */
+            source: string;
+        };
+        /** LeadSource */
+        LeadSource: {
+            /**
+             * Id
+             * @description S1, S2, ...
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Domain */
+            domain: string;
+        };
+        /** LeadsContent */
+        LeadsContent: {
+            /** Companies */
+            companies: components["schemas"]["Lead"][];
+            /**
+             * Events
+             * @description Trade fairs where these companies meet
+             */
+            events: components["schemas"]["LeadEvent"][];
+            /**
+             * Sources
+             * @description Every page searched, best first
+             */
+            sources: components["schemas"]["LeadSource"][];
+            /**
+             * Research Available
+             * @description False if web search couldn't run
+             */
+            research_available: boolean;
+            /**
+             * Removed
+             * @description Names dropped because the cited page didn't show them
+             */
+            removed: number;
+        };
+        /** LeadsOut */
+        LeadsOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "missing" | "pending" | "ready" | "failed";
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "buyers" | "suppliers";
+            content?: components["schemas"]["LeadsContent"] | null;
+            /** Error */
+            error?: string | null;
+            /** Generated At */
+            generated_at?: string | null;
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
+            usage?: components["schemas"]["LeadsUsage"] | null;
+        };
+        /** LeadsUsage */
+        LeadsUsage: {
+            /** Searches */
+            searches: number;
+            /** Pages Read */
+            pages_read: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Models */
+            models: string[];
         };
         /** LoginRequest */
         LoginRequest: {
@@ -3022,6 +3360,50 @@ export interface operations {
             };
         };
     };
+    estimate_api_v1_freight_get: {
+        parameters: {
+            query: {
+                /** @description Shipping from */
+                origin: string;
+                /** @description Shipping to */
+                dest: string;
+                hs6: string;
+                container?: "20ft" | "40ft" | "40hc";
+                /** @description Your load; default: typical */
+                kg_per_container?: number | null;
+                /** @description Goods value for insurance */
+                value_usd_kg?: number | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreightEstimate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_profile_api_v1_me_profile_get: {
         parameters: {
             query?: never;
@@ -3294,6 +3676,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SourceProductMatch"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leads_api_v1_countries__country__leads_get: {
+        parameters: {
+            query: {
+                hs6: string;
+                /** @description buyers: importers there; suppliers: makers there */
+                side: "buyers" | "suppliers";
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                country: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_leads_api_v1_countries__country__leads_post: {
+        parameters: {
+            query: {
+                hs6: string;
+                /** @description buyers: importers there; suppliers: makers there */
+                side: "buyers" | "suppliers";
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                country: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_intro_api_v1_leads_intro_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntroIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntroOut"];
                 };
             };
             /** @description Validation Error */

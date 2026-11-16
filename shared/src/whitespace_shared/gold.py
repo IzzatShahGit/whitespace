@@ -27,6 +27,7 @@ MARKET_SUPPLIER_TABLE = "gold_market_supplier"
 SUPPLIER_LANDSCAPE_TABLE = "gold_supplier_landscape"
 PRODUCT_TABLE = "ref_product"
 COUNTRY_TABLE = "ref_country"
+SEA_ROUTE_TABLE = "ref_sea_route"
 
 
 class _Contract(BaseModel):
@@ -97,3 +98,18 @@ class SupplierLandscape(_Contract):
     world_share: float = Field(ge=0, le=1)
     markets_served: int = Field(ge=0, description="Markets buying at least $100k from it")
     unit_price_usd_kg: float | None = Field(default=None, ge=0)
+
+
+class SeaRoute(_Contract):
+    """Shortest sea leg between an exporter and a country's main ports, plus road legs
+    to the gateway port for landlocked countries. Same distance in both directions."""
+
+    origin: CountryCode
+    dest: CountryCode
+    sea_nm: float = Field(ge=0, description="Nautical miles port to port (0: same port)")
+    origin_port: str
+    origin_port_code: str
+    dest_port: str
+    dest_port_code: str
+    origin_inland_km: int = Field(ge=0)
+    dest_inland_km: int = Field(ge=0)

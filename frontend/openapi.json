@@ -1657,6 +1657,161 @@
         }
       }
     },
+    "/api/v1/freight": {
+      "get": {
+        "tags": [
+          "freight"
+        ],
+        "summary": "Estimate",
+        "description": "One container's cost by stage (low / typical / high), the route and transit time.",
+        "operationId": "estimate_api_v1_freight_get",
+        "parameters": [
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "Shipping from",
+              "title": "Origin"
+            },
+            "description": "Shipping from"
+          },
+          {
+            "name": "dest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "Shipping to",
+              "title": "Dest"
+            },
+            "description": "Shipping to"
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "container",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "20ft",
+                "40ft",
+                "40hc"
+              ],
+              "type": "string",
+              "default": "40ft",
+              "title": "Container"
+            }
+          },
+          {
+            "name": "kg_per_container",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 30000,
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Your load; default: typical",
+              "title": "Kg Per Container"
+            },
+            "description": "Your load; default: typical"
+          },
+          {
+            "name": "value_usd_kg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 10000,
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Goods value for insurance",
+              "title": "Value Usd Kg"
+            },
+            "description": "Goods value for insurance"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreightEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/me/profile": {
       "get": {
         "tags": [
@@ -2282,6 +2437,282 @@
                     "$ref": "#/components/schemas/SourceProductMatch"
                   },
                   "title": "Response Search Products Api V1 Sourcing Products Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/countries/{country}/leads": {
+      "get": {
+        "tags": [
+          "leads"
+        ],
+        "summary": "Get Leads",
+        "description": "The company list if one exists (\"missing\" otherwise), or its progress.",
+        "operationId": "get_leads_api_v1_countries__country__leads_get",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Country"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "buyers",
+                "suppliers"
+              ],
+              "type": "string",
+              "description": "buyers: importers there; suppliers: makers there",
+              "title": "Side"
+            },
+            "description": "buyers: importers there; suppliers: makers there"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "leads"
+        ],
+        "summary": "Request Leads",
+        "description": "Search for companies (in the background) unless a fresh list already exists.",
+        "operationId": "request_leads_api_v1_countries__country__leads_post",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Country"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "buyers",
+                "suppliers"
+              ],
+              "type": "string",
+              "description": "buyers: importers there; suppliers: makers there",
+              "title": "Side"
+            },
+            "description": "buyers: importers there; suppliers: makers there"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leads/intro": {
+      "post": {
+        "tags": [
+          "leads"
+        ],
+        "summary": "Draft Intro",
+        "description": "A first-contact email to one company, ready to edit and send from your own inbox.",
+        "operationId": "draft_intro_api_v1_leads_intro_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntroIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntroOut"
                 }
               }
             }
@@ -4044,6 +4475,62 @@
         ],
         "title": "ChatThreadOut"
       },
+      "CostLine": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "to_port",
+              "after_arrival"
+            ],
+            "title": "Stage",
+            "description": "to_port: up to the market's port (CIF); after: beyond"
+          },
+          "usd": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per container"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "stage",
+          "usd"
+        ],
+        "title": "CostLine"
+      },
+      "CostRange": {
+        "properties": {
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "typical": {
+            "type": "number",
+            "title": "Typical"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "low",
+          "typical",
+          "high"
+        ],
+        "title": "CostRange"
+      },
       "CountryOut": {
         "properties": {
           "code": {
@@ -4400,6 +4887,211 @@
         "title": "DutyRate",
         "description": "One country's import duty on the product, and where the figure comes from."
       },
+      "FreightEstimate": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "dest": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "route": {
+            "$ref": "#/components/schemas/FreightRoute"
+          },
+          "container": {
+            "type": "string",
+            "enum": [
+              "20ft",
+              "40ft",
+              "40hc"
+            ],
+            "title": "Container"
+          },
+          "kg_per_container": {
+            "type": "number",
+            "title": "Kg Per Container"
+          },
+          "kg_basis": {
+            "type": "string",
+            "title": "Kg Basis",
+            "description": "Where the load figure comes from"
+          },
+          "value_usd_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Usd Kg",
+            "description": "Goods value used for insurance"
+          },
+          "value_basis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Basis"
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/FuelPrice"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "to_port": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per container, to the market's port (CIF)"
+          },
+          "after_arrival": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per container, port to buyer"
+          },
+          "total": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "to_port_usd_kg": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "total_usd_kg": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "lane": {
+            "$ref": "#/components/schemas/LaneInfo"
+          },
+          "rates_as_of": {
+            "type": "string",
+            "title": "Rates As Of",
+            "description": "Month the base container rates were last set"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "dest",
+          "route",
+          "container",
+          "kg_per_container",
+          "kg_basis",
+          "value_usd_kg",
+          "value_basis",
+          "fuel",
+          "lines",
+          "to_port",
+          "after_arrival",
+          "total",
+          "to_port_usd_kg",
+          "total_usd_kg",
+          "lane",
+          "rates_as_of",
+          "notes"
+        ],
+        "title": "FreightEstimate"
+      },
+      "FreightRoute": {
+        "properties": {
+          "origin_port": {
+            "type": "string",
+            "title": "Origin Port"
+          },
+          "dest_port": {
+            "type": "string",
+            "title": "Dest Port"
+          },
+          "sea_nm": {
+            "type": "number",
+            "title": "Sea Nm"
+          },
+          "sea_km": {
+            "type": "number",
+            "title": "Sea Km"
+          },
+          "origin_inland_km": {
+            "type": "integer",
+            "title": "Origin Inland Km",
+            "description": "Road/rail to the origin port (landlocked)"
+          },
+          "dest_inland_km": {
+            "type": "integer",
+            "title": "Dest Inland Km",
+            "description": "Road/rail from the destination port"
+          },
+          "days_low": {
+            "type": "integer",
+            "title": "Days Low"
+          },
+          "days_high": {
+            "type": "integer",
+            "title": "Days High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin_port",
+          "dest_port",
+          "sea_nm",
+          "sea_km",
+          "origin_inland_km",
+          "dest_inland_km",
+          "days_low",
+          "days_high"
+        ],
+        "title": "FreightRoute"
+      },
+      "FuelPrice": {
+        "properties": {
+          "brent_usd": {
+            "type": "number",
+            "title": "Brent Usd"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor",
+            "description": "Sea freight multiplier vs the reference fuel price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "brent_usd",
+          "as_of",
+          "source",
+          "factor"
+        ],
+        "title": "FuelPrice"
+      },
       "FxRates": {
         "properties": {
           "base": {
@@ -4482,6 +5174,91 @@
           "version"
         ],
         "title": "HealthResponse"
+      },
+      "IntroIn": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "title": "Hs6"
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Country"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buyers",
+              "suppliers"
+            ],
+            "title": "Side"
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "importer",
+              "distributor",
+              "wholesaler",
+              "retailer",
+              "brand",
+              "manufacturer",
+              "exporter",
+              "agent",
+              "other"
+            ],
+            "title": "Kind",
+            "default": "other"
+          },
+          "handles": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Handles",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "country",
+          "side",
+          "company"
+        ],
+        "title": "IntroIn"
+      },
+      "IntroOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "drafted_by": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "template"
+            ],
+            "title": "Drafted By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "body",
+          "drafted_by"
+        ],
+        "title": "IntroOut"
       },
       "LandedCost": {
         "properties": {
@@ -4678,6 +5455,323 @@
         ],
         "title": "LandedLine",
         "description": "Cost per kg delivered to the market: price, freight, then duty."
+      },
+      "LaneInfo": {
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "headhaul",
+              "backhaul",
+              "balanced"
+            ],
+            "title": "Direction",
+            "description": "backhaul: against the main flow of containers, so cheaper"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor",
+            "description": "Sea rate multiplier for this direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "direction",
+          "factor"
+        ],
+        "title": "LaneInfo"
+      },
+      "Lead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "importer",
+              "distributor",
+              "wholesaler",
+              "retailer",
+              "brand",
+              "manufacturer",
+              "exporter",
+              "agent",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "handles": {
+            "type": "string",
+            "title": "Handles",
+            "description": "What they deal in, in a few words"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website",
+            "description": "Only when seen on the source page"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "The source id this company was found on"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "handles",
+          "source"
+        ],
+        "title": "Lead"
+      },
+      "LeadEvent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When",
+            "description": "As written on the source, if given"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "source"
+        ],
+        "title": "LeadEvent"
+      },
+      "LeadSource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "S1, S2, ..."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "url",
+          "domain"
+        ],
+        "title": "LeadSource"
+      },
+      "LeadsContent": {
+        "properties": {
+          "companies": {
+            "items": {
+              "$ref": "#/components/schemas/Lead"
+            },
+            "type": "array",
+            "title": "Companies"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/LeadEvent"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Trade fairs where these companies meet"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/LeadSource"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "Every page searched, best first"
+          },
+          "research_available": {
+            "type": "boolean",
+            "title": "Research Available",
+            "description": "False if web search couldn't run"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed",
+            "description": "Names dropped because the cited page didn't show them"
+          }
+        },
+        "type": "object",
+        "required": [
+          "companies",
+          "events",
+          "sources",
+          "research_available",
+          "removed"
+        ],
+        "title": "LeadsContent"
+      },
+      "LeadsOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "missing",
+              "pending",
+              "ready",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buyers",
+              "suppliers"
+            ],
+            "title": "Side"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadsContent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": false
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadsUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "side"
+        ],
+        "title": "LeadsOut"
+      },
+      "LeadsUsage": {
+        "properties": {
+          "searches": {
+            "type": "integer",
+            "title": "Searches"
+          },
+          "pages_read": {
+            "type": "integer",
+            "title": "Pages Read"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "searches",
+          "pages_read",
+          "input_tokens",
+          "output_tokens",
+          "models"
+        ],
+        "title": "LeadsUsage"
       },
       "LoginRequest": {
         "properties": {

@@ -54,16 +54,22 @@ async def search(
     *,
     topic: str = "news",
     max_results: int = 5,
+    time_range: str | None = "year",
+    country: str | None = None,
 ) -> list[SearchResult]:
-    payload = {
+    """`country` (a full name, e.g. "germany") favours pages from that country."""
+    payload: dict[str, object] = {
         "query": query,
         "topic": topic,
         "search_depth": "basic",
-        "time_range": "year",
         "max_results": max_results,
         "include_answer": False,
         "include_raw_content": False,
     }
+    if time_range:
+        payload["time_range"] = time_range
+    if country and topic == "general":
+        payload["country"] = country.lower()
     try:
         response = await client.post(
             SEARCH_URL,
@@ -92,3 +98,36 @@ async def search(
             )
         )
     return out
+
+
+EXTRACT_URL = "https://api.tavily.com/extract"
+EXTRACT_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
+
+
+async def extract(
+    client: httpx.AsyncClient, urls: list[str], api_key: str, *, max_chars: int = 6000
+) -> dict[str, str]:
+    """The text of each page that could be read (url -> text), whitespace-collapsed.
+
+    A basic extract costs 1 credit per 5 pages read. Used for directory and list pages,
+    whose search snippets show only the first few company names.
+    """
+    if not urls:
+        return {}
+    try:
+        response = await client.post(
+            EXTRACT_URL,
+            json={"urls": urls, "extract_depth": "basic"},
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=EXTRACT_TIMEOUT,
+        )
+        response.raise_for_status()
+        results = response.json().get("results", [])
+    except (httpx.HTTPError, ValueError) as exc:
+        raise SearchError(f"Tavily extract: {type(exc).__name__}") from exc
+    pages: dict[str, str] = {}
+    for r in results:
+        url, text = r.get("url"), r.get("raw_content")
+        if isinstance(url, str) and isinstance(text, str) and text.strip():
+            pages[url] = " ".join(text.split())[:max_chars]
+    return pages

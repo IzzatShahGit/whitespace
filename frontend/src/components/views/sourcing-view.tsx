@@ -1,5 +1,8 @@
 "use client";
 
+import { LeadsPanel } from "@/components/leads/leads-panel";
+import { FreightEstimate } from "@/components/money/freight-estimate";
+import { Segmented } from "@/components/ui/segmented";
 import {
   ArrowLeft,
   ListChecks,
@@ -177,6 +180,47 @@ function CurrentSuppliers({ data }: { data: SourcingPage }) {
 }
 
 /** Where to buy a product: picks, every supplier compared, budget, and what to do next. */
+/** Makers to contact in one of the picked supplier countries (the best value first). */
+function SupplierLeads({ data }: { data: SourcingPage }) {
+  const countries = [
+    ...new Map(
+      [...data.picks.map((p) => p.country), ...data.suppliers.map((s) => s.country)].map((c) => [
+        c.code,
+        c,
+      ]),
+    ).values(),
+  ].slice(0, 4);
+  const [code, setCode] = useState(countries[0]?.code);
+  const country = countries.find((c) => c.code === code) ?? countries[0];
+  if (!country) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      {countries.length > 1 && (
+        <Segmented
+          label="Supplier country"
+          value={country.code}
+          onChange={setCode}
+          items={countries.map((c) => ({ value: c.code, label: c.name }))}
+        />
+      )}
+      <LeadsPanel
+        key={country.code}
+        hs6={data.product.hs6}
+        country={country.code}
+        countryName={country.name}
+        productName={data.product.name}
+        side="suppliers"
+      />
+      <FreightEstimate
+        origin={country.code}
+        dest={data.buyer.code}
+        hs6={data.product.hs6}
+        title={`Shipping from ${country.name}`}
+      />
+    </div>
+  );
+}
+
 export function SourcingView({ params }: { params: Promise<{ hs6: string }> }) {
   const { hs6 } = use(params);
   const profile = useProfile();
@@ -319,6 +363,10 @@ export function SourcingView({ params }: { params: Promise<{ hs6: string }> }) {
           <CurrentSuppliers data={data} />
         </div>
       </div>
+
+      <section aria-label="Who to buy from" className="rise-in" style={delay(160)}>
+        <SupplierLeads data={data} />
+      </section>
 
       <Card className="rise-in p-5 sm:p-6" style={delay(200)}>
         <CardHeader

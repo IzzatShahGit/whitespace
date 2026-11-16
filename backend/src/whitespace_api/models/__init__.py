@@ -3,6 +3,7 @@
 from whitespace_api.models.base import Base
 from whitespace_api.models.brief import MarketBrief
 from whitespace_api.models.chat import ChatMessage, ChatThread
+from whitespace_api.models.lead import TradeLeads
 from whitespace_api.models.profile import UserProfile
 from whitespace_api.models.recent import MonthlyTradeCache
 from whitespace_api.models.tariff import TariffCache
@@ -11,6 +12,7 @@ from whitespace_api.models.trade import (
     MarketOpportunity,
     MarketSupplier,
     Product,
+    SeaRoute,
     SupplierLandscape,
 )
 from whitespace_api.models.usage import UsageCounter
@@ -29,8 +31,10 @@ __all__ = [
     "Notification",
     "Product",
     "RefreshToken",
+    "SeaRoute",
     "SupplierLandscape",
     "TariffCache",
+    "TradeLeads",
     "UsageCounter",
     "User",
     "UserProfile",

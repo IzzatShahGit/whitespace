@@ -12,16 +12,14 @@ export type LandedLine = components["schemas"]["LandedLine"];
 
 const DAY = 24 * 60 * 60 * 1000; // tariff schedules change yearly
 
+/** Freight as a share of the price (typed by the user) or USD per kg (from an estimate). */
+export type LandedFreight = { pct: number; usdKg?: never } | { usdKg: number; pct?: never } | null;
+
 export const landedKeys = {
   duties: (exporter: string, hs6: string, market: string) =>
     ["duties", exporter, hs6, market] as const,
-  landed: (
-    exporter: string,
-    hs6: string,
-    market: string,
-    cost: number,
-    freightPct: number | null,
-  ) => ["landed", exporter, hs6, market, cost, freightPct] as const,
+  landed: (exporter: string, hs6: string, market: string, cost: number, freight: LandedFreight) =>
+    ["landed", exporter, hs6, market, cost, freight?.pct ?? null, freight?.usdKg ?? null] as const,
 };
 
 /** Import duty for the exporter vs its rivals. Null when the market isn't covered (404). */
@@ -52,11 +50,14 @@ export function useLandedCost(
   hs6: string,
   market: string,
   cost: number | undefined,
-  freightPct: number | null,
+  freight: LandedFreight,
 ) {
   const rounded = cost === undefined ? 0 : Math.round(cost * 100) / 100;
+  const usdKg = freight?.usdKg !== undefined ? Math.round(freight.usdKg * 1000) / 1000 : undefined;
+  const steady: LandedFreight =
+    freight?.pct !== undefined ? freight : usdKg !== undefined ? { usdKg } : null;
   return useQuery({
-    queryKey: landedKeys.landed(exporter ?? "", hs6, market, rounded, freightPct),
+    queryKey: landedKeys.landed(exporter ?? "", hs6, market, rounded, steady),
     queryFn: () =>
       unwrap(
         api.GET("/api/v1/markets/{market}/landed-cost", {
@@ -66,7 +67,8 @@ export function useLandedCost(
               exporter: exporter!,
               hs6,
               cost_usd_kg: rounded,
-              ...(freightPct !== null && { freight_pct: freightPct }),
+              ...(steady?.pct !== undefined && { freight_pct: steady.pct }),
+              ...(steady?.usdKg !== undefined && { freight_usd_kg: steady.usdKg }),
             },
           },
         }),

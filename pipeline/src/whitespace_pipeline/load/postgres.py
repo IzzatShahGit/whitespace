@@ -21,6 +21,7 @@ from whitespace_shared.gold import (
     MARKET_OPPORTUNITY_TABLE,
     MARKET_SUPPLIER_TABLE,
     PRODUCT_TABLE,
+    SEA_ROUTE_TABLE,
     SUPPLIER_LANDSCAPE_TABLE,
 )
 
@@ -67,6 +68,9 @@ def run(settings: PipelineSettings) -> dict[str, int]:
     if not (gold_dir / "market_opportunity.parquet").exists():
         raise RuntimeError("Gold is missing; run `ws-pipeline gold` first")
     data = tables(gold_dir)
+    routes = settings.gold_dir / "sea_routes.parquet"  # from `ws-pipeline routes`
+    if routes.exists():
+        data[SEA_ROUTE_TABLE] = pl.read_parquet(routes)
     with psycopg.connect(libpq_url(settings.database_url)) as conn, conn.cursor() as cur:
         for table, frame in data.items():
             _copy(cur, table, frame)

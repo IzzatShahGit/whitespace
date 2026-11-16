@@ -14,6 +14,7 @@ from whitespace_shared.gold import (
     MARKET_OPPORTUNITY_TABLE,
     MARKET_SUPPLIER_TABLE,
     PRODUCT_TABLE,
+    SEA_ROUTE_TABLE,
     SUPPLIER_LANDSCAPE_TABLE,
 )
 
@@ -103,3 +104,22 @@ class SupplierLandscape(Base):
     world_share: Mapped[float] = mapped_column(Float)
     markets_served: Mapped[int] = mapped_column(Integer)
     unit_price_usd_kg: Mapped[float | None] = mapped_column(Float)
+
+
+class SeaRoute(Base):
+    """Sea distance between an exporter and a country's main ports (pipeline `routes`).
+
+    One row per (exporter, country); the same distance serves the reverse direction.
+    """
+
+    __tablename__ = SEA_ROUTE_TABLE
+
+    origin: Mapped[str] = mapped_column(CHAR(3), primary_key=True)
+    dest: Mapped[str] = mapped_column(CHAR(3), primary_key=True)
+    sea_nm: Mapped[float] = mapped_column(Float)
+    origin_port: Mapped[str] = mapped_column(String(80))
+    origin_port_code: Mapped[str] = mapped_column(String(5))
+    dest_port: Mapped[str] = mapped_column(String(80))
+    dest_port_code: Mapped[str] = mapped_column(String(5))
+    origin_inland_km: Mapped[int] = mapped_column(Integer)
+    dest_inland_km: Mapped[int] = mapped_column(Integer)

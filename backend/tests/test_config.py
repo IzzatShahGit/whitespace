@@ -9,6 +9,33 @@ def test_plain_postgres_url_gets_async_driver() -> None:
     assert settings.database_url == "postgresql+asyncpg://u:p@host:5432/db"
 
 
+@pytest.mark.parametrize(
+    ("pasted", "expected"),
+    [
+        # Neon's copy button (libpq style): asyncpg wants ssl=, has no channel_binding.
+        (
+            "postgresql://u:p@ep-x.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+            "postgresql+asyncpg://u:p@ep-x.aws.neon.tech/neondb?ssl=require",
+        ),
+        (
+            "postgresql://u:p@h/db?ssl=require&channel_binding=require",
+            "postgresql+asyncpg://u:p@h/db?ssl=require",
+        ),
+        ("postgresql://u:p@h/db?channel_binding=require", "postgresql+asyncpg://u:p@h/db"),
+        ('  "postgresql://u:p@h/db?ssl=require"  ', "postgresql+asyncpg://u:p@h/db?ssl=require"),
+        ("postgresql+asyncpg://u:p@h/db", "postgresql+asyncpg://u:p@h/db"),
+    ],
+)
+def test_pasted_provider_urls_work_with_asyncpg(pasted: str, expected: str) -> None:
+    assert Settings(database_url=pasted).database_url == expected
+
+
+def test_database_target_hides_credentials() -> None:
+    s = Settings(database_url="postgresql://user:secret@ep-x.neon.tech/neondb?sslmode=require")
+    assert s.database_target == "ep-x.neon.tech/neondb?ssl=require"
+    assert "secret" not in s.database_target
+
+
 DEPLOYED_OK = {"jwt_secret": "x" * 40, "cookie_secure": True}
 
 

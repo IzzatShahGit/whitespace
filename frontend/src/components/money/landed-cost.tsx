@@ -7,6 +7,7 @@ import { Badge, Callout } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { ApiError } from "@/lib/api/queries";
+import { useFreight, useShipping } from "@/lib/api/freight";
 import { type LandedLine, useDuties, useLandedCost } from "@/lib/api/landed-cost";
 import { perKg } from "@/lib/money";
 
@@ -176,8 +177,18 @@ export function LandedReceipt({
   const [freightText, setFreightText] = useState("");
   const parsed = Number(freightText);
   const freight = freightText.trim() && parsed >= 0 && parsed <= 100 ? parsed : null;
+  const shipping = useShipping();
+  const estimate = useFreight(exporter, market, hs6, shipping.container, shipping.load, cost);
+  // No figure typed: use the shipping estimate (to the market's port, so duty sees CIF).
+  const estimated = freight === null ? estimate.data?.to_port_usd_kg.typical : undefined;
   const duties = useDuties(exporter, hs6, market);
-  const landed = useLandedCost(exporter, hs6, market, cost, freight);
+  const landed = useLandedCost(
+    exporter,
+    hs6,
+    market,
+    cost,
+    freight !== null ? { pct: freight } : estimated !== undefined ? { usdKg: estimated } : null,
+  );
   if (!duties.data) return null; // market not covered by the tariff data
   if (landed.isError) {
     return <p className="text-sm text-muted">Couldn’t work out the landed cost right now.</p>;
@@ -202,7 +213,7 @@ export function LandedReceipt({
             inputMode="decimal"
             value={freightText}
             onChange={(e) => setFreightText(e.target.value)}
-            placeholder={l?.freight_pct != null ? String(l.freight_pct) : "10"}
+            placeholder={estimated !== undefined ? "auto" : "10"}
             aria-label="Freight and insurance, percent of your price"
             className="h-9 w-14 rounded-lg border border-line bg-surface px-2 text-right text-base text-fg tabular-nums outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10 sm:text-sm"
           />
@@ -215,7 +226,14 @@ export function LandedReceipt({
         <>
           <dl className="mt-3 flex flex-col gap-1.5 text-sm" aria-live="polite">
             <Line label="Your price (FOB)" value={perKg(yours.fob_usd_kg)} />
-            <Line label="+ Freight and insurance" value={perKg(yours.freight_usd_kg)} />
+            <Line
+              label={`+ Freight and insurance${
+                estimated !== undefined && freight === null
+                  ? ` (estimate, ${estimate.data?.container === "20ft" ? "20ft" : "40ft"})`
+                  : ""
+              }`}
+              value={perKg(yours.freight_usd_kg)}
+            />
             <Line
               label={`+ Duty ${rate(yours.duty_pct)}${duties.data.yours.scheme ? ` (${duties.data.yours.scheme})` : ""}`}
               value={perKg(yours.duty_usd_kg)}
