@@ -1,6 +1,6 @@
 "use client";
 
-import { KeyRound, MailCheck, Palette, Trash2, UserRound } from "lucide-react";
+import { Languages, KeyRound, MailCheck, Palette, Trash2, UserRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
@@ -8,6 +8,8 @@ import { type FormEvent, useState } from "react";
 import { ThemeSwitch } from "@/components/shell/topbar";
 import { api } from "@/lib/api/client";
 import { keys, unwrap } from "@/lib/api/queries";
+import { useLocale, useT } from "@/lib/i18n";
+import { LOCALES, type Locale } from "@/lib/i18n/locales";
 import { Callout } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -26,6 +28,7 @@ function Saved({ show }: { show: boolean }) {
 }
 
 function NameCard({ user }: { user: User }) {
+  const t = useT();
   const update = useUpdateMe();
   const [name, setName] = useState(user.full_name);
   const changed = name.trim() !== user.full_name && name.trim().length > 0;
@@ -37,7 +40,11 @@ function NameCard({ user }: { user: User }) {
 
   return (
     <Card className="p-5 sm:p-6">
-      <CardHeader icon={<UserRound />} title="Profile" description="How we greet you." />
+      <CardHeader
+        icon={<UserRound />}
+        title={t("settings.profile")}
+        description={t("settings.profileDesc")}
+      />
       <form onSubmit={submit} className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field
           id="full-name"
@@ -128,8 +135,60 @@ function PasswordCard({ user }: { user: User }) {
   );
 }
 
+/** Interface language: applies at once, and is saved to the account for other devices. */
+function LanguageCard() {
+  const t = useT();
+  const client = useQueryClient();
+  const { locale, setLocale } = useLocale();
+
+  function choose(next: Locale) {
+    setLocale(next);
+    void api
+      .PUT("/api/v1/auth/me/locale", { body: { locale: next } })
+      .then(() => client.invalidateQueries({ queryKey: keys.me }));
+  }
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <CardHeader
+        icon={<Languages />}
+        title={t("settings.languageTitle")}
+        description={t("settings.languageDesc")}
+      />
+      <div
+        role="radiogroup"
+        aria-label={t("common.language")}
+        className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3"
+      >
+        {LOCALES.map((l) => (
+          <button
+            key={l.code}
+            type="button"
+            role="radio"
+            aria-checked={locale === l.code}
+            lang={l.code}
+            dir={l.dir}
+            onClick={() => choose(l.code)}
+            className={`flex flex-col items-start rounded-xl border px-3 py-2 text-start transition-colors ${
+              locale === l.code
+                ? "border-brand bg-brand-soft text-brand"
+                : "border-line text-fg hover:border-line-strong"
+            }`}
+          >
+            <span className="text-sm font-medium">{l.name}</span>
+            <span className="text-xs text-subtle" dir="ltr">
+              {l.english}
+            </span>
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 /** The weekly email: off by default; turning it on confirms the address first. */
 function DigestCard({ user }: { user: User }) {
+  const t = useT();
   const client = useQueryClient();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ tone: "positive" | "negative"; text: string }>();
@@ -159,8 +218,8 @@ function DigestCard({ user }: { user: User }) {
     <Card className="p-5 sm:p-6">
       <CardHeader
         icon={<MailCheck />}
-        title="Weekly email"
-        description="Monday mornings: follow-ups due, moves in your markets, checklists and trade fairs. Only when there’s something new."
+        title={t("settings.weeklyEmail")}
+        description={t("settings.weeklyEmailDesc")}
       />
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button
@@ -168,10 +227,10 @@ function DigestCard({ user }: { user: User }) {
           disabled={pending}
           onClick={() => void toggle(!user.digest_enabled)}
         >
-          {user.digest_enabled ? "Turn off" : "Turn on"}
+          {user.digest_enabled ? t("settings.turnOff") : t("settings.turnOn")}
         </Button>
         <span className="text-sm text-muted">
-          {user.digest_enabled ? `On, to ${user.email}` : "Off"}
+          {user.digest_enabled ? t("settings.on", { email: user.email }) : t("settings.off")}
         </span>
       </div>
       {message && (
@@ -187,12 +246,13 @@ function DigestCard({ user }: { user: User }) {
 }
 
 function AppearanceCard() {
+  const t = useT();
   return (
     <Card className="p-5 sm:p-6">
       <CardHeader
         icon={<Palette />}
-        title="Appearance"
-        description="Light, dark, or match your device."
+        title={t("settings.appearance")}
+        description={t("settings.appearanceDesc")}
       />
       <div className="mt-5 max-w-sm">
         <ThemeSwitch />
@@ -272,6 +332,7 @@ export function AccountSettings() {
   if (!me.data) return <Skeleton className="h-64" />;
   return (
     <>
+      <LanguageCard />
       <NameCard user={me.data} />
       <PasswordCard user={me.data} />
       <DigestCard user={me.data} />

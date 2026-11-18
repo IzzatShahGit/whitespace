@@ -26,29 +26,34 @@ import {
   useRequirements,
   useTickRequirement,
 } from "@/lib/api/requirements";
+import { useT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 
-const GROUPS: { key: Requirement["category"][]; title: string; icon: ReactNode }[] = [
-  { key: ["document", "registration"], title: "Papers and registrations", icon: <FileText /> },
-  { key: ["certificate"], title: "Certificates and proof of origin", icon: <BadgeCheck /> },
-  { key: ["product_rule"], title: "Rules the goods must meet", icon: <TestTubeDiagonal /> },
-  { key: ["labelling"], title: "Labels and marking", icon: <Tag /> },
-  { key: ["other"], title: "Other", icon: <ClipboardCheck /> },
+const GROUPS: { key: Requirement["category"][]; title: MessageKey; icon: ReactNode }[] = [
+  { key: ["document", "registration"], title: "requirements.groupPapers", icon: <FileText /> },
+  { key: ["certificate"], title: "requirements.groupCertificates", icon: <BadgeCheck /> },
+  { key: ["product_rule"], title: "requirements.groupRules", icon: <TestTubeDiagonal /> },
+  { key: ["labelling"], title: "requirements.groupLabels", icon: <Tag /> },
+  { key: ["other"], title: "requirements.groupOther", icon: <ClipboardCheck /> },
 ];
 
-const NEED: Record<Requirement["need"], { label: string; tone: "caution" | "neutral" | "brand" }> =
-  {
-    required: { label: "Required", tone: "caution" },
-    often_asked: { label: "Buyers ask for it", tone: "brand" },
-    depends: { label: "Depends", tone: "neutral" },
-  };
+const NEED: Record<
+  Requirement["need"],
+  { label: MessageKey; tone: "caution" | "neutral" | "brand" }
+> = {
+  required: { label: "requirements.required", tone: "caution" },
+  often_asked: { label: "requirements.oftenAsked", tone: "brand" },
+  depends: { label: "requirements.depends", tone: "neutral" },
+};
 
-const STEPS = [
-  "Searching official trade and customs sites…",
-  "Reading the rules for your product…",
-  "Checking every item against the words on its page…",
+const STEPS: MessageKey[] = [
+  "requirements.stepSearch",
+  "requirements.stepRead",
+  "requirements.stepCheck",
 ];
 
 function Progress() {
+  const t = useT();
   const [step, setStep] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 7000);
@@ -56,7 +61,7 @@ function Progress() {
   }, []);
   return (
     <div aria-live="polite" className="flex flex-col gap-3">
-      <p className="text-sm text-muted">{STEPS[step]}</p>
+      <p className="text-sm text-muted">{t(STEPS[step]!)}</p>
       <Skeleton className="h-14 w-full" />
       <Skeleton className="h-14 w-full" />
       <Skeleton className="h-14 w-4/5" />
@@ -75,6 +80,7 @@ function Item({
   done: boolean;
   onToggle: (done: boolean) => void;
 }) {
+  const t = useT();
   const id = `req-${item.key}`;
   return (
     <li className="flex gap-3 rounded-xl border border-line p-3.5 transition-colors has-[:checked]:bg-surface-2/50">
@@ -93,7 +99,7 @@ function Item({
           >
             {item.title}
           </label>
-          <Badge tone={NEED[item.need].tone}>{NEED[item.need].label}</Badge>
+          <Badge tone={NEED[item.need].tone}>{t(NEED[item.need].label)}</Badge>
         </div>
         <p className="mt-1 text-sm leading-6 text-muted">{item.detail}</p>
         {item.issuer && (
@@ -103,7 +109,7 @@ function Item({
         )}
         <details className="group mt-2 text-xs">
           <summary className="cursor-pointer text-subtle hover:text-fg">
-            What the source says
+            {t("requirements.sourceSays")}
           </summary>
           <blockquote className="mt-2 border-l-2 border-line-strong pl-3 leading-5 text-muted italic">
             “{item.quote}”
@@ -134,6 +140,7 @@ function Checklist({
   data: RequirementsOut;
   onToggle: (item: string, done: boolean) => void;
 }) {
+  const t = useT();
   const content = data.content!;
   const done = new Set(data.done ?? []);
   const sources = new Map(content.sources.map((s) => [s.id, s]));
@@ -153,11 +160,9 @@ function Checklist({
     <div className="flex flex-col gap-6">
       <div>
         <div className="flex items-baseline justify-between text-sm">
-          <span className="font-medium">
-            {ticked} of {total} done
-          </span>
+          <span className="font-medium">{t("requirements.done", { done: ticked, total })}</span>
           <span className="text-xs text-subtle">
-            {official} of {content.sources.length} sources are official sites
+            {t("requirements.official", { count: official, total: content.sources.length })}
           </span>
         </div>
         <div
@@ -180,7 +185,7 @@ function Checklist({
         return (
           <section key={group.title} className="flex flex-col gap-2.5">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-fg [&>svg]:h-4 [&>svg]:w-4 [&>svg]:text-subtle">
-              {group.icon} {group.title}
+              {group.icon} {t(group.title)}
             </h3>
             <ul className="flex flex-col gap-2">
               {items.map((item) => (
@@ -219,6 +224,7 @@ export function RequirementsPanel({
   exporterName: string;
   productName: string;
 }) {
+  const t = useT();
   const reqs = useRequirements(hs6, market, exporter);
   const request = useRequestRequirements(hs6, market, exporter);
   const tick = useTickRequirement(hs6, market, exporter);
@@ -229,8 +235,11 @@ export function RequirementsPanel({
     <Card className="p-5 sm:p-6">
       <CardHeader
         icon={<ClipboardCheck />}
-        title={`What you need to ship to ${marketName}`}
-        description={`Papers, certificates, product rules and labels for ${productName} from ${exporterName}.`}
+        title={t("requirements.title", { market: marketName })}
+        description={t("requirements.description", {
+          product: productName,
+          exporter: exporterName,
+        })}
         action={
           data?.content && (data.stale || status === "failed") ? (
             <Button
@@ -239,7 +248,7 @@ export function RequirementsPanel({
               disabled={request.isPending}
               onClick={() => request.mutate()}
             >
-              <RefreshCw /> Refresh
+              <RefreshCw /> {t("common.refresh")}
             </Button>
           ) : undefined
         }
@@ -259,13 +268,13 @@ export function RequirementsPanel({
             <div>
               <p className="font-medium">
                 {status === "failed"
-                  ? "The last check didn’t finish"
-                  : `Check the rules for ${productName} in ${marketName}`}
+                  ? t("requirements.failedTitle")
+                  : t("requirements.startTitle", { product: productName, market: marketName })}
               </p>
               <p className="mt-1 text-sm text-muted">
                 {status === "failed"
                   ? (data?.error ?? "Please try again.")
-                  : "We read official trade and customs sites and keep only items we can quote word for word from the page. About 30 seconds."}
+                  : t("requirements.startBody")}
               </p>
             </div>
             <Button
@@ -274,7 +283,7 @@ export function RequirementsPanel({
               disabled={request.isPending}
               onClick={() => request.mutate()}
             >
-              <Search /> {status === "failed" ? "Try again" : "Check requirements"}
+              <Search /> {status === "failed" ? t("common.retry") : t("requirements.start")}
             </Button>
           </div>
         )}
@@ -300,9 +309,7 @@ export function RequirementsPanel({
             <p className="mt-7 flex gap-2 border-t border-line pt-4 text-xs leading-5 text-subtle">
               <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
               <span>
-                Checked {data.generated_at?.slice(0, 10)}. Each item quotes the page it comes from.
-                Rules change: confirm with your importer, customs broker or chamber of commerce
-                before you ship.
+                {t("requirements.footer", { date: data.generated_at?.slice(0, 10) ?? "" })}
               </span>
             </p>
           </>

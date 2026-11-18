@@ -8,6 +8,7 @@ import {
   Globe,
   History,
   KanbanSquare,
+  Ship,
   Mail,
   Trash2,
 } from "lucide-react";
@@ -27,13 +28,13 @@ import {
   type Contact,
   STAGES,
   type Stage,
-  stageLabel,
   useContactEvents,
   usePipeline,
   useRemoveContact,
   useUpdateContact,
 } from "@/lib/api/pipeline";
 import { capitalize } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time";
 
 type Filter = "due" | "active" | Stage;
@@ -62,6 +63,7 @@ function Events({ id }: { id: string }) {
 }
 
 function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
+  const t = useT();
   const id = useId();
   const update = useUpdateContact();
   const remove = useRemoveContact();
@@ -99,18 +101,22 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
         </div>
         {contact.due ? (
           <Badge tone="caution" icon={<AlarmClock />}>
-            Follow up {contact.follow_up_on && fmtDay(contact.follow_up_on)}
+            {t("pipeline.followUp", {
+              date: contact.follow_up_on ? fmtDay(contact.follow_up_on) : "",
+            })}
           </Badge>
         ) : (
           contact.follow_up_on && (
-            <Badge tone="neutral">Follow up {fmtDay(contact.follow_up_on)}</Badge>
+            <Badge tone="neutral">
+              {t("pipeline.followUp", { date: fmtDay(contact.follow_up_on) })}
+            </Badge>
           )
         )}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-xs text-muted" htmlFor={`${id}-stage`}>
-          Stage
+          {t("pipeline.stage")}
           <select
             id={`${id}-stage`}
             value={contact.stage}
@@ -120,14 +126,14 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           >
             {STAGES.map((s) => (
               <option key={s.value} value={s.value}>
-                {s.label}
+                {t(`pipeline.stages.${s.value}`)}
               </option>
             ))}
           </select>
         </label>
         {ACTIVE.includes(contact.stage) && (
           <label className="flex flex-col gap-1 text-xs text-muted" htmlFor={`${id}-date`}>
-            Follow up on
+            {t("pipeline.followUpOn")}
             <input
               id={`${id}-date`}
               type="date"
@@ -140,20 +146,20 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
         )}
         {contact.stage === "to_contact" && (
           <Button size="sm" variant="secondary" onClick={() => save({ stage: "emailed" })}>
-            <Mail /> I emailed them
+            <Mail /> {t("pipeline.emailedThem")}
           </Button>
         )}
       </div>
 
       <label className="flex flex-col gap-1 text-xs text-muted" htmlFor={`${id}-note`}>
-        Note
+        {t("pipeline.note")}
         <textarea
           id={`${id}-note`}
           value={note}
           rows={2}
           maxLength={2000}
           dir="auto"
-          placeholder="What you sent, who replied, prices discussed…"
+          placeholder={t("pipeline.notePlaceholder")}
           onChange={(e) => setNote(e.target.value)}
           onBlur={() => note !== (contact.note ?? "") && save({ note })}
           className={`${inputClass} text-sm`}
@@ -171,8 +177,16 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           href={`${market}?tab=${contact.side === "suppliers" ? "overview" : "buyers"}`}
           className="inline-flex items-center gap-1 text-brand hover:underline"
         >
-          <Building2 className="h-3.5 w-3.5" aria-hidden /> Market and email draft
+          <Building2 className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.marketAndEmail")}
         </Link>
+        {contact.stage === "won" && (
+          <Link
+            href={`/app/quotes?contact=${contact.id}`}
+            className="inline-flex items-center gap-1 font-medium text-positive hover:underline"
+          >
+            <Ship className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.prepareShipment")}
+          </Link>
+        )}
         <Link
           href={`/app/quotes/new?${new URLSearchParams({
             hs6: contact.hs6,
@@ -182,7 +196,7 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           })}`}
           className="inline-flex items-center gap-1 text-brand hover:underline"
         >
-          <FilePlus2 className="h-3.5 w-3.5" aria-hidden /> Make a quote
+          <FilePlus2 className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.makeQuote")}
         </Link>
         {contact.website && (
           <a
@@ -191,7 +205,7 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
             rel="noopener noreferrer nofollow"
             className="inline-flex items-center gap-1 text-muted hover:text-fg"
           >
-            <Globe className="h-3.5 w-3.5" aria-hidden /> Website
+            <Globe className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.website")}
           </a>
         )}
         {contact.source_url && (
@@ -201,7 +215,7 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
             rel="noopener noreferrer nofollow"
             className="inline-flex items-center gap-1 text-muted hover:text-fg"
           >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden /> Where we found them
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.foundAt")}
           </a>
         )}
         <button
@@ -210,18 +224,18 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           onClick={() => setHistory((h) => !h)}
           className="inline-flex items-center gap-1 text-muted hover:text-fg"
         >
-          <History className="h-3.5 w-3.5" aria-hidden /> History
+          <History className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.history")}
         </button>
         <button
           type="button"
           onClick={() => {
-            if (window.confirm(`Remove ${contact.name} from your pipeline?`)) {
+            if (window.confirm(t("pipeline.removeConfirm", { name: contact.name }))) {
               remove.mutate(contact.id);
             }
           }}
           className="ml-auto inline-flex items-center gap-1 text-subtle hover:text-negative"
         >
-          <Trash2 className="h-3.5 w-3.5" aria-hidden /> Remove
+          <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t("common.remove")}
         </button>
       </div>
       {contact.side === "buyers" && (
@@ -234,6 +248,7 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
 
 /** Every company the user is working on, by stage, with follow-ups due first. */
 export function PipelineView() {
+  const t = useT();
   const pipeline = usePipeline();
   const search = useSearchParams();
   const focus = search.get("contact");
@@ -266,19 +281,22 @@ export function PipelineView() {
       f === "due" ? c.due : f === "active" ? ACTIVE.includes(c.stage) : c.stage === f,
     ).length;
   const items = [
-    { value: "due" as Filter, label: `Due (${count("due")})` },
-    { value: "active" as Filter, label: `Active (${count("active")})` },
-    ...STAGES.map((s) => ({ value: s.value as Filter, label: `${s.label} (${count(s.value)})` })),
+    { value: "due" as Filter, label: t("pipeline.due", { count: count("due") }) },
+    { value: "active" as Filter, label: t("pipeline.active", { count: count("active") }) },
+    ...STAGES.map((s) => ({
+      value: s.value as Filter,
+      label: `${t(`pipeline.stages.${s.value}`)} (${count(s.value)})`,
+    })),
   ];
 
   return (
     <Page>
       <PageHeader
-        title="Pipeline"
-        description="Companies you’re talking to, where each one stands, and who to chase next."
+        title={t("pipeline.title")}
+        description={t("pipeline.description")}
         actions={
           <ButtonLink href="/app/markets" variant="secondary">
-            <Building2 /> Find companies
+            <Building2 /> {t("pipeline.findCompanies")}
           </ButtonLink>
         }
       />
@@ -288,26 +306,25 @@ export function PipelineView() {
         <Card className="p-6">
           <EmptyState
             icon={<KanbanSquare />}
-            title="Your pipeline is empty"
+            title={t("pipeline.emptyTitle")}
             action={
               <ButtonLink href="/app/markets" variant="primary">
-                Find buyers
+                {t("pipeline.findBuyers")}
               </ButtonLink>
             }
           >
-            Open a market’s “Who to contact” tab and press “Save to pipeline” on a company. We’ll
-            remind you when it’s time to follow up.
+            {t("pipeline.emptyBody")}
           </EmptyState>
         </Card>
       ) : (
         <Card className="flex flex-col gap-5 p-5 sm:p-6">
           <CardHeader
             icon={<KanbanSquare />}
-            title={`${count("active")} active, ${count("won")} won`}
-            description="Follow-ups are set five days after you email a company; change the date any time."
+            title={t("pipeline.summary", { active: count("active"), won: count("won") })}
+            description={t("pipeline.summaryDesc")}
           />
           <Segmented
-            label="Show"
+            label={t("pipeline.show")}
             value={filter}
             onChange={(next) => replaceSearchParams({ stage: next })}
             items={items}
@@ -321,10 +338,10 @@ export function PipelineView() {
           ) : (
             <p className="text-sm text-muted">
               {filter === "due"
-                ? "Nothing due. Nice."
+                ? t("pipeline.nothingDue")
                 : filter === "active"
-                  ? "Nothing active right now."
-                  : `Nothing in “${stageLabel(filter)}”.`}
+                  ? t("pipeline.nothingActive")
+                  : t("pipeline.nothingIn", { stage: t(`pipeline.stages.${filter}`) })}
             </p>
           )}
         </Card>

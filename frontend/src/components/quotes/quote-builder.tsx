@@ -24,8 +24,14 @@ import {
   useQuotePreview,
 } from "@/lib/api/quotes";
 import { capitalize } from "@/lib/format";
+import { useT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 
-const RISK: Record<string, string> = { low: "Low risk", medium: "Some risk", high: "High risk" };
+const RISK: Record<string, MessageKey> = {
+  low: "quotes.riskLow",
+  medium: "quotes.riskMedium",
+  high: "quotes.riskHigh",
+};
 
 function num(text: string): number | null {
   const n = Number(text.replace(/[$,\s]/g, ""));
@@ -53,6 +59,7 @@ function Labeled({
 
 /** Build a quote or proforma from the user's numbers, priced live by the server. */
 export function QuoteBuilder() {
+  const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   const profile = useProfile();
@@ -135,8 +142,8 @@ export function QuoteBuilder() {
   return (
     <Page>
       <PageHeader
-        title={kind === "proforma" ? "New proforma invoice" : "New quote"}
-        description="Priced by Incoterms® 2020 from your FOB price. The buyer sees only the document on the right."
+        title={kind === "proforma" ? t("quotes.newProforma") : t("quotes.new")}
+        description={t("quotes.builderDesc")}
       />
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <Card className="no-print flex flex-col gap-4 p-5">
@@ -145,12 +152,12 @@ export function QuoteBuilder() {
             value={kind}
             onChange={setKind}
             items={[
-              { value: "quote", label: "Quote" },
-              { value: "proforma", label: "Proforma invoice" },
+              { value: "quote", label: t("quotes.quote") },
+              { value: "proforma", label: t("quotes.proforma") },
             ]}
           />
           <div className="grid gap-3 sm:grid-cols-2">
-            <Labeled label="Product" wide>
+            <Labeled label={t("quotes.product")} wide>
               <select
                 value={product}
                 onChange={(e) => setHs6(e.target.value)}
@@ -166,13 +173,13 @@ export function QuoteBuilder() {
                 ))}
               </select>
             </Labeled>
-            <Labeled label="Buyer’s country" wide>
+            <Labeled label={t("quotes.buyerCountry")} wide>
               <select
                 value={market}
                 onChange={(e) => setMarket(e.target.value)}
                 className={`${inputClass} text-sm`}
               >
-                <option value="">Choose…</option>
+                <option value="">{t("quotes.choose")}</option>
                 {markets.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
@@ -180,7 +187,7 @@ export function QuoteBuilder() {
                 ))}
               </select>
             </Labeled>
-            <Labeled label="Buyer (company)" wide>
+            <Labeled label={t("quotes.buyer")} wide>
               <input
                 value={buyer}
                 onChange={(e) => setBuyer(e.target.value)}
@@ -188,7 +195,7 @@ export function QuoteBuilder() {
                 className={`${inputClass} text-sm`}
               />
             </Labeled>
-            <Labeled label="Buyer’s address (optional)" wide>
+            <Labeled label={t("quotes.buyerAddress")} wide>
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -197,7 +204,7 @@ export function QuoteBuilder() {
                 className={`${inputClass} text-sm`}
               />
             </Labeled>
-            <Labeled label="Quantity (kg)">
+            <Labeled label={t("quotes.quantity")}>
               <input
                 inputMode="decimal"
                 value={qty}
@@ -206,7 +213,7 @@ export function QuoteBuilder() {
                 className={`${inputClass} text-sm tabular-nums`}
               />
             </Labeled>
-            <Labeled label="Your price, FOB (US$/kg)">
+            <Labeled label={t("quotes.price")}>
               <input
                 inputMode="decimal"
                 value={price}
@@ -219,7 +226,7 @@ export function QuoteBuilder() {
 
           <div className="flex flex-col gap-2">
             <Segmented
-              label="Price basis"
+              label={t("quotes.basis")}
               value={incoterm}
               onChange={setIncoterm}
               items={INCOTERMS}
@@ -231,24 +238,24 @@ export function QuoteBuilder() {
           {incoterm !== "FOB" && (
             <>
               <Segmented
-                label="Container"
+                label={t("quotes.container")}
                 value={container}
                 onChange={setContainer}
                 items={CONTAINER_OPTIONS}
               />
-              <Labeled label="Freight from your forwarder (US$, optional)">
+              <Labeled label={t("quotes.freight")}>
                 <input
                   inputMode="decimal"
                   value={freight}
                   onChange={(e) => setFreight(e.target.value)}
-                  placeholder="Our estimate is used if empty"
+                  placeholder={t("quotes.freightPlaceholder")}
                   className={`${inputClass} text-sm tabular-nums`}
                 />
               </Labeled>
             </>
           )}
           <div className="grid gap-3 sm:grid-cols-[1fr_7rem]">
-            <Labeled label="Payment terms">
+            <Labeled label={t("quotes.payment")}>
               <select
                 value={payment}
                 onChange={(e) => setPayment(e.target.value as PaymentTerms)}
@@ -261,7 +268,7 @@ export function QuoteBuilder() {
                 ))}
               </select>
             </Labeled>
-            <Labeled label="Valid (days)">
+            <Labeled label={t("quotes.validity")}>
               <input
                 inputMode="numeric"
                 value={validity}
@@ -272,7 +279,7 @@ export function QuoteBuilder() {
           </div>
           {quote && (
             <Callout tone={quote.payment.risk === "high" ? "caution" : "neutral"}>
-              <span className="block font-medium">{RISK[quote.payment.risk]} for you</span>
+              <span className="block font-medium">{t(RISK[quote.payment.risk]!)}</span>
               {quote.payment.explain}
             </Callout>
           )}
@@ -299,14 +306,14 @@ export function QuoteBuilder() {
             }
           >
             {create.isPending && <LoaderCircle className="animate-spin" />}
-            Issue {kind === "proforma" ? "proforma" : "quote"}
+            {kind === "proforma" ? t("quotes.issueProforma") : t("quotes.issue")}
           </Button>
           {create.isError && <p className="text-sm text-negative">{create.error.message}</p>}
           <Link
             href="/app/settings/business"
             className="text-xs text-muted underline-offset-4 hover:underline"
           >
-            Edit your company details on quotes
+            {t("quotes.editCompany")}
           </Link>
         </Card>
 
@@ -318,8 +325,7 @@ export function QuoteBuilder() {
             <QuoteDocument quote={quote} draft />
           ) : (
             <Card className="flex min-h-80 items-center justify-center p-8 text-center text-sm text-muted">
-              Choose the buyer’s country, then enter the buyer, quantity and your FOB price to see
-              the quote.
+              {t("quotes.previewEmpty")}
             </Card>
           )}
         </div>

@@ -11,6 +11,7 @@ from whitespace_api.models.profile import UserProfile
 from whitespace_api.models.quotes import BusinessDetails, Quote
 from whitespace_api.models.recent import MonthlyTradeCache
 from whitespace_api.models.requirements import MarketRequirements, RequirementCheck
+from whitespace_api.models.shipments import Shipment
 from whitespace_api.models.tariff import TariffCache
 from whitespace_api.models.tenders import TenderCache
 from whitespace_api.models.trade import (
@@ -50,6 +51,7 @@ __all__ = [
     "RefreshToken",
     "RequirementCheck",
     "SeaRoute",
+    "Shipment",
     "SupplierLandscape",
     "TariffCache",
     "TenderCache",

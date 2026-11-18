@@ -29,7 +29,10 @@ class BusinessDetails(Base):
     website: Mapped[str | None] = mapped_column(String(255))
     tax_id: Mapped[str | None] = mapped_column(String(60))
     bank_details: Mapped[str | None] = mapped_column(Text)
+    # Registered Exporter number (EU/UK/Swiss/Norwegian/Turkish GSP origin statements).
+    rex_number: Mapped[str | None] = mapped_column(String(40))
     next_quote: Mapped[int] = mapped_column(Integer, server_default="1")
+    next_invoice: Mapped[int] = mapped_column(Integer, server_default="1")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

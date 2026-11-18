@@ -21,6 +21,12 @@ const FIELDS: { key: keyof BusinessIn; label: string; hint?: string; max: number
     hint: "e.g. NTN, VAT or EORI number",
     max: 60,
   },
+  {
+    key: "rex_number",
+    label: "REX number (for EU GSP)",
+    hint: "Registered Exporter number, if you have one",
+    max: 40,
+  },
 ];
 
 function Form({ business }: { business: Business }) {

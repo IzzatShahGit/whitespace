@@ -308,6 +308,7 @@ async def price(
         hs6=body.hs6,
         description=description,
         market=body.market,
+        exporter=exporter,
         incoterm=body.incoterm,
         named_place=named_place,
         origin_port=origin_port,
@@ -376,6 +377,7 @@ async def list_quotes(db: AsyncSession, user: User) -> list[QuoteSummary]:
     return [
         QuoteSummary(
             id=q.id,
+            contact_id=q.contact_id,
             number=q.number,
             kind=q.kind,
             buyer_name=q.buyer_name,

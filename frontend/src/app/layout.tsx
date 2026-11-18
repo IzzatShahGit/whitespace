@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { PageViews } from "@/components/analytics/page-views";
+import { I18nProvider } from "@/lib/i18n";
+import { LOCALE_SCRIPT } from "@/lib/i18n/locales";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 
 const geistSans = Geist({
@@ -31,9 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        {children}
+        <I18nProvider>{children}</I18nProvider>
         {/* Reads the URL, so it streams in after the prerendered page. */}
         <Suspense>
           <PageViews />

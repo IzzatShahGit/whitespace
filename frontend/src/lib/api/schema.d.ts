@@ -150,6 +150,26 @@ export interface paths {
         patch: operations["update_me_api_v1_auth_me_patch"];
         trace?: never;
     };
+    "/api/v1/auth/me/locale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Locale
+         * @description The interface language, kept with the account so every device uses it.
+         */
+        put: operations["set_locale_api_v1_auth_me_locale_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/password": {
         parameters: {
             query?: never;
@@ -1256,6 +1276,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/shipments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Shipments */
+        get: operations["list_shipments_api_v1_shipments_get"];
+        put?: never;
+        /**
+         * Create
+         * @description Documents for the deal behind a quote (one set per quote; asking again opens it).
+         */
+        post: operations["create_api_v1_shipments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipments/{shipment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get */
+        get: operations["get_api_v1_shipments__shipment_id__get"];
+        put?: never;
+        post?: never;
+        /** Remove */
+        delete: operations["remove_api_v1_shipments__shipment_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update
+         * @description Fill in shipping details. Send the version you last saw; stale edits get 409.
+         */
+        patch: operations["update_api_v1_shipments__shipment_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1440,6 +1503,11 @@ export interface components {
              * @description NTN / VAT / EORI
              */
             tax_id?: string | null;
+            /**
+             * Rex Number
+             * @description Registered Exporter (REX) number, for GSP
+             */
+            rex_number?: string | null;
             /** Bank Details */
             bank_details?: string | null;
         };
@@ -1460,6 +1528,11 @@ export interface components {
              * @description NTN / VAT / EORI
              */
             tax_id?: string | null;
+            /**
+             * Rex Number
+             * @description Registered Exporter (REX) number, for GSP
+             */
+            rex_number?: string | null;
             /** Bank Details */
             bank_details?: string | null;
             /**
@@ -1607,6 +1680,18 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ChecklistItem */
+        ChecklistItem: {
+            /** Title */
+            title: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "fill_in" | "from_others";
+            /** Detail */
+            detail: string;
         };
         /** CompanyCheck */
         CompanyCheck: {
@@ -2384,6 +2469,14 @@ export interface components {
              */
             exact: boolean;
         };
+        /** LocaleIn */
+        LocaleIn: {
+            /**
+             * Locale
+             * @enum {string}
+             */
+            locale: "en" | "ur" | "bn" | "vi" | "tr" | "es" | "pt" | "id" | "ar";
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -2648,6 +2741,21 @@ export interface components {
              * @description Newest first
              */
             items: components["schemas"]["NotificationOut"][];
+        };
+        /** OriginStatement */
+        OriginStatement: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "eu_gsp_statement" | "certificate";
+            /**
+             * Text
+             * @description The statement to print, when we know its wording
+             */
+            text: string | null;
+            /** Guidance */
+            guidance: string[];
         };
         /** Party */
         Party: {
@@ -2985,6 +3093,11 @@ export interface components {
             /** Market */
             market: string;
             /**
+             * Exporter
+             * @description Shipping from, ISO alpha-3
+             */
+            exporter?: string | null;
+            /**
              * Incoterm
              * @enum {string}
              */
@@ -3046,6 +3159,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Contact Id */
+            contact_id?: string | null;
             /** Number */
             number: string;
             /**
@@ -3325,6 +3440,208 @@ export interface components {
             name: string;
             /** Niches */
             niches: components["schemas"]["NicheSummary"][];
+        };
+        /** Shipment */
+        Shipment: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
+            /** Quote Id */
+            quote_id: string | null;
+            /** Quote Number */
+            quote_number: string | null;
+            /** Invoice Number */
+            invoice_number: string;
+            /** Hs6 */
+            hs6: string;
+            /** Market */
+            market: string;
+            /** Description */
+            description: string;
+            seller: components["schemas"]["Party"];
+            buyer: components["schemas"]["Party"];
+            /** Bank Details */
+            bank_details: string | null;
+            /** Incoterm */
+            incoterm: string;
+            /** Named Place */
+            named_place: string;
+            /** Origin Port */
+            origin_port: string;
+            /** Dest Port */
+            dest_port: string;
+            /** Origin Country */
+            origin_country: string;
+            /** Quantity Kg */
+            quantity_kg: number;
+            /** Lines */
+            lines: components["schemas"]["QuoteLine"][];
+            /** Total Usd */
+            total_usd: number;
+            /** Payment Text */
+            payment_text: string;
+            details: components["schemas"]["ShipmentDetails"];
+            /**
+             * Volume M3
+             * @description From package size and count
+             */
+            volume_m3: number | null;
+            origin: components["schemas"]["OriginStatement"];
+            /** Checklist */
+            checklist: components["schemas"]["ChecklistItem"][];
+            /**
+             * Warnings
+             * @description Missing or inconsistent details, for the seller
+             */
+            warnings: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ShipmentDetails
+         * @description What the exporter fills in; everything is optional until they print.
+         */
+        ShipmentDetails: {
+            /** Invoice Date */
+            invoice_date?: string | null;
+            /** Consignee Address */
+            consignee_address?: string | null;
+            /** Notify Party */
+            notify_party?: string | null;
+            /** Vessel */
+            vessel?: string | null;
+            /** Voyage */
+            voyage?: string | null;
+            /** Bl Number */
+            bl_number?: string | null;
+            /**
+             * Containers
+             * @description Container numbers
+             */
+            containers?: string | null;
+            /** Seals */
+            seals?: string | null;
+            /** Final Destination */
+            final_destination?: string | null;
+            /** Packages */
+            packages?: number | null;
+            /**
+             * Package Type
+             * @default cartons
+             */
+            package_type: string;
+            /** Net Kg */
+            net_kg?: number | null;
+            /** Gross Kg */
+            gross_kg?: number | null;
+            /**
+             * Package Size Cm
+             * @description Length x width x height, e.g. "60x40x40"
+             */
+            package_size_cm?: string | null;
+            /**
+             * Marks
+             * @description Shipping marks
+             */
+            marks?: string | null;
+            /**
+             * Origin Criterion
+             * @description "P" (wholly obtained) or "W" + HS heading
+             */
+            origin_criterion?: string | null;
+        };
+        /** ShipmentIn */
+        ShipmentIn: {
+            /**
+             * Quote Id
+             * Format: uuid
+             */
+            quote_id: string;
+        };
+        /** ShipmentPatch */
+        ShipmentPatch: {
+            /** Invoice Date */
+            invoice_date?: string | null;
+            /** Consignee Address */
+            consignee_address?: string | null;
+            /** Notify Party */
+            notify_party?: string | null;
+            /** Vessel */
+            vessel?: string | null;
+            /** Voyage */
+            voyage?: string | null;
+            /** Bl Number */
+            bl_number?: string | null;
+            /**
+             * Containers
+             * @description Container numbers
+             */
+            containers?: string | null;
+            /** Seals */
+            seals?: string | null;
+            /** Final Destination */
+            final_destination?: string | null;
+            /** Packages */
+            packages?: number | null;
+            /**
+             * Package Type
+             * @default cartons
+             */
+            package_type: string;
+            /** Net Kg */
+            net_kg?: number | null;
+            /** Gross Kg */
+            gross_kg?: number | null;
+            /**
+             * Package Size Cm
+             * @description Length x width x height, e.g. "60x40x40"
+             */
+            package_size_cm?: string | null;
+            /**
+             * Marks
+             * @description Shipping marks
+             */
+            marks?: string | null;
+            /**
+             * Origin Criterion
+             * @description "P" (wholly obtained) or "W" + HS heading
+             */
+            origin_criterion?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** ShipmentSummary */
+        ShipmentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Number */
+            invoice_number: string;
+            /** Buyer Name */
+            buyer_name: string;
+            /** Market */
+            market: string;
+            /** Total Usd */
+            total_usd: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * Signal
@@ -3644,6 +3961,8 @@ export interface components {
              * @default false
              */
             digest_enabled: boolean;
+            /** Locale */
+            locale?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -4002,6 +4321,43 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateMeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_locale_api_v1_auth_me_locale_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocaleIn"];
             };
         };
         responses: {
@@ -6448,6 +6804,183 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VatCheck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_shipments_api_v1_shipments_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_shipments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Shipment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_api_v1_shipments__shipment_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                shipment_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Shipment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_api_v1_shipments__shipment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                shipment_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_shipments__shipment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                shipment_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipmentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Shipment"];
                 };
             };
             /** @description Validation Error */

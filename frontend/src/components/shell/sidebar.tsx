@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { activeHref, LEARN, NAV, SETTINGS, USAGE } from "@/components/shell/nav";
 import { useChatSuggestions, useMe } from "@/lib/api/queries";
+import { useT } from "@/lib/i18n";
 
 function UsageMeter() {
+  const t = useT();
   const usage = useChatSuggestions();
   if (!usage.data) return null;
   return (
@@ -15,14 +17,14 @@ function UsageMeter() {
       href="/app/ask"
       className="block rounded-2xl border border-line bg-surface p-3 text-xs text-muted transition-colors hover:border-brand/40"
     >
-      <span className="font-medium text-fg">{usage.data.remaining_today}</span> AI questions left
-      today
+      {t("shell.aiLeft", { count: usage.data.remaining_today })}
     </Link>
   );
 }
 
 /** Desktop navigation: always visible, icons + words, the current section highlighted. */
 export function Sidebar() {
+  const t = useT();
   const current = activeHref(usePathname());
   const isAdmin = useMe().data?.is_admin === true;
   return (
@@ -31,7 +33,7 @@ export function Sidebar() {
         <Logo href="/app" />
       </div>
       <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ id, href, icon: Icon }) => {
           const active = current === href;
           return (
             <Link
@@ -48,7 +50,7 @@ export function Sidebar() {
                 className={`h-[18px] w-[18px] transition-colors ${active ? "text-brand" : "text-subtle group-hover:text-fg"}`}
                 strokeWidth={1.8}
               />
-              {label}
+              {t(`nav.${id}`)}
               {href === "/app/ask" && (
                 <span className="ml-auto rounded-full bg-accent/15 px-1.5 py-0.5 text-xs font-semibold text-accent">
                   AI
@@ -69,9 +71,9 @@ export function Sidebar() {
             }`}
           >
             <USAGE.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-            {USAGE.label}
+            {t("nav.usage")}
             <span className="ml-auto rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-subtle uppercase">
-              Admin
+              {t("nav.admin")}
             </span>
           </Link>
         )}
@@ -83,7 +85,7 @@ export function Sidebar() {
           }`}
         >
           <LEARN.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-          {LEARN.label}
+          {t("nav.learn")}
         </Link>
         <Link
           href={SETTINGS.href}
@@ -93,7 +95,7 @@ export function Sidebar() {
           }`}
         >
           <SETTINGS.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-          {SETTINGS.label}
+          {t("nav.settings")}
         </Link>
       </div>
     </aside>
@@ -104,6 +106,7 @@ const MOBILE_ORDER = ["/app", "/app/markets", "/app/ask", "/app/buy", "/app/watc
 
 /** Phones: the main sections as a bottom tab bar (thumb reach), with Ask raised in the middle. */
 export function MobileTabs() {
+  const t = useT();
   const current = activeHref(usePathname());
   const items = MOBILE_ORDER.map((href) => NAV.find((n) => n.href === href)!);
   return (
@@ -112,7 +115,7 @@ export function MobileTabs() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       <ul className="grid grid-cols-5 items-end">
-        {items.map(({ href, label, icon: Icon }) => {
+        {items.map(({ id, href, icon: Icon }) => {
           const active = current === href;
           const ask = href === "/app/ask";
           return (
@@ -131,7 +134,7 @@ export function MobileTabs() {
                 ) : (
                   <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} />
                 )}
-                {label}
+                {t(`nav.${id}`)}
               </Link>
             </li>
           );

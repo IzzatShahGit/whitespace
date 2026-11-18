@@ -39,14 +39,16 @@ import {
 import { usePipelineSummary } from "@/lib/api/pipeline";
 import { useMyTenders } from "@/lib/api/tenders";
 import { capitalize, money, signedPercent } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
 const MAP_MARKETS = 20;
 const TOP_LIST = 5;
 
-function greeting(now = new Date()): string {
+function greeting(now = new Date()): MessageKey {
   const hour = now.getHours();
-  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  return hour < 12 ? "dashboard.morning" : hour < 18 ? "dashboard.afternoon" : "dashboard.evening";
 }
 
 /** Shade 1–5 from the opportunity score (0–1). */
@@ -55,6 +57,7 @@ function level(score: number): MapValue["level"] {
 }
 
 function OpportunityMap({ data }: { data: DashboardData }) {
+  const t = useT();
   const products = data.products;
   const [selected, setSelected] = useState(products[0]?.product.hs6);
   const exporter = data.profile.exporter;
@@ -75,11 +78,11 @@ function OpportunityMap({ data }: { data: DashboardData }) {
     <Card className="rise-in flex flex-col gap-5 p-5 sm:p-6 lg:col-span-2" style={delay(120)}>
       <CardHeader
         icon={<Globe2 />}
-        title={`Where your ${current.product.name} sell best`}
-        description={`The ${MAP_MARKETS} strongest markets for exporters in ${exporter.name}, by opportunity.`}
+        title={t("dashboard.sellBest", { product: current.product.name })}
+        description={t("dashboard.sellBestDesc", { count: MAP_MARKETS, country: exporter.name })}
         action={
           <ButtonLink href={`/app/markets/${current.product.hs6}`} variant="secondary" size="sm">
-            All {current.total_markets} <ArrowRight />
+            {t("common.all")} {current.total_markets} <ArrowRight />
           </ButtonLink>
         }
       />
@@ -137,6 +140,7 @@ function OpportunityMap({ data }: { data: DashboardData }) {
 
 /** The user's own outreach: follow-ups due today, else where the pipeline stands. */
 function FollowUps() {
+  const t = useT();
   const summary = usePipelineSummary();
   const s = summary.data;
   if (!s || s.total === 0) return null;
@@ -147,11 +151,15 @@ function FollowUps() {
     <Card className="rise-in flex flex-col gap-3 p-5" style={delay(140)}>
       <CardHeader
         icon={<AlarmClock />}
-        title={s.due.length ? `${s.due.length} to follow up` : "Your pipeline"}
-        description={`${active} active · ${s.by_stage["won"] ?? 0} won`}
+        title={
+          s.due.length
+            ? t("dashboard.toFollowUp", { count: s.due.length })
+            : t("dashboard.yourPipeline")
+        }
+        description={t("dashboard.pipelineCounts", { active, won: s.by_stage["won"] ?? 0 })}
         action={
           <ButtonLink href="/app/pipeline" variant="secondary" size="sm">
-            Open <ArrowRight />
+            {t("common.open")} <ArrowRight />
           </ButtonLink>
         }
       />
@@ -176,6 +184,7 @@ function FollowUps() {
 
 /** Public buyers in Europe asking for the user's products: shown only when there are some. */
 function OpenTenders() {
+  const t = useT();
   const tenders = useMyTenders();
   const list = tenders.data?.tenders ?? [];
   if (!list.length) return null;
@@ -183,27 +192,27 @@ function OpenTenders() {
     <Card className="rise-in flex flex-col gap-3 p-5" style={delay(150)}>
       <CardHeader
         icon={<Gavel />}
-        title={`${list.length} open tender${list.length > 1 ? "s" : ""}`}
-        description="Public buyers in Europe asking for your products"
+        title={t("dashboard.openTenders", { count: list.length })}
+        description={t("dashboard.openTendersDesc")}
         action={
           <ButtonLink href="/app/tenders" variant="secondary" size="sm">
-            All <ArrowRight />
+            {t("common.all")} <ArrowRight />
           </ButtonLink>
         }
       />
       <ul className="flex flex-col gap-1">
-        {list.slice(0, 3).map((t) => (
-          <li key={t.number}>
+        {list.slice(0, 3).map((tender) => (
+          <li key={tender.number}>
             <a
-              href={t.url}
+              href={tender.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-surface-2"
             >
-              <span className="min-w-0 truncate">{t.buyer}</span>
+              <span className="min-w-0 truncate">{tender.buyer}</span>
               <span className="shrink-0 text-xs text-muted">
-                {t.country_names[0]}
-                {t.days_left !== null ? ` · ${t.days_left}d` : ""}
+                {tender.country_names[0]}
+                {tender.days_left !== null ? ` · ${tender.days_left}d` : ""}
               </span>
             </a>
           </li>
@@ -214,10 +223,15 @@ function OpenTenders() {
 }
 
 function BestMoves({ data }: { data: DashboardData }) {
+  const t = useT();
   if (data.best_moves.length === 0) return null;
   return (
     <Card className="rise-in flex flex-col gap-4 p-5" style={delay(160)}>
-      <CardHeader icon={<Rocket />} title="Your best moves" description="Where the data says go." />
+      <CardHeader
+        icon={<Rocket />}
+        title={t("dashboard.bestMoves")}
+        description={t("dashboard.bestMovesDesc")}
+      />
       <ul className="flex flex-col gap-2">
         {data.best_moves.map(({ product, market }) => (
           <li
@@ -239,14 +253,14 @@ function BestMoves({ data }: { data: DashboardData }) {
               {signedPercent(market.import_growth_3y)}/yr
             </p>
             <p className="text-xs leading-5 text-muted">
-              <span className="font-medium text-fg">Next: </span>
+              <span className="font-medium text-fg">{t("dashboard.next")} </span>
               {market.verdict.next_step}
             </p>
             <Link
               href={`/app/markets/${product.hs6}/${market.market.code}/deal`}
               className="relative z-10 inline-flex items-center gap-1.5 self-start rounded-md text-xs font-medium text-brand hover:underline"
             >
-              <FileText className="h-3.5 w-3.5" aria-hidden /> Deal sheet: costs and buyers
+              <FileText className="h-3.5 w-3.5" aria-hidden /> {t("dashboard.dealSheetLink")}
             </Link>
           </li>
         ))}
@@ -256,6 +270,7 @@ function BestMoves({ data }: { data: DashboardData }) {
 }
 
 function AskCard() {
+  const t = useT();
   const router = useRouter();
   const suggestions = useChatSuggestions();
   const [text, setText] = useState("");
@@ -274,14 +289,14 @@ function AskCard() {
       />
       <CardHeader
         icon={<Sparkles />}
-        title="Ask Whitespace"
-        description="Any question about selling or buying abroad, in your language."
+        title={t("dashboard.askWhitespace")}
+        description={t("dashboard.askDesc")}
       />
       <form onSubmit={submit} className="flex gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="e.g. Can I compete in Germany?"
+          placeholder={t("dashboard.askPlaceholder")}
           aria-label="Your question"
           className="h-10 min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 text-sm outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
         />
@@ -309,6 +324,8 @@ function AskCard() {
 }
 
 function SellHome() {
+  const t = useT();
+  const { locale } = useLocale();
   const me = useMe();
   const dashboard = useDashboard(true);
 
@@ -326,7 +343,7 @@ function SellHome() {
     );
   }
   if (dashboard.isError) {
-    return <Problem title="Couldn’t load your overview">Please refresh the page.</Problem>;
+    return <Problem title={t("dashboard.loadError")}>Please refresh the page.</Problem>;
   }
 
   const data = dashboard.data;
@@ -343,24 +360,25 @@ function SellHome() {
   return (
     <Page>
       <PageHeader
-        eyebrow={new Date().toLocaleDateString("en", {
+        eyebrow={new Date().toLocaleDateString(locale, {
           weekday: "long",
           day: "numeric",
           month: "long",
         })}
-        title={`${greeting()}${firstName ? `, ${firstName}` : ""}`}
-        description={`Exporting from ${profile.exporter.name}: ${products
-          .map((p) => p.product.name)
-          .join(", ")}.`}
+        title={`${t(greeting())}${firstName ? `, ${firstName}` : ""}`}
+        description={t("dashboard.exportingFrom", {
+          country: profile.exporter.name,
+          products: products.map((p) => p.product.name).join(", "),
+        })}
         actions={
           <>
             {profile.goal === "both" && (
               <ButtonLink href="/app/buy" variant="secondary">
-                Find suppliers
+                {t("dashboard.findSuppliers")}
               </ButtonLink>
             )}
             <ButtonLink href="/app/ask" variant="accent">
-              <Sparkles /> Ask Whitespace
+              <Sparkles /> {t("dashboard.askWhitespace")}
             </ButtonLink>
           </>
         }
@@ -369,31 +387,31 @@ function SellHome() {
       <div className="rise-in grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" style={delay(60)}>
         <Stat
           icon={<Trophy />}
-          label="Best next market"
+          label={t("dashboard.bestNext")}
           value={top ? top.market.market.name : "—"}
-          note={top ? capitalize(top.product.name) : "No clear move yet"}
+          note={top ? capitalize(top.product.name) : t("dashboard.noMoveYet")}
         />
         <Stat
           icon={<TrendingUp />}
-          label="Fastest-growing demand"
+          label={t("dashboard.fastest")}
           value={fastest ? signedPercent(fastest.import_growth_3y) : "—"}
           changeTone="positive"
-          note={fastest ? `${fastest.market.name}, a year` : undefined}
+          note={fastest ? t("dashboard.fastestNote", { market: fastest.market.name }) : undefined}
           explain="How fast the market's imports grew each year over the last three years of customs data."
         />
         <Stat
           icon={<Globe2 />}
-          label="Markets ranked for you"
+          label={t("dashboard.ranked")}
           value={ranked.toLocaleString("en")}
-          note={`for ${products.length} product${products.length === 1 ? "" : "s"}`}
+          note={t("dashboard.rankedNote", { count: products.length })}
         />
         <Stat
           icon={<Layers />}
-          label="Your products"
+          label={t("dashboard.yourProducts")}
           value={products.length}
           note={
             <Link href="/app/settings/business" className="text-brand hover:underline">
-              Edit list
+              {t("dashboard.editList")}
             </Link>
           }
         />

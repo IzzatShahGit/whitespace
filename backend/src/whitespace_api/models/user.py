@@ -24,6 +24,8 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     # The weekly email; only sent once the address is verified.
     digest_enabled: Mapped[bool] = mapped_column(default=False, server_default=false())
+    # Interface language (en, ur, bn, ...); None = the browser's choice.
+    locale: Mapped[str | None] = mapped_column(String(8))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
