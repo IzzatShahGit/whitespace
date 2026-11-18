@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  AlarmClock,
   ArrowRight,
   FileText,
+  Gavel,
   Globe2,
   Layers,
   Rocket,
@@ -34,6 +36,8 @@ import {
   useMe,
   useProfile,
 } from "@/lib/api/queries";
+import { usePipelineSummary } from "@/lib/api/pipeline";
+import { useMyTenders } from "@/lib/api/tenders";
 import { capitalize, money, signedPercent } from "@/lib/format";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
@@ -127,6 +131,84 @@ function OpportunityMap({ data }: { data: DashboardData }) {
           </li>
         ))}
       </ol>
+    </Card>
+  );
+}
+
+/** The user's own outreach: follow-ups due today, else where the pipeline stands. */
+function FollowUps() {
+  const summary = usePipelineSummary();
+  const s = summary.data;
+  if (!s || s.total === 0) return null;
+  const active = ["to_contact", "emailed", "replied", "samples", "negotiating"]
+    .map((k) => s.by_stage[k] ?? 0)
+    .reduce((a, b) => a + b, 0);
+  return (
+    <Card className="rise-in flex flex-col gap-3 p-5" style={delay(140)}>
+      <CardHeader
+        icon={<AlarmClock />}
+        title={s.due.length ? `${s.due.length} to follow up` : "Your pipeline"}
+        description={`${active} active · ${s.by_stage["won"] ?? 0} won`}
+        action={
+          <ButtonLink href="/app/pipeline" variant="secondary" size="sm">
+            Open <ArrowRight />
+          </ButtonLink>
+        }
+      />
+      {s.due.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {s.due.slice(0, 4).map((c) => (
+            <li key={c.id}>
+              <Link
+                href={`/app/pipeline?contact=${c.id}`}
+                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-surface-2"
+              >
+                <span className="min-w-0 truncate font-medium">{c.name}</span>
+                <span className="shrink-0 text-xs text-muted">{c.market_name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+/** Public buyers in Europe asking for the user's products: shown only when there are some. */
+function OpenTenders() {
+  const tenders = useMyTenders();
+  const list = tenders.data?.tenders ?? [];
+  if (!list.length) return null;
+  return (
+    <Card className="rise-in flex flex-col gap-3 p-5" style={delay(150)}>
+      <CardHeader
+        icon={<Gavel />}
+        title={`${list.length} open tender${list.length > 1 ? "s" : ""}`}
+        description="Public buyers in Europe asking for your products"
+        action={
+          <ButtonLink href="/app/tenders" variant="secondary" size="sm">
+            All <ArrowRight />
+          </ButtonLink>
+        }
+      />
+      <ul className="flex flex-col gap-1">
+        {list.slice(0, 3).map((t) => (
+          <li key={t.number}>
+            <a
+              href={t.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-surface-2"
+            >
+              <span className="min-w-0 truncate">{t.buyer}</span>
+              <span className="shrink-0 text-xs text-muted">
+                {t.country_names[0]}
+                {t.days_left !== null ? ` · ${t.days_left}d` : ""}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }
@@ -322,6 +404,8 @@ function SellHome() {
       <div className="grid gap-4 lg:grid-cols-3">
         <OpportunityMap data={data} />
         <div className="flex flex-col gap-4">
+          <FollowUps />
+          <OpenTenders />
           <AskCard />
           <BestMoves data={data} />
         </div>

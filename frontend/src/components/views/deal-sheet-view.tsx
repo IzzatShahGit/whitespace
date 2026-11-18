@@ -3,6 +3,8 @@
 import {
   ArrowLeft,
   Building2,
+  ClipboardCheck,
+  FilePlus2,
   CalendarDays,
   Check,
   Globe,
@@ -36,6 +38,7 @@ import {
   useShipping,
 } from "@/lib/api/freight";
 import { type LandedCost, useLandedCost } from "@/lib/api/landed-cost";
+import { useRequestRequirements, useRequirements } from "@/lib/api/requirements";
 import {
   ApiError,
   type LeadsContent,
@@ -388,6 +391,73 @@ function Steps({
   );
 }
 
+/** The lane's requirements in brief: progress, then the required items first. */
+function BeforeYouShip({
+  hs6,
+  market,
+  exporter,
+  marketName,
+}: {
+  hs6: string;
+  market: string;
+  exporter: string | undefined;
+  marketName: string;
+}) {
+  const reqs = useRequirements(hs6, market, exporter);
+  const request = useRequestRequirements(hs6, market, exporter);
+  const data = reqs.data;
+  if (reqs.isPending) return <Skeleton className="h-24" />;
+  if (data?.status === "pending") {
+    return <p className="text-sm text-muted">Checking official sites for the rules…</p>;
+  }
+  if (!data?.content) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted">
+          Papers, certificates and label rules for {marketName}, from official sites.
+        </p>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="no-print"
+          disabled={request.isPending}
+          onClick={() => request.mutate()}
+        >
+          <Search /> Check requirements
+        </Button>
+      </div>
+    );
+  }
+  const done = new Set(data.done ?? []);
+  const items = data.content.items;
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">
+        {items.filter((i) => done.has(i.key)).length} of {items.length} done.
+      </p>
+      <ul className="flex flex-col gap-1.5">
+        {items.slice(0, 8).map((item) => (
+          <li key={item.key} className="flex items-start gap-2 text-sm">
+            <span
+              aria-hidden
+              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                done.has(item.key) ? "border-brand bg-brand text-white" : "border-line-strong"
+              }`}
+            >
+              {done.has(item.key) && <Check className="h-3 w-3" />}
+            </span>
+            <span className={done.has(item.key) ? "text-muted line-through" : "text-fg"}>
+              {item.title}
+              {item.need === "required" && <span className="text-subtle"> · required</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {items.length > 8 && <p className="text-xs text-subtle">+ {items.length - 8} more</p>}
+    </div>
+  );
+}
+
 /** One page to decide and act: the opportunity, your numbers, the route, buyers, next steps. */
 export function DealSheetView({ params }: { params: Promise<{ hs6: string; market: string }> }) {
   const { hs6, market } = use(params);
@@ -507,7 +577,21 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
         title={`Deal sheet: ${d.product.name} to ${m.market.name}`}
         description={`From ${d.exporter.name} · ${today} · customs data ${d.data.start_year}–${d.data.end_year}`}
         actions={
-          <div className="no-print flex gap-2">
+          <div className="no-print flex flex-wrap gap-2">
+            <ButtonLink
+              variant="secondary"
+              href={`/app/quotes/new?${new URLSearchParams({
+                hs6,
+                market: code,
+                ...(used ? { price: String(used) } : {}),
+                ...(freight.data
+                  ? { kg: String(Math.round(freight.data.kg_per_container * containers)) }
+                  : {}),
+                ship: shipping.container,
+              })}`}
+            >
+              <FilePlus2 /> Make a quote
+            </ButtonLink>
             <Button variant="secondary" onClick={() => void copyLink()}>
               {copied ? <Check /> : <Link2 />} {copied ? "Copied" : "Copy link"}
             </Button>
@@ -686,6 +770,28 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
           </p>
         </Section>
       )}
+
+      <Section
+        icon={<ClipboardCheck />}
+        title="Before you ship"
+        action={
+          <ButtonLink
+            href={`${marketHref}?tab=needs`}
+            variant="ghost"
+            size="sm"
+            className="no-print"
+          >
+            Full checklist
+          </ButtonLink>
+        }
+      >
+        <BeforeYouShip
+          hs6={hs6}
+          market={code}
+          exporter={exporter.code}
+          marketName={m.market.name}
+        />
+      </Section>
 
       <Section icon={<Building2 />} title={`Who to contact in ${m.market.name}`}>
         <Contacts

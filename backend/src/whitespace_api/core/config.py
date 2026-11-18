@@ -89,6 +89,10 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     # True whenever the site is served over HTTPS (always outside local).
     cookie_secure: bool = False
+    # Proxies in front of the API that each append the caller's address to
+    # X-Forwarded-For. Local: 1 (our Next server). Behind a hosting edge that also
+    # appends (e.g. SnapDeploy): 2. Entries left of these are client-supplied and ignored.
+    trusted_proxy_hops: int = Field(default=1, ge=1, le=5)
     # Public address of the web app. Google redirects back here, and the
     # web app forwards /api/* to this API, so cookies stay first-party.
     public_app_url: str = "http://localhost:3400"
@@ -146,6 +150,11 @@ class Settings(BaseSettings):
     leads_cache_days: int = Field(default=30, ge=1)
     leads_daily_limit: int = Field(default=10, ge=1, description="New lead searches per user/day")
     intro_daily_limit: int = Field(default=20, ge=1, description="Intro emails per user per day")
+    # Import requirements per (product, market, exporter): rules change slowly.
+    requirements_cache_days: int = Field(default=45, ge=1)
+    requirements_daily_limit: int = Field(
+        default=10, ge=1, description="New requirement checks per user per day"
+    )
     # Ollama is for local development only, with a small model (see .env.example).
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
@@ -171,6 +180,13 @@ class Settings(BaseSettings):
 
     def is_admin(self, email: str) -> bool:
         return email.strip().lower() in {e.strip().lower() for e in self.admin_emails if e.strip()}
+
+    # --- outreach pipeline and scheduled jobs ---
+    pipeline_limit: int = Field(default=500, ge=10, description="Companies per user")
+    # Runs reminders, the weekly digest and alerts inside the API process. Off in tests.
+    scheduler_enabled: bool = True
+    digest_weekday: int = Field(default=0, ge=0, le=6, description="0 = Monday (UTC)")
+    digest_hour_utc: int = Field(default=6, ge=0, le=23)
 
     # --- watchlists and alerts ---
     watch_limit: int = Field(default=50, ge=1, description="Watched product-markets per user")

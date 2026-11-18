@@ -26,6 +26,8 @@ dependencies = [
     "pwdlib[argon2]>=0.2",
     "pyjwt[crypto]>=2.10",
     "email-validator>=2.2",
+    # country codes (ISO alpha-2 for the company registers)
+    "pycountry>=24.6",
 ]
 
 [project.scripts]

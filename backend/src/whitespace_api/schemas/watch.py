@@ -13,7 +13,9 @@ from whitespace_shared.gold import CountryCode, HS6Code
 
 MAX_READ_IDS = 100
 
-NotificationKind = Literal["imports_up", "imports_down", "share_up", "share_down", "rival_slipping"]
+NotificationKind = Literal[
+    "imports_up", "imports_down", "share_up", "share_down", "rival_slipping", "follow_up", "tender"
+]
 
 
 class WatchIn(BaseModel):

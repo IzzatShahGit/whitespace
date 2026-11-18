@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ClipboardCheck,
   BarChart3,
   Building2,
   CalendarClock,
@@ -23,6 +24,7 @@ import { useSearchParams } from "next/navigation";
 import { type CSSProperties, type ReactNode, use, useEffect } from "react";
 
 import { LeadsPanel } from "@/components/leads/leads-panel";
+import { RequirementsPanel } from "@/components/requirements/requirements-panel";
 import { FreightEstimate } from "@/components/money/freight-estimate";
 import { BriefPanel } from "@/components/markets/brief-panel";
 import { LoadError } from "@/components/markets/load-error";
@@ -52,10 +54,11 @@ import { useExporter, withExporter } from "@/lib/use-exporter";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
 
-type TabKey = "overview" | "buyers" | "competitors" | "prices" | "recent";
+type TabKey = "overview" | "needs" | "buyers" | "competitors" | "prices" | "recent";
 
 const TABS: Record<TabKey, { short: string; long: string; icon: ReactNode }> = {
   overview: { short: "Overview", long: "Overview", icon: <LayoutGrid /> },
+  needs: { short: "Rules", long: "What you need", icon: <ClipboardCheck /> },
   buyers: { short: "Buyers", long: "Who to contact", icon: <Building2 /> },
   competitors: { short: "Rivals", long: "Competitors", icon: <Users /> },
   prices: { short: "Prices", long: "Prices & costs", icon: <Scale /> },
@@ -156,7 +159,7 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
   }
 
   // The monthly tab appears for markets with a monthly source (EU members and the US).
-  const keys: TabKey[] = ["overview", "buyers", "competitors", "prices"];
+  const keys: TabKey[] = ["overview", "needs", "buyers", "competitors", "prices"];
   const requested = search.get("tab") as TabKey | null;
   if (recent.data || (requested === "recent" && recent.isPending)) keys.push("recent");
   const tab: TabKey = requested && keys.includes(requested) ? requested : "overview";
@@ -349,6 +352,16 @@ function Detail({
               />
               <HowWeDecide />
             </>
+          )}
+          {tab === "needs" && (
+            <RequirementsPanel
+              hs6={product.hs6}
+              market={m.market.code}
+              marketName={m.market.name}
+              exporter={exp.code}
+              exporterName={exp.name}
+              productName={product.name}
+            />
           )}
           {tab === "buyers" && (
             <LeadsPanel

@@ -1,10 +1,13 @@
 "use client";
 
-import { KeyRound, Palette, Trash2, UserRound } from "lucide-react";
+import { KeyRound, MailCheck, Palette, Trash2, UserRound } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ThemeSwitch } from "@/components/shell/topbar";
+import { api } from "@/lib/api/client";
+import { keys, unwrap } from "@/lib/api/queries";
 import { Callout } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -125,6 +128,64 @@ function PasswordCard({ user }: { user: User }) {
   );
 }
 
+/** The weekly email: off by default; turning it on confirms the address first. */
+function DigestCard({ user }: { user: User }) {
+  const client = useQueryClient();
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<{ tone: "positive" | "negative"; text: string }>();
+
+  async function toggle(enabled: boolean) {
+    setPending(true);
+    setMessage(undefined);
+    try {
+      const out = await unwrap(api.POST("/api/v1/auth/digest", { body: { enabled } }));
+      await client.invalidateQueries({ queryKey: keys.me });
+      setMessage(
+        out.verification_sent
+          ? {
+              tone: "positive",
+              text: `We sent a link to ${user.email}. Open it to confirm your address; the weekly email starts then.`,
+            }
+          : { tone: "positive", text: enabled ? "Weekly email on." : "Weekly email off." },
+      );
+    } catch (error) {
+      setMessage({ tone: "negative", text: (error as Error).message });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <CardHeader
+        icon={<MailCheck />}
+        title="Weekly email"
+        description="Monday mornings: follow-ups due, moves in your markets, checklists and trade fairs. Only when there’s something new."
+      />
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <Button
+          variant={user.digest_enabled ? "secondary" : "primary"}
+          disabled={pending}
+          onClick={() => void toggle(!user.digest_enabled)}
+        >
+          {user.digest_enabled ? "Turn off" : "Turn on"}
+        </Button>
+        <span className="text-sm text-muted">
+          {user.digest_enabled ? `On, to ${user.email}` : "Off"}
+        </span>
+      </div>
+      {message && (
+        <p
+          role="status"
+          className={`mt-3 text-sm ${message.tone === "positive" ? "text-positive" : "text-negative"}`}
+        >
+          {message.text}
+        </p>
+      )}
+    </Card>
+  );
+}
+
 function AppearanceCard() {
   return (
     <Card className="p-5 sm:p-6">
@@ -213,6 +274,7 @@ export function AccountSettings() {
     <>
       <NameCard user={me.data} />
       <PasswordCard user={me.data} />
+      <DigestCard user={me.data} />
       <AppearanceCard />
       <DangerCard user={me.data} />
     </>

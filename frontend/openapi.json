@@ -541,6 +541,159 @@
         }
       }
     },
+    "/api/v1/auth/digest": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Set Digest",
+        "description": "Turn the weekly email on or off. An unverified address gets a confirmation link.",
+        "operationId": "set_digest_api_v1_auth_digest_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify Email",
+        "description": "Confirm an address from the emailed link (works signed in or out).",
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/unsubscribe": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Unsubscribe",
+        "description": "Stop the weekly email, from the link in it (no sign-in needed).",
+        "operationId": "unsubscribe_api_v1_auth_unsubscribe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsubscribeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/delete-account": {
       "post": {
         "tags": [
@@ -3880,6 +4033,1618 @@
           }
         }
       }
+    },
+    "/api/v1/markets/{market}/requirements": {
+      "get": {
+        "tags": [
+          "requirements"
+        ],
+        "summary": "Get Requirements",
+        "description": "The researched requirements (\"missing\" if never checked), with your ticks.",
+        "operationId": "get_requirements_api_v1_markets__market__requirements_get",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "Shipping from",
+              "title": "Exporter"
+            },
+            "description": "Shipping from"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "requirements"
+        ],
+        "summary": "Request Requirements",
+        "description": "Research the requirements in the background unless a fresh result exists.",
+        "operationId": "request_requirements_api_v1_markets__market__requirements_post",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "exporter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "description": "Shipping from",
+              "title": "Exporter"
+            },
+            "description": "Shipping from"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/markets/{market}/requirements/done/{item}": {
+      "put": {
+        "tags": [
+          "requirements"
+        ],
+        "summary": "Tick",
+        "description": "Mark one requirement as done (idempotent).",
+        "operationId": "tick_api_v1_markets__market__requirements_done__item__put",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "item",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$",
+              "title": "Item"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "requirements"
+        ],
+        "summary": "Untick",
+        "operationId": "untick_api_v1_markets__market__requirements_done__item__delete",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Market"
+            }
+          },
+          {
+            "name": "item",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$",
+              "title": "Item"
+            }
+          },
+          {
+            "name": "hs6",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "List Contacts",
+        "operationId": "list_contacts_api_v1_pipeline_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContactOut"
+                  },
+                  "title": "Response List Contacts Api V1 Pipeline Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Add",
+        "description": "Save a company (idempotent: saving it again returns the existing one).",
+        "operationId": "add_api_v1_pipeline_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactAdded"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/summary": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Summary",
+        "description": "Counts by stage and the follow-ups due, for the dashboard.",
+        "operationId": "summary_api_v1_pipeline_summary_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/{contact_id}": {
+      "patch": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Update",
+        "description": "Move stage, edit the note or the follow-up date. Send the version you last saw.",
+        "operationId": "update_api_v1_pipeline__contact_id__patch",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Remove",
+        "operationId": "remove_api_v1_pipeline__contact_id__delete",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/{contact_id}/events": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Events",
+        "operationId": "events_api_v1_pipeline__contact_id__events_get",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventOut"
+                  },
+                  "title": "Response Events Api V1 Pipeline  Contact Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business": {
+      "get": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Get Business",
+        "operationId": "get_business_api_v1_business_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Save Business",
+        "description": "Your company as printed on quotes and proformas.",
+        "operationId": "save_business_api_v1_business_put",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotes/preview": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Preview",
+        "description": "Price a quote without issuing it (no number, nothing saved).",
+        "operationId": "preview_api_v1_quotes_preview_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotes": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Create",
+        "description": "Issue a quote or proforma: numbered, and saved exactly as priced.",
+        "operationId": "create_api_v1_quotes_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "List Quotes",
+        "operationId": "list_quotes_api_v1_quotes_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuoteSummary"
+                  },
+                  "title": "Response List Quotes Api V1 Quotes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotes/{quote_id}": {
+      "get": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Get Quote",
+        "operationId": "get_quote_api_v1_quotes__quote_id__get",
+        "parameters": [
+          {
+            "name": "quote_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Quote Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Remove",
+        "operationId": "remove_api_v1_quotes__quote_id__delete",
+        "parameters": [
+          {
+            "name": "quote_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Quote Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenders": {
+      "get": {
+        "tags": [
+          "tenders"
+        ],
+        "summary": "My Tenders",
+        "description": "Open EU tenders for the products in your profile, soonest deadline first.",
+        "operationId": "my_tenders_api_v1_tenders_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TendersOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenders/{hs6}": {
+      "get": {
+        "tags": [
+          "tenders"
+        ],
+        "summary": "Product Tenders",
+        "operationId": "product_tenders_api_v1_tenders__hs6__get",
+        "parameters": [
+          {
+            "name": "hs6",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{6}$",
+              "title": "Hs6"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TendersOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/companies/check": {
+      "get": {
+        "tags": [
+          "tenders"
+        ],
+        "summary": "Check Company",
+        "description": "Look a company up in the global register of legal entities (GLEIF).",
+        "operationId": "check_company_api_v1_companies_check_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 160,
+              "title": "Name"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9]{2}$",
+              "title": "Country"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/companies/vat": {
+      "post": {
+        "tags": [
+          "tenders"
+        ],
+        "summary": "Check Vat",
+        "description": "Check an EU VAT number with the EU's VIES service.",
+        "operationId": "check_vat_api_v1_companies_vat_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VatIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VatCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4271,6 +6036,196 @@
           "models"
         ],
         "title": "BriefUsage"
+      },
+      "BusinessIn": {
+        "properties": {
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id",
+            "description": "NTN / VAT / EORI"
+          },
+          "bank_details": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Details"
+          }
+        },
+        "type": "object",
+        "title": "BusinessIn"
+      },
+      "BusinessOut": {
+        "properties": {
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id",
+            "description": "NTN / VAT / EORI"
+          },
+          "bank_details": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Details"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete",
+            "description": "Has a company name and an address"
+          }
+        },
+        "type": "object",
+        "required": [
+          "complete"
+        ],
+        "title": "BusinessOut"
       },
       "CardMarket": {
         "properties": {
@@ -4709,6 +6664,387 @@
         ],
         "title": "ChatThreadOut"
       },
+      "CompanyCheck": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/LeiMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "False if the register couldn't be reached"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country",
+          "matches",
+          "available",
+          "checked_at"
+        ],
+        "title": "CompanyCheck"
+      },
+      "ContactAdded": {
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/ContactOut"
+          },
+          "created": {
+            "type": "boolean",
+            "title": "Created",
+            "description": "False if it was already in your pipeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contact",
+          "created"
+        ],
+        "title": "ContactAdded"
+      },
+      "ContactIn": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "title": "Hs6"
+          },
+          "market": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Market"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buyers",
+              "suppliers"
+            ],
+            "title": "Side",
+            "default": "buyers"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "importer",
+                  "distributor",
+                  "wholesaler",
+                  "retailer",
+                  "brand",
+                  "manufacturer",
+                  "exporter",
+                  "agent",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "market",
+          "name"
+        ],
+        "title": "ContactIn"
+      },
+      "ContactOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "market": {
+            "type": "string",
+            "title": "Market"
+          },
+          "market_name": {
+            "type": "string",
+            "title": "Market Name"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buyers",
+              "suppliers"
+            ],
+            "title": "Side"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "to_contact",
+              "emailed",
+              "replied",
+              "samples",
+              "negotiating",
+              "won",
+              "lost"
+            ],
+            "title": "Stage"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On"
+          },
+          "due": {
+            "type": "boolean",
+            "title": "Due",
+            "description": "A follow-up is due today or overdue"
+          },
+          "last_contacted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contacted At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hs6",
+          "product_name",
+          "market",
+          "market_name",
+          "side",
+          "name",
+          "kind",
+          "city",
+          "website",
+          "source_url",
+          "stage",
+          "note",
+          "follow_up_on",
+          "due",
+          "last_contacted_at",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ContactOut"
+      },
+      "ContactPatch": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version",
+            "description": "The version you last saw; stale edits get 409"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "to_contact",
+                  "emailed",
+                  "replied",
+                  "samples",
+                  "negotiating",
+                  "won",
+                  "lost"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On",
+            "description": "Send null to clear it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "title": "ContactPatch"
+      },
       "CostLine": {
         "properties": {
           "key": {
@@ -4940,6 +7276,38 @@
         },
         "type": "object",
         "title": "DeleteAccountRequest"
+      },
+      "DigestIn": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "DigestIn"
+      },
+      "DigestOut": {
+        "properties": {
+          "digest_enabled": {
+            "type": "boolean",
+            "title": "Digest Enabled"
+          },
+          "verification_sent": {
+            "type": "boolean",
+            "title": "Verification Sent",
+            "description": "True when we emailed a link to confirm the address first"
+          }
+        },
+        "type": "object",
+        "required": [
+          "digest_enabled",
+          "verification_sent"
+        ],
+        "title": "DigestOut"
       },
       "DutyCard": {
         "properties": {
@@ -5199,6 +7567,30 @@
           "event"
         ],
         "title": "EventIn"
+      },
+      "EventOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "detail",
+          "created_at"
+        ],
+        "title": "EventOut"
       },
       "ForgotPasswordRequest": {
         "properties": {
@@ -6108,6 +8500,69 @@
         ],
         "title": "LeadsUsage"
       },
+      "LeiMatch": {
+        "properties": {
+          "lei": {
+            "type": "string",
+            "title": "Lei"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "registration_status": {
+            "type": "string",
+            "title": "Registration Status"
+          },
+          "registered_as": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registered As"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "exact": {
+            "type": "boolean",
+            "title": "Exact",
+            "description": "Same name as the one you checked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lei",
+          "name",
+          "city",
+          "active",
+          "registration_status",
+          "registered_as",
+          "url",
+          "exact"
+        ],
+        "title": "LeiMatch"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -6671,7 +9126,9 @@
               "imports_down",
               "share_up",
               "share_down",
-              "rival_slipping"
+              "rival_slipping",
+              "follow_up",
+              "tender"
             ],
             "title": "Kind"
           },
@@ -6755,6 +9212,157 @@
           "items"
         ],
         "title": "NotificationsPage"
+      },
+      "Party": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country"
+        ],
+        "title": "Party"
+      },
+      "Payment": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "advance",
+              "deposit_30",
+              "lc_sight",
+              "cad",
+              "open_30"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "As printed on the quote"
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Risk",
+            "description": "For the seller"
+          },
+          "explain": {
+            "type": "string",
+            "title": "Explain",
+            "description": "For the seller only: what it means for them"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "text",
+          "risk",
+          "explain"
+        ],
+        "title": "Payment"
+      },
+      "PipelineSummary": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "by_stage": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Stage"
+          },
+          "due": {
+            "items": {
+              "$ref": "#/components/schemas/ContactOut"
+            },
+            "type": "array",
+            "title": "Due",
+            "description": "Follow-ups due today or overdue, oldest first"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "by_stage",
+          "due"
+        ],
+        "title": "PipelineSummary"
       },
       "Preview": {
         "properties": {
@@ -7188,6 +9796,476 @@
         ],
         "title": "ProvidersOut"
       },
+      "QuoteIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "quote",
+              "proforma"
+            ],
+            "title": "Kind",
+            "default": "quote"
+          },
+          "hs6": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "title": "Hs6"
+          },
+          "market": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Market"
+          },
+          "exporter": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter",
+            "description": "Default: your profile"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "buyer_name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Buyer Name"
+          },
+          "buyer_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Address"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quantity_kg": {
+            "type": "number",
+            "maximum": 5000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity Kg"
+          },
+          "unit_price_fob": {
+            "type": "number",
+            "maximum": 10000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price Fob",
+            "description": "USD per kg, FOB"
+          },
+          "incoterm": {
+            "type": "string",
+            "enum": [
+              "FOB",
+              "CFR",
+              "CIF",
+              "DAP"
+            ],
+            "title": "Incoterm",
+            "default": "FOB"
+          },
+          "container": {
+            "type": "string",
+            "enum": [
+              "20ft",
+              "40ft",
+              "40hc",
+              "lcl"
+            ],
+            "title": "Container",
+            "default": "40ft"
+          },
+          "freight_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Usd",
+            "description": "A forwarder's figure for all the freight"
+          },
+          "payment_terms": {
+            "type": "string",
+            "enum": [
+              "advance",
+              "deposit_30",
+              "lc_sight",
+              "cad",
+              "open_30"
+            ],
+            "title": "Payment Terms",
+            "default": "deposit_30"
+          },
+          "validity_days": {
+            "type": "integer",
+            "maximum": 180.0,
+            "minimum": 1.0,
+            "title": "Validity Days",
+            "default": 30
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "market",
+          "buyer_name",
+          "quantity_kg",
+          "unit_price_fob"
+        ],
+        "title": "QuoteIn"
+      },
+      "QuoteLine": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "amount_usd": {
+            "type": "number",
+            "title": "Amount Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "amount_usd"
+        ],
+        "title": "QuoteLine"
+      },
+      "QuoteOut": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "None for a preview"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "quote",
+              "proforma"
+            ],
+            "title": "Kind"
+          },
+          "issued": {
+            "type": "string",
+            "format": "date",
+            "title": "Issued"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid Until"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Party"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/Party"
+          },
+          "bank_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Details"
+          },
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "market": {
+            "type": "string",
+            "title": "Market"
+          },
+          "incoterm": {
+            "type": "string",
+            "enum": [
+              "FOB",
+              "CFR",
+              "CIF",
+              "DAP"
+            ],
+            "title": "Incoterm"
+          },
+          "named_place": {
+            "type": "string",
+            "title": "Named Place",
+            "description": "e.g. Karachi (FOB) or Bremerhaven (CIF)"
+          },
+          "origin_port": {
+            "type": "string",
+            "title": "Origin Port"
+          },
+          "dest_port": {
+            "type": "string",
+            "title": "Dest Port"
+          },
+          "quantity_kg": {
+            "type": "number",
+            "title": "Quantity Kg"
+          },
+          "containers": {
+            "type": "integer",
+            "title": "Containers"
+          },
+          "container": {
+            "type": "string",
+            "enum": [
+              "20ft",
+              "40ft",
+              "40hc",
+              "lcl"
+            ],
+            "title": "Container"
+          },
+          "unit_price_fob": {
+            "type": "number",
+            "title": "Unit Price Fob"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total_usd": {
+            "type": "number",
+            "title": "Total Usd"
+          },
+          "unit_price_usd_kg": {
+            "type": "number",
+            "title": "Unit Price Usd Kg",
+            "description": "Total / quantity, at the chosen incoterm"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/Payment"
+          },
+          "terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Terms",
+            "description": "Printed conditions"
+          },
+          "freight_basis": {
+            "type": "string",
+            "enum": [
+              "estimate",
+              "your figure",
+              "none"
+            ],
+            "title": "Freight Basis"
+          },
+          "seller_notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Seller Notes",
+            "description": "For the seller only, never printed"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "kind",
+          "issued",
+          "valid_until",
+          "seller",
+          "buyer",
+          "bank_details",
+          "hs6",
+          "description",
+          "market",
+          "incoterm",
+          "named_place",
+          "origin_port",
+          "dest_port",
+          "quantity_kg",
+          "containers",
+          "container",
+          "unit_price_fob",
+          "lines",
+          "total_usd",
+          "unit_price_usd_kg",
+          "payment",
+          "terms",
+          "freight_basis",
+          "seller_notes",
+          "contact_id",
+          "created_at"
+        ],
+        "title": "QuoteOut"
+      },
+      "QuoteSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "quote",
+              "proforma"
+            ],
+            "title": "Kind"
+          },
+          "buyer_name": {
+            "type": "string",
+            "title": "Buyer Name"
+          },
+          "market": {
+            "type": "string",
+            "title": "Market"
+          },
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "total_usd": {
+            "type": "number",
+            "title": "Total Usd"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "kind",
+          "buyer_name",
+          "market",
+          "hs6",
+          "total_usd",
+          "created_at"
+        ],
+        "title": "QuoteSummary"
+      },
       "RangeIdea": {
         "properties": {
           "product": {
@@ -7407,6 +10485,212 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "Requirement": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Stable id for ticking it off"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "document",
+              "certificate",
+              "product_rule",
+              "labelling",
+              "registration",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "need": {
+            "type": "string",
+            "enum": [
+              "required",
+              "often_asked",
+              "depends"
+            ],
+            "title": "Need"
+          },
+          "issuer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuer",
+            "description": "Who issues it or checks it, if the page says"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote",
+            "description": "The words on the source page that back this item"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "category",
+          "title",
+          "detail",
+          "need",
+          "issuer",
+          "quote",
+          "source"
+        ],
+        "title": "Requirement"
+      },
+      "RequirementSource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "S1, S2, ..."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "official": {
+            "type": "boolean",
+            "title": "Official",
+            "description": "A government or intergovernmental site"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "url",
+          "domain",
+          "official"
+        ],
+        "title": "RequirementSource"
+      },
+      "RequirementsContent": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Requirement"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/RequirementSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "research_available": {
+            "type": "boolean",
+            "title": "Research Available"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed",
+            "description": "Items dropped because their page didn't back them"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "sources",
+          "research_available",
+          "removed"
+        ],
+        "title": "RequirementsContent"
+      },
+      "RequirementsOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "missing",
+              "pending",
+              "ready",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequirementsContent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": false
+          },
+          "done": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Done",
+            "description": "Item keys this user ticked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "RequirementsOut"
       },
       "ResetPasswordRequest": {
         "properties": {
@@ -7911,6 +11195,192 @@
         ],
         "title": "SupplierOut"
       },
+      "Tender": {
+        "properties": {
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "buyer": {
+            "type": "string",
+            "title": "Buyer"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries",
+            "description": "Buyer countries, ISO alpha-3"
+          },
+          "country_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Country Names"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "category",
+              "keyword"
+            ],
+            "title": "Match",
+            "description": "category: the notice's CPV codes fit the product too"
+          },
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "title",
+          "buyer",
+          "countries",
+          "country_names",
+          "published",
+          "deadline",
+          "days_left",
+          "value",
+          "currency",
+          "url",
+          "match",
+          "hs6",
+          "product_name"
+        ],
+        "title": "Tender"
+      },
+      "TendersOut": {
+        "properties": {
+          "tenders": {
+            "items": {
+              "$ref": "#/components/schemas/Tender"
+            },
+            "type": "array",
+            "title": "Tenders"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "TED couldn't be reached; this is the last list"
+          },
+          "products": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Products",
+            "description": "Product names searched"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenders",
+          "fetched_at",
+          "stale",
+          "products"
+        ],
+        "title": "TendersOut"
+      },
+      "TokenIn": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "TokenIn"
+      },
       "Totals": {
         "properties": {
           "users": {
@@ -8019,6 +11489,27 @@
         ],
         "title": "UnreadCount"
       },
+      "UnsubscribeIn": {
+        "properties": {
+          "u": {
+            "type": "string",
+            "format": "uuid",
+            "title": "U"
+          },
+          "t": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 32,
+            "title": "T"
+          }
+        },
+        "type": "object",
+        "required": [
+          "u",
+          "t"
+        ],
+        "title": "UnsubscribeIn"
+      },
       "UpdateMeRequest": {
         "properties": {
           "full_name": {
@@ -8067,6 +11558,11 @@
             "type": "boolean",
             "title": "Is Admin",
             "description": "Can open the usage page",
+            "default": false
+          },
+          "digest_enabled": {
+            "type": "boolean",
+            "title": "Digest Enabled",
             "default": false
           }
         },
@@ -8120,6 +11616,81 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VatCheck": {
+        "properties": {
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "number",
+          "valid",
+          "name",
+          "address",
+          "checked_at"
+        ],
+        "title": "VatCheck"
+      },
+      "VatIn": {
+        "properties": {
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Country",
+            "description": "An EU member, ISO alpha-3"
+          },
+          "number": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 4,
+            "title": "Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "number"
+        ],
+        "title": "VatIn"
       },
       "Verdict": {
         "properties": {

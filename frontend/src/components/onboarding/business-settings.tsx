@@ -15,6 +15,7 @@ import {
 } from "@/components/onboarding/preferences";
 import { Callout } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { LetterheadCard } from "@/components/quotes/letterhead-card";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import {
@@ -232,5 +233,10 @@ export function BusinessSettings() {
       </EmptyState>
     );
   }
-  return <Form profile={profile.data} exporters={exporters.data} countries={countries.data} />;
+  return (
+    <>
+      <Form profile={profile.data} exporters={exporters.data} countries={countries.data} />
+      <LetterheadCard />
+    </>
+  );
 }

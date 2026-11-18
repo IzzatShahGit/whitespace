@@ -56,8 +56,10 @@ async def search(
     max_results: int = 5,
     time_range: str | None = "year",
     country: str | None = None,
+    include_domains: list[str] | None = None,
 ) -> list[SearchResult]:
-    """`country` (a full name, e.g. "germany") favours pages from that country."""
+    """`country` (a full name, e.g. "germany") favours pages from that country;
+    `include_domains` limits results to those sites (and their subdomains)."""
     payload: dict[str, object] = {
         "query": query,
         "topic": topic,
@@ -70,6 +72,8 @@ async def search(
         payload["time_range"] = time_range
     if country and topic == "general":
         payload["country"] = country.lower()
+    if include_domains:
+        payload["include_domains"] = include_domains
     try:
         response = await client.post(
             SEARCH_URL,

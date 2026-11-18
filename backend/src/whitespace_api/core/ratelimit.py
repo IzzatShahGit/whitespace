@@ -7,10 +7,15 @@ can replace it later behind the same interface.
 
 from __future__ import annotations
 
+import logging
 import time
 from collections import OrderedDict, deque
 
 from fastapi import HTTPException, Request, status
+
+from whitespace_api.core.config import get_settings
+
+log = logging.getLogger(__name__)
 
 
 class RateLimiter:
@@ -33,12 +38,29 @@ class RateLimiter:
         return allowed
 
 
+_logged_hops = False
+
+
 def client_key(request: Request) -> str:
-    """The caller's address: first X-Forwarded-For hop (set by our own web proxy), else the peer."""
+    """The caller's address as seen by the outermost proxy we trust.
+
+    Each trusted proxy appends the address it received from, so the real caller sits
+    `trusted_proxy_hops` entries from the right. Anything further left was sent by the
+    client itself and could be forged to dodge rate limits, so it is never used.
+    """
+    global _logged_hops
     forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    if not forwarded:
+        return request.client.host if request.client else "unknown"
+    hops = [h.strip() for h in forwarded.split(",") if h.strip()]
+    if not hops:
+        return request.client.host if request.client else "unknown"
+    if not _logged_hops:
+        # Count only (no addresses): tells us what trusted_proxy_hops should be in prod.
+        log.info("x-forwarded-for carries %d hop(s)", len(hops))
+        _logged_hops = True
+    trusted = get_settings().trusted_proxy_hops
+    return hops[-trusted] if len(hops) >= trusted else hops[0]
 
 
 def limit(limiter: RateLimiter, request: Request) -> None:

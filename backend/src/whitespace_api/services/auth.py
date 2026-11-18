@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from whitespace_api.core import security, tasks
 from whitespace_api.core.config import Settings
+from whitespace_api.models.jobs import EmailVerification
 from whitespace_api.models.user import PasswordReset, User
 from whitespace_api.notify.email import EmailMessage, Sender, get_sender
 from whitespace_api.repositories import users as repo
@@ -20,6 +21,7 @@ from whitespace_api.services.google_oauth import GoogleIdentity
 
 log = logging.getLogger(__name__)
 RESETS_PER_HOUR = 3  # links one account can be sent an hour
+VERIFY_LINK_HOURS = 48
 
 
 class AuthError(Exception):
@@ -283,6 +285,82 @@ async def reset_password(
     session = await _start_session(db, user, settings)
     await db.commit()
     return session
+
+
+# ---------- weekly email and address verification ----------
+async def set_digest(
+    db: AsyncSession, user: User, *, enabled: bool, settings: Settings, sender: Sender | None = None
+) -> tuple[bool, bool]:
+    """Turn the weekly email on or off: (digest_enabled, verification_sent).
+
+    An unverified address gets a confirmation link first; the digest starts once it's
+    clicked. That stops anyone signing someone else's address up for our emails.
+    """
+    if not enabled or user.email_verified:
+        user.digest_enabled = enabled
+        await db.commit()
+        return enabled, False
+    now = datetime.now(UTC)
+    recent = await db.scalar(
+        select(func.count())
+        .select_from(EmailVerification)
+        .where(
+            EmailVerification.user_id == user.id,
+            EmailVerification.created_at > now - timedelta(hours=1),
+        )
+    )
+    if (recent or 0) >= RESETS_PER_HOUR:
+        raise AuthError("We've sent a few links already. Check your inbox (and spam).")
+    token = security.new_refresh_token()
+    db.add(
+        EmailVerification(
+            user_id=user.id,
+            token_hash=security.hash_token(token),
+            expires_at=now + timedelta(hours=VERIFY_LINK_HOURS),
+        )
+    )
+    await db.commit()
+    link = f"{settings.public_app_url.rstrip('/')}/verify-email?token={token}"
+    name = user.full_name.split()[0] if user.full_name.strip() else "there"
+    message = EmailMessage(
+        to=user.email,
+        subject="Confirm your email for Whitespace",
+        text=(
+            f"Hi {name},\n\nConfirm this address to get your weekly Whitespace email "
+            f"(follow-ups due, market moves, checklists):\n\n{link}\n\n"
+            f"The link works for {VERIFY_LINK_HOURS} hours. If you didn't ask for this, "
+            "ignore it and nothing will be sent.\n\nWhitespace\n"
+        ),
+    )
+    tasks.spawn(_deliver(sender or get_sender(settings), message))
+    return False, True
+
+
+async def verify_email(db: AsyncSession, *, token: str) -> User:
+    """Use a confirmation link: the address is verified and the weekly email turned on."""
+    now = datetime.now(UTC)
+    row = await db.scalar(
+        select(EmailVerification).where(EmailVerification.token_hash == security.hash_token(token))
+    )
+    if row is None or row.used_at is not None or row.expires_at <= now:
+        raise AuthError("This link has expired or was already used.")
+    user = await repo.get_user(db, row.user_id)
+    if user is None or not user.is_active:
+        raise AuthError("This link has expired or was already used.")
+    await db.execute(
+        update(EmailVerification)
+        .where(EmailVerification.user_id == user.id, EmailVerification.used_at.is_(None))
+        .values(used_at=now)
+    )
+    user.email_verified = True
+    user.digest_enabled = True
+    await db.commit()
+    return user
+
+
+async def unsubscribe(db: AsyncSession, user_id: uuid.UUID) -> None:
+    await db.execute(update(User).where(User.id == user_id).values(digest_enabled=False))
+    await db.commit()
 
 
 async def delete_account(db: AsyncSession, user: User, *, password: str | None) -> None:

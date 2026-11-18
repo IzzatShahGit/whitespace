@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Users } from "lucide-react";
+import { AlarmClock, Gavel, TrendingDown, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 
 import { toneClass } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ const ICONS = {
   share_up: TrendingUp,
   share_down: TrendingDown,
   rival_slipping: Users,
+  follow_up: AlarmClock,
+  tender: Gavel,
 } as const;
 
 function tone(n: Notification): "positive" | "negative" | "neutral" {
