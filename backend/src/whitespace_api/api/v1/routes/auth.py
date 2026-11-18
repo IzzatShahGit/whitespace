@@ -15,15 +15,20 @@ from whitespace_api.models.user import User
 from whitespace_api.schemas.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
+    DigestIn,
+    DigestOut,
     ForgotPasswordRequest,
     LoginRequest,
     ProvidersOut,
     RegisterRequest,
     ResetPasswordRequest,
+    TokenIn,
+    UnsubscribeIn,
     UpdateMeRequest,
     UserOut,
 )
 from whitespace_api.services import auth as auth_service
+from whitespace_api.services import digest as digest_service
 
 router = APIRouter(prefix="/auth")
 
@@ -171,6 +176,46 @@ async def reset_password(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     set_session_cookies(response, session, settings)
     return _out(session.user, settings)
+
+
+@router.post("/digest", response_model=DigestOut)
+async def set_digest(
+    body: DigestIn, user: CurrentUser, db: DbSession, settings: AppSettings
+) -> DigestOut:
+    """Turn the weekly email on or off. An unverified address gets a confirmation link."""
+    if body.enabled and not settings.email_enabled:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Email isn't set up yet")
+    try:
+        enabled, sent = await auth_service.set_digest(
+            db, user, enabled=body.enabled, settings=settings
+        )
+    except auth_service.AuthError as exc:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(exc)) from exc
+    return DigestOut(digest_enabled=enabled, verification_sent=sent)
+
+
+@router.post("/verify-email", response_model=UserOut)
+async def verify_email(
+    body: TokenIn, request: Request, db: DbSession, settings: AppSettings
+) -> UserOut:
+    """Confirm an address from the emailed link (works signed in or out)."""
+    limit(_reset_limit, request)
+    try:
+        user = await auth_service.verify_email(db, token=body.token)
+    except auth_service.AuthError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    return _out(user, settings)
+
+
+@router.post("/unsubscribe", status_code=status.HTTP_204_NO_CONTENT)
+async def unsubscribe(
+    body: UnsubscribeIn, request: Request, db: DbSession, settings: AppSettings
+) -> None:
+    """Stop the weekly email, from the link in it (no sign-in needed)."""
+    limit(_reset_limit, request)
+    if not digest_service.valid_unsubscribe(body.u, body.t, settings):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "This unsubscribe link isn't valid")
+    await auth_service.unsubscribe(db, body.u)
 
 
 @router.post("/delete-account", status_code=status.HTTP_204_NO_CONTENT)

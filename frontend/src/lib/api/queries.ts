@@ -304,7 +304,7 @@ export function useNiche(exporter: string | undefined, slug: string) {
 }
 
 // ---------- AI briefs ----------
-const BRIEF_POLL_MS = 2000;
+export const BRIEF_POLL_MS = 2000;
 
 /** The brief's current state; polls while it's being written. */
 export function useBrief(exporter: string | undefined, hs6: string, market: string) {

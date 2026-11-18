@@ -28,6 +28,7 @@ class UserOut(BaseModel):
     has_password: bool
     created_at: datetime
     is_admin: bool = Field(default=False, description="Can open the usage page")
+    digest_enabled: bool = False
 
 
 class UpdateMeRequest(BaseModel):
@@ -54,6 +55,26 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str = Field(min_length=20, max_length=200)
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class DigestIn(BaseModel):
+    enabled: bool
+
+
+class DigestOut(BaseModel):
+    digest_enabled: bool
+    verification_sent: bool = Field(
+        description="True when we emailed a link to confirm the address first"
+    )
+
+
+class TokenIn(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+
+
+class UnsubscribeIn(BaseModel):
+    u: uuid.UUID
+    t: str = Field(min_length=32, max_length=32)
 
 
 class ProvidersOut(BaseModel):

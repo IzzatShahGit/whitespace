@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  BookmarkCheck,
+  BookmarkPlus,
   Building2,
   CalendarDays,
   Check,
@@ -13,6 +15,7 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { track } from "@/lib/analytics";
+import { sameCompany, useAddContact, usePipeline } from "@/lib/api/pipeline";
 import { Segmented } from "@/components/ui/segmented";
 import {
   type Lead,
@@ -177,6 +181,56 @@ function IntroBox({
   );
 }
 
+/** Save a company to the user's pipeline; shows when it's already there. */
+function SaveToPipeline({
+  lead,
+  hs6,
+  country,
+  side,
+  sourceUrl,
+}: {
+  lead: Lead;
+  hs6: string;
+  country: string;
+  side: LeadSide;
+  sourceUrl?: string;
+}) {
+  const pipeline = usePipeline();
+  const add = useAddContact();
+  const saved = pipeline.data?.some(
+    (c) => c.hs6 === hs6 && c.market === country && sameCompany(c.name, lead.name),
+  );
+  if (saved || add.isSuccess) {
+    return (
+      <Link href="/app/pipeline" className={`${linkClass} text-positive`}>
+        <BookmarkCheck className="h-3.5 w-3.5" aria-hidden /> In pipeline
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      disabled={add.isPending}
+      onClick={() =>
+        add.mutate({
+          hs6,
+          market: country,
+          side,
+          name: lead.name,
+          kind: lead.kind,
+          city: lead.city ?? null,
+          website: lead.website ?? null,
+          source_url: sourceUrl ?? null,
+        })
+      }
+      className={`${linkClass} text-brand`}
+    >
+      <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
+      {add.isError ? "Couldn’t save, retry" : "Save to pipeline"}
+    </button>
+  );
+}
+
 function LeadRow({
   lead,
   content,
@@ -230,6 +284,13 @@ function LeadRow({
         </div>
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        <SaveToPipeline
+          lead={lead}
+          hs6={hs6}
+          country={country}
+          side={side}
+          sourceUrl={source?.url}
+        />
         {/* Phones: the email action sits with the links instead of beside the name. */}
         <button
           type="button"

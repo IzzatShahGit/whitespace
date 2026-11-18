@@ -13,7 +13,7 @@ import asyncio
 import logging
 import smtplib
 import ssl
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from email.message import EmailMessage as MimeMessage
 from email.utils import formataddr, make_msgid
 from typing import Protocol
@@ -29,6 +29,7 @@ class EmailMessage:
     to: str
     subject: str
     text: str
+    headers: dict[str, str] = field(default_factory=dict)  # e.g. List-Unsubscribe
 
 
 class Sender(Protocol):
@@ -59,6 +60,8 @@ class SmtpSender:
         mime["To"] = message.to
         mime["Subject"] = message.subject
         mime["Message-ID"] = make_msgid(domain=self.user.rpartition("@")[2] or None)
+        for name, value in message.headers.items():
+            mime[name] = value
         mime.set_content(message.text)
         return mime
 

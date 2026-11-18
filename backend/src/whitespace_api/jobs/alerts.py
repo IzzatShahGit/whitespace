@@ -54,8 +54,15 @@ class Summary:
     failed: int = 0  # unexpected errors, logged with a traceback
 
 
-async def run(settings: Settings, *, today: date | None = None) -> Summary:
-    """One run, unless another holds the lock."""
+async def run(
+    settings: Settings, *, today: date | None = None, advisory_lock: bool = True
+) -> Summary:
+    """One run, unless another holds the lock. The in-app scheduler passes
+    `advisory_lock=False`: its job lease already guarantees one run at a time, and
+    session-level advisory locks aren't reliable behind a transaction-mode pooler."""
+    if not advisory_lock:
+        sender = get_sender(settings) if settings.alerts_email_enabled else None
+        return await _check_all(settings, today or datetime.now(UTC).date(), sender)
     async with tasks.session_factory() as lock_session:
         # A session-level lock on a connection in autocommit mode: held for the whole run
         # without keeping a transaction open, and freed by Postgres if the process dies.
