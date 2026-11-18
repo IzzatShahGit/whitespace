@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 
 from whitespace_api.schemas.trade import CountryOut
 
-ContainerKind = Literal["20ft", "40ft", "40hc"]
+# "lcl": a share of a container (less than container load), for small orders.
+ContainerKind = Literal["20ft", "40ft", "40hc", "lcl"]
 Stage = Literal["to_port", "after_arrival"]
 
 
@@ -48,7 +49,7 @@ class CostLine(BaseModel):
     key: str
     label: str
     stage: Stage = Field(description="to_port: up to the market's port (CIF); after: beyond")
-    usd: CostRange = Field(description="Per container")
+    usd: CostRange = Field(description="Per container (per shipment if lcl)")
 
 
 class FreightEstimate(BaseModel):
@@ -56,7 +57,8 @@ class FreightEstimate(BaseModel):
     dest: CountryOut
     route: FreightRoute
     container: ContainerKind
-    kg_per_container: float
+    kg_per_container: float = Field(description="Kg in the box, or in the shipment if lcl")
+    volume_m3: float = Field(description="Roughly how much space the load takes")
     kg_basis: str = Field(description="Where the load figure comes from")
     value_usd_kg: float | None = Field(description="Goods value used for insurance")
     value_basis: str | None

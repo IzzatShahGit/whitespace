@@ -3,13 +3,13 @@
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordField } from "@/components/auth/password-field";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { signIn, signUp } from "@/lib/auth";
+import { providers, signIn, signUp } from "@/lib/auth";
 
 type Mode = "login" | "signup";
 
@@ -44,6 +44,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   // The Google flow returns ?error=google on failure; the reason stays in server logs.
   const [error, setError] = useState(params.get("error") === "google" ? GOOGLE_ERROR : undefined);
   const [pending, setPending] = useState(false);
+  const [canReset, setCanReset] = useState(false);
+
+  useEffect(() => {
+    if (mode === "login") void providers().then((p) => setCanReset(p.passwordReset));
+  }, [mode]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,6 +112,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
           maxLength={128}
           required
         />
+        {canReset && (
+          <Link
+            href="/forgot-password"
+            className="-mt-2 self-end text-sm text-muted underline-offset-4 hover:text-fg hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        )}
 
         {error && (
           <div
@@ -122,6 +135,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {pending && <LoaderCircle aria-hidden className="animate-spin" />}
           {pending ? text.pending : text.submit}
         </Button>
+        {mode === "signup" && (
+          <p className="text-center text-xs leading-5 text-subtle">
+            By creating an account you agree to our{" "}
+            <Link href="/terms" className="underline underline-offset-2 hover:text-fg">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-fg">
+              Privacy policy
+            </Link>
+            .
+          </p>
+        )}
       </form>
 
       <p className="mt-8 text-center text-sm text-muted">

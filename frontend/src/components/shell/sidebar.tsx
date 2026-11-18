@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/brand/logo";
-import { activeHref, LEARN, NAV, SETTINGS } from "@/components/shell/nav";
-import { useChatSuggestions } from "@/lib/api/queries";
+import { activeHref, LEARN, NAV, SETTINGS, USAGE } from "@/components/shell/nav";
+import { useChatSuggestions, useMe } from "@/lib/api/queries";
 
 function UsageMeter() {
   const usage = useChatSuggestions();
@@ -24,6 +24,7 @@ function UsageMeter() {
 /** Desktop navigation: always visible, icons + words, the current section highlighted. */
 export function Sidebar() {
   const current = activeHref(usePathname());
+  const isAdmin = useMe().data?.is_admin === true;
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-canvas px-3 py-4 lg:flex">
       <div className="px-2 pb-6">
@@ -59,6 +60,21 @@ export function Sidebar() {
       </nav>
       <div className="flex flex-col gap-2">
         <UsageMeter />
+        {isAdmin && (
+          <Link
+            href={USAGE.href}
+            aria-current={current === USAGE.href ? "page" : undefined}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
+              current === USAGE.href ? "bg-surface text-fg" : "text-muted hover:text-fg"
+            }`}
+          >
+            <USAGE.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
+            {USAGE.label}
+            <span className="ml-auto rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-subtle uppercase">
+              Admin
+            </span>
+          </Link>
+        )}
         <Link
           href={LEARN.href}
           aria-current={current === LEARN.href ? "page" : undefined}

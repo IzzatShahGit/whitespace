@@ -16,6 +16,9 @@ FROM base AS build
 # Where /api/* is forwarded; baked into the build's routing table.
 ARG API_INTERNAL_URL=http://localhost:8400
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
+# Shown on the Terms and Privacy pages; baked in at build time.
+ARG NEXT_PUBLIC_CONTACT_EMAIL=
+ENV NEXT_PUBLIC_CONTACT_EMAIL=$NEXT_PUBLIC_CONTACT_EMAIL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build

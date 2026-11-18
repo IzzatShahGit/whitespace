@@ -105,6 +105,11 @@ def test_core_name_strips_only_trailing_legal_words() -> None:
     )
     assert agent.is_past("TEXPO 2024", None, 2026)
     assert not agent.is_past("Heimtextil", "January 2026 / 2027", 2026)
+    assert agent.is_past("Techtextil 2026", "21-24 April 2026", 2026, 11)
+    assert agent.is_past("Heimtextil", "13.-16. Januar 2026", 2026, 11)
+    assert not agent.is_past("Heimtextil", "13-16 January 2026", 2026, 1)  # this month
+    assert not agent.is_past("Interior Lifestyle", "June 2026", 2026, None)
+    assert not agent.is_past("Hometex", "May 2026", 2026, 3)
     assert not agent.on_page("Ltd", PAGE.lower())  # too short to prove anything
 
 

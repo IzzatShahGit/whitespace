@@ -392,7 +392,7 @@ def outbox(monkeypatch: pytest.MonkeyPatch) -> list[EmailMessage]:
         async def send(self, message: EmailMessage) -> None:
             sent.append(message)
 
-    monkeypatch.setattr(job, "get_sender", Recorder)
+    monkeypatch.setattr(job, "get_sender", lambda _settings: Recorder())
     return sent
 
 
@@ -423,8 +423,8 @@ async def test_the_default_sender_sends_nothing_and_never_logs_addresses(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.INFO)
-    sender = get_sender()
-    assert isinstance(sender, LogSender)
+    sender = get_sender(Settings(_env_file=None))  # type: ignore[call-arg]
+    assert isinstance(sender, LogSender)  # no SMTP account configured
     await sender.send(EmailMessage(to="ahmed@example.com", subject="Towels: up 30%", text="..."))
     assert "Towels: up 30%" in caplog.text and "ahmed@example.com" not in caplog.text
 

@@ -64,7 +64,7 @@ async def run(settings: Settings, *, today: date | None = None) -> Summary:
             log.info("Alerts: another run is in progress; nothing to do")
             return Summary(locked=True)
         try:
-            sender = get_sender() if settings.alerts_email_enabled else None
+            sender = get_sender(settings) if settings.alerts_email_enabled else None
             return await _check_all(settings, today or datetime.now(UTC).date(), sender)
         finally:
             await conn.execute(text("SELECT pg_advisory_unlock(:id)"), {"id": LOCK_ID})

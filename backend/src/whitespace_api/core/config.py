@@ -150,6 +150,28 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
 
+    # --- email (password reset; alerts later) ---
+    # Any SMTP account. Gmail: smtp.gmail.com:587 with an app password
+    # (Google Account -> Security -> App passwords). Unset = no email is sent.
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    mail_from_name: str = "Whitespace"
+    reset_token_minutes: int = Field(default=30, ge=5, le=24 * 60)
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.smtp_user and self.smtp_password)
+
+    # --- usage analytics (first-party, no cookies) ---
+    # Who can open /app/admin: comma-separated emails.
+    admin_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
+    analytics_keep_days: int = Field(default=400, ge=30, description="Older counts are pruned")
+
+    def is_admin(self, email: str) -> bool:
+        return email.strip().lower() in {e.strip().lower() for e in self.admin_emails if e.strip()}
+
     # --- watchlists and alerts ---
     watch_limit: int = Field(default=50, ge=1, description="Watched product-markets per user")
     # Off until an email account exists: while off, alerts are in-app only and the job
@@ -195,7 +217,7 @@ class Settings(BaseSettings):
             )
         return self
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "admin_emails", mode="before")
     @classmethod
     def _split_csv(cls, value: object) -> object:
         if isinstance(value, str):

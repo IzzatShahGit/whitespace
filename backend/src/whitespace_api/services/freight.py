@@ -1,4 +1,4 @@
-"""Freight estimates: one full container, from the exporter's port to the buyer.
+"""Freight estimates: one container (or a share of one), from the exporter's port to the buyer.
 
 A transparent model, not a quote. Every figure is a low / typical / high range:
 
@@ -7,6 +7,10 @@ A transparent model, not a quote. Every figure is a low / typical / high range:
   insurance       0.3% of 110% of the goods + freight value (the usual cover)
   road legs       to/from the gateway port, for landlocked countries
   arrival         destination terminal handling and delivery order
+
+A shared container (LCL, "less than container load") is priced per cubic metre (or per
+tonne, whichever is more), with the higher per-m³ rates and fixed paperwork that forwarders
+charge for consolidating small shipments.
 
 Base rates are set from public container indices and should be reviewed monthly
 (`RATES_AS_OF`). The route comes from the pipeline's `ref_sea_route` table; the load
@@ -60,10 +64,19 @@ BOXES: dict[ContainerKind, Box] = {
     "40ft": Box("40ft container", 1.00, 1.00, 58.0, 26_000),
     "40hc": Box("40ft high-cube", 1.05, 1.00, 66.0, 26_000),
 }
+FEU_USABLE_M3 = BOXES["40ft"].usable_m3
 ORIGIN_FEES_FEU = 350.0  # terminal handling, export customs, documents
 ARRIVAL_FEES_FEU = 500.0  # destination terminal handling, delivery order
 INSURANCE_RATE = 0.003
 INSURED_SHARE = 1.10
+
+# Shared container (LCL), per "W/M": a cubic metre or a tonne, whichever is more; min 1.
+LCL_SEA_PREMIUM = 1.5  # per m³, vs a full 40ft's rate per usable m³
+LCL_ORIGIN_FIXED, LCL_ORIGIN_PER_WM = 75.0, 25.0  # papers; warehouse receiving
+LCL_ARRIVAL_FIXED, LCL_ARRIVAL_PER_WM = 150.0, 45.0  # delivery order; unpacking, handling
+LCL_ROAD_SHARE = 1.5  # part-loads cost more per m³ than a full truck
+LCL_DEFAULT_M3 = 5.0  # a typical small first order
+LCL_EXTRA_DAYS = (4, 8)  # waiting for the box to fill, unpacking at arrival
 
 # Typical packed density (kg per m3) by HS chapter range: decides how many kg fit.
 DENSITY: list[tuple[range, int, str]] = [
@@ -93,14 +106,19 @@ class NoRouteError(Exception):
     """No sea route between these countries. The message is safe to show."""
 
 
-def typical_load(hs6: str, box: Box) -> tuple[float, str]:
+def density(hs6: str) -> tuple[int, str]:
     chapter = int(hs6[:2])
-    density, kind = next(
-        ((d, k) for r, d, k in DENSITY if chapter in r),
-        DEFAULT_DENSITY,
-    )
-    kg = min(box.max_kg, density * box.usable_m3)
-    limit = "weight limit" if kg == box.max_kg else f"about {density} kg per m³"
+    return next(((d, k) for r, d, k in DENSITY if chapter in r), DEFAULT_DENSITY)
+
+
+def typical_load(hs6: str, box: Box | None) -> tuple[float, str]:
+    """Kg in a typical full box, or in a typical small shared shipment (`box` None)."""
+    kg_m3, kind = density(hs6)
+    if box is None:
+        kg = kg_m3 * LCL_DEFAULT_M3
+        return round(kg, -1), f"A typical small order of {kind} (about {LCL_DEFAULT_M3:g} m³)"
+    kg = min(box.max_kg, kg_m3 * box.usable_m3)
+    limit = "weight limit" if kg == box.max_kg else f"about {kg_m3} kg per m³"
     return round(kg, -1), f"A typical load for {kind} ({limit})"
 
 
@@ -152,11 +170,23 @@ def build(
     fuel: brent_feed.Brent,
 ) -> FreightEstimate:
     """The estimate itself. Pure: no database or network."""
-    box = BOXES[container]
+    shared = container == "lcl"
+    box = None if shared else BOXES[container]
     if kg is None:
         kg, kg_basis = typical_load(hs6, box)
     else:
         kg_basis = "Your figure"
+    volume = kg / density(hs6)[0]
+    if box is None:
+        wm = max(1.0, volume, kg / 1000)  # what a shared box is charged on
+        sea_mult = LCL_SEA_PREMIUM * wm / FEU_USABLE_M3
+        road_mult = min(1.0, LCL_ROAD_SHARE * wm / FEU_USABLE_M3)
+        origin_fees = LCL_ORIGIN_FIXED + LCL_ORIGIN_PER_WM * wm
+        arrival_fees = LCL_ARRIVAL_FIXED + LCL_ARRIVAL_PER_WM * wm
+    else:
+        sea_mult, road_mult = box.sea_factor, box.fee_factor
+        origin_fees = ORIGIN_FEES_FEU * box.fee_factor
+        arrival_fees = ARRIVAL_FEES_FEU * box.fee_factor
     origin_port, dest_port = route.origin_port, route.dest_port
     origin_km, dest_km = route.origin_inland_km, route.dest_inland_km
     if reverse:
@@ -172,19 +202,23 @@ def build(
                 key="origin_road",
                 label=f"Road/rail to {origin_port} (~{origin_km:,} km)",
                 stage="to_port",
-                usd=spread(origin_km * ROAD_PER_KM_FEU * box.fee_factor, 0.75, 1.4),
+                usd=spread(origin_km * ROAD_PER_KM_FEU * road_mult, 0.75, 1.4),
             )
         )
     lines.append(
         CostLine(
             key="origin_fees",
-            label="Port handling, customs and papers at origin",
+            label=(
+                "Warehouse, customs and papers at origin"
+                if shared
+                else "Port handling, customs and papers at origin"
+            ),
             stage="to_port",
-            usd=spread(ORIGIN_FEES_FEU * box.fee_factor, 0.75, 1.4),
+            usd=spread(origin_fees, 0.75, 1.4),
         )
     )
     if route.sea_nm > 0:
-        sea = (FEU_BASE + FEU_PER_NM * route.sea_nm) * factor * direction.factor * box.sea_factor
+        sea = (FEU_BASE + FEU_PER_NM * route.sea_nm) * factor * direction.factor * sea_mult
         lines.append(
             CostLine(
                 key="sea",
@@ -214,9 +248,13 @@ def build(
     lines.append(
         CostLine(
             key="arrival_fees",
-            label=f"Port handling and release at {dest_port}",
+            label=(
+                f"Unpacking, handling and release at {dest_port}"
+                if shared
+                else f"Port handling and release at {dest_port}"
+            ),
             stage="after_arrival",
-            usd=spread(ARRIVAL_FEES_FEU * box.fee_factor, 0.75, 1.5),
+            usd=spread(arrival_fees, 0.75, 1.5),
         )
     )
     if dest_km:
@@ -225,7 +263,7 @@ def build(
                 key="dest_road",
                 label=f"Road/rail from {dest_port} (~{dest_km:,} km)",
                 stage="after_arrival",
-                usd=spread(dest_km * ROAD_PER_KM_FEU * box.fee_factor, 0.75, 1.4),
+                usd=spread(dest_km * ROAD_PER_KM_FEU * road_mult, 0.75, 1.4),
             )
         )
 
@@ -233,6 +271,8 @@ def build(
     after = add(*(line.usd for line in lines if line.stage == "after_arrival"))
     total = add(to_port, after)
     days_low, days_high = transit_days(route.sea_nm, origin_km + dest_km)
+    if shared:
+        days_low, days_high = days_low + LCL_EXTRA_DAYS[0], days_high + LCL_EXTRA_DAYS[1]
 
     notes = [
         "An estimate from distance, fuel and typical port fees, not a quote: ask two or "
@@ -244,6 +284,24 @@ def build(
             "part-empty, so rates this way are lower: sea freight is priced at "
             f"{direction.factor:.0%} of the busy direction."
         )
+    if shared:
+        twenty = BOXES["20ft"]
+        if volume > twenty.usable_m3 or kg > twenty.max_kg:
+            notes.append(
+                f"About {volume:.0f} m³ is more than a 20ft container holds: at this size a "
+                "full container is usually cheaper than sharing."
+            )
+        else:
+            full = build(
+                origin=origin, dest=dest, route=route, reverse=reverse, hs6=hs6,
+                container="20ft", kg=kg, value_usd_kg=value_usd_kg,
+                value_basis=value_basis, fuel=fuel,
+            ).total.typical  # fmt: skip
+            notes.append(
+                f"About {volume:.1f} m³ shares a container with other shippers. A whole 20ft "
+                f"would cost about ${full:,.0f} all-in"
+                + (", less than sharing: book a full one." if full <= total.typical else ".")
+            )
     if fuel.source != "FRED":
         notes.append("Live fuel prices were unavailable, so a reference oil price was used.")
     if not value_usd_kg:
@@ -271,6 +329,7 @@ def build(
         ),
         container=container,
         kg_per_container=kg,
+        volume_m3=round(volume, 1),
         kg_basis=kg_basis,
         value_usd_kg=value_usd_kg,
         value_basis=value_basis,

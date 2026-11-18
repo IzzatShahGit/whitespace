@@ -29,3 +29,24 @@ export async function signIn(body: { email: string; password: string }): Promise
 export async function signOut(): Promise<void> {
   await api.POST("/api/v1/auth/logout");
 }
+
+/** Ask for a reset link. The answer is the same whether or not the email has an account. */
+export async function forgotPassword(email: string): Promise<{ error?: string }> {
+  const { error, response } = await api.POST("/api/v1/auth/password/forgot", { body: { email } });
+  if (response.status === 429) return { error: "Too many requests. Please wait a minute." };
+  return error ? { error: message(error, "Couldn’t send the link. Please try again.") } : {};
+}
+
+/** Set a new password from an emailed link; signs the user in. */
+export async function resetPassword(token: string, new_password: string): Promise<Result> {
+  const { data, error } = await api.POST("/api/v1/auth/password/reset", {
+    body: { token, new_password },
+  });
+  return data ? { user: data } : { error: message(error, "Couldn’t reset your password") };
+}
+
+/** Which sign-in features the server has turned on. */
+export async function providers(): Promise<{ google: boolean; passwordReset: boolean }> {
+  const { data } = await api.GET("/api/v1/auth/providers");
+  return { google: Boolean(data?.google), passwordReset: Boolean(data?.password_reset) };
+}

@@ -80,7 +80,7 @@ async def finish(client: AsyncClient, monkeypatch: pytest.MonkeyPatch, **claims:
 
 async def test_providers_reports_google(client: AsyncClient) -> None:
     response = await client.get("/api/v1/auth/providers")
-    assert response.json() == {"password": True, "google": True}
+    assert response.json() == {"password": True, "google": True, "password_reset": False}
 
 
 async def test_start_uses_pkce_state_and_nonce(client: AsyncClient) -> None:

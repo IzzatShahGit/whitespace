@@ -170,6 +170,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot Password
+         * @description Email a reset link if the account exists. The answer is the same either way.
+         */
+        post: operations["forgot_password_api_v1_auth_password_forgot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Password
+         * @description Set a new password from an emailed link, and sign in. Other sessions end.
+         */
+        post: operations["reset_password_api_v1_auth_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/delete-account": {
         parameters: {
             query?: never;
@@ -835,10 +875,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Track
+         * @description Count one page view or action. No cookies; nothing that identifies a person.
+         */
+        post: operations["track_api_v1_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stats
+         * @description Visitors, sign-ups and feature use over the last 30 days. Admins only.
+         */
+        get: operations["stats_api_v1_admin_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminStats */
+        AdminStats: {
+            /**
+             * Since
+             * Format: date
+             */
+            since: string;
+            /**
+             * Until
+             * Format: date
+             */
+            until: string;
+            /** @description Over the period, except users and active_7d */
+            totals: components["schemas"]["Totals"];
+            /** Days */
+            days: components["schemas"]["DayStats"][];
+            /** Top Pages */
+            top_pages: components["schemas"]["Count"][];
+            /**
+             * Actions
+             * @description Feature use over the period
+             */
+            actions: components["schemas"]["Count"][];
+        };
         /** BestMove */
         BestMove: {
             product: components["schemas"]["ProductOut"];
@@ -1130,7 +1234,7 @@ export interface components {
              * @enum {string}
              */
             stage: "to_port" | "after_arrival";
-            /** @description Per container */
+            /** @description Per container (per shipment if lcl) */
             usd: components["schemas"]["CostRange"];
         };
         /** CostRange */
@@ -1141,6 +1245,13 @@ export interface components {
             typical: number;
             /** High */
             high: number;
+        };
+        /** Count */
+        Count: {
+            /** Name */
+            name: string;
+            /** Count */
+            count: number;
         };
         /** CountryOut */
         CountryOut: {
@@ -1177,6 +1288,20 @@ export interface components {
             end_year: number;
             /** Version */
             version: string;
+        };
+        /** DayStats */
+        DayStats: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Page Views */
+            page_views: number;
+            /** Visitors */
+            visitors: number;
+            /** Sign Ups */
+            sign_ups: number;
         };
         /** DeleteAccountRequest */
         DeleteAccountRequest: {
@@ -1291,6 +1416,24 @@ export interface components {
              */
             note: string | null;
         };
+        /** EventIn */
+        EventIn: {
+            /**
+             * Event
+             * @enum {string}
+             */
+            event: "page_view" | "deal_sheet_print" | "deal_sheet_copy_link" | "email_draft_open" | "intro_copy";
+            /** Path */
+            path?: string | null;
+        };
+        /** ForgotPasswordRequest */
+        ForgotPasswordRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /** FreightEstimate */
         FreightEstimate: {
             origin: components["schemas"]["CountryOut"];
@@ -1300,9 +1443,17 @@ export interface components {
              * Container
              * @enum {string}
              */
-            container: "20ft" | "40ft" | "40hc";
-            /** Kg Per Container */
+            container: "20ft" | "40ft" | "40hc" | "lcl";
+            /**
+             * Kg Per Container
+             * @description Kg in the box, or in the shipment if lcl
+             */
             kg_per_container: number;
+            /**
+             * Volume M3
+             * @description Roughly how much space the load takes
+             */
+            volume_m3: number;
             /**
              * Kg Basis
              * @description Where the load figure comes from
@@ -2102,6 +2253,11 @@ export interface components {
             password: boolean;
             /** Google */
             google: boolean;
+            /**
+             * Password Reset
+             * @default false
+             */
+            password_reset: boolean;
         };
         /**
          * RangeIdea
@@ -2215,6 +2371,13 @@ export interface components {
             full_name: string;
             /** Password */
             password: string;
+        };
+        /** ResetPasswordRequest */
+        ResetPasswordRequest: {
+            /** Token */
+            token: string;
+            /** New Password */
+            new_password: string;
         };
         /** RivalDuty */
         RivalDuty: {
@@ -2433,6 +2596,22 @@ export interface components {
             /** Unit Price Usd Kg */
             unit_price_usd_kg?: number | null;
         };
+        /** Totals */
+        Totals: {
+            /** Users */
+            users: number;
+            /**
+             * Active 7D
+             * @description Signed in during the last 7 days
+             */
+            active_7d: number;
+            /** Sign Ups */
+            sign_ups: number;
+            /** Visitors */
+            visitors: number;
+            /** Page Views */
+            page_views: number;
+        };
         /** TrendCard */
         TrendCard: {
             /**
@@ -2486,6 +2665,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Is Admin
+             * @description Can open the usage page
+             * @default false
+             */
+            is_admin: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -2853,6 +3038,72 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forgot_password_api_v1_auth_password_forgot_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_password_api_v1_auth_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
             };
         };
         responses: {
@@ -3368,8 +3619,8 @@ export interface operations {
                 /** @description Shipping to */
                 dest: string;
                 hs6: string;
-                container?: "20ft" | "40ft" | "40hc";
-                /** @description Your load; default: typical */
+                container?: "20ft" | "40ft" | "40hc" | "lcl";
+                /** @description Kg per box (per shipment if lcl) */
                 kg_per_container?: number | null;
                 /** @description Goods value for insurance */
                 value_usd_kg?: number | null;
@@ -4285,6 +4536,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Preview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    track_api_v1_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stats_api_v1_admin_stats_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminStats"];
                 };
             };
             /** @description Validation Error */

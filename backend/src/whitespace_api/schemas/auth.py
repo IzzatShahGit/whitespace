@@ -27,6 +27,7 @@ class UserOut(BaseModel):
     email_verified: bool
     has_password: bool
     created_at: datetime
+    is_admin: bool = Field(default=False, description="Can open the usage page")
 
 
 class UpdateMeRequest(BaseModel):
@@ -46,6 +47,16 @@ class DeleteAccountRequest(BaseModel):
     )
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
 class ProvidersOut(BaseModel):
     password: bool
     google: bool
+    password_reset: bool = False

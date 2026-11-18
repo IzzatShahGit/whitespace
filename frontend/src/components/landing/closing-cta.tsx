@@ -51,6 +51,12 @@ export function Footer() {
           <a href="/login" className="text-muted hover:text-fg">
             Sign in
           </a>
+          <a href="/terms" className="text-muted hover:text-fg">
+            Terms
+          </a>
+          <a href="/privacy" className="text-muted hover:text-fg">
+            Privacy
+          </a>
         </nav>
       </div>
       <p className="mx-auto max-w-6xl px-4 pb-8 text-xs text-subtle sm:px-6">

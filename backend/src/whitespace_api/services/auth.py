@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from whitespace_api.core import security
+from whitespace_api.core import security, tasks
 from whitespace_api.core.config import Settings
-from whitespace_api.models.user import User
+from whitespace_api.models.user import PasswordReset, User
+from whitespace_api.notify.email import EmailMessage, Sender, get_sender
 from whitespace_api.repositories import users as repo
 from whitespace_api.services.google_oauth import GoogleIdentity
+
+log = logging.getLogger(__name__)
+RESETS_PER_HOUR = 3  # links one account can be sent an hour
 
 
 class AuthError(Exception):
@@ -189,6 +195,91 @@ async def change_password(
     _check_password(user, current_password)
     user.password_hash = security.hash_password(new_password)
     await repo.revoke_all_refresh_tokens(db, user.id, datetime.now(UTC))
+    session = await _start_session(db, user, settings)
+    await db.commit()
+    return session
+
+
+# ---------- password reset ----------
+def _reset_email(user: User, link: str, minutes: int) -> EmailMessage:
+    name = user.full_name.split()[0] if user.full_name.strip() else "there"
+    return EmailMessage(
+        to=user.email,
+        subject="Reset your Whitespace password",
+        text=(
+            f"Hi {name},\n\n"
+            "Someone (hopefully you) asked to reset the password for your Whitespace "
+            f"account. Open this link to choose a new one:\n\n{link}\n\n"
+            f"The link works once, for {minutes} minutes. If you didn't ask for it, "
+            "ignore this email: your password stays the same.\n\n"
+            "Whitespace\n"
+        ),
+    )
+
+
+async def _deliver(sender: Sender, message: EmailMessage) -> None:
+    try:
+        await sender.send(message)
+    except Exception as exc:  # never surface delivery errors to the caller
+        log.warning("Password reset email failed: %s", type(exc).__name__)
+
+
+async def request_password_reset(
+    db: AsyncSession, *, email: str, settings: Settings, sender: Sender | None = None
+) -> None:
+    """Email a one-time reset link if the account exists. Says nothing either way, and
+    sends in the background, so the response can't reveal who has an account."""
+    user = await repo.get_user_by_email(db, email)
+    if user is None or not user.is_active:
+        return
+    now = datetime.now(UTC)
+    recent = await db.scalar(
+        select(func.count())
+        .select_from(PasswordReset)
+        .where(
+            PasswordReset.user_id == user.id,
+            PasswordReset.created_at > now - timedelta(hours=1),
+        )
+    )
+    if (recent or 0) >= RESETS_PER_HOUR:
+        return
+    token = security.new_refresh_token()
+    db.add(
+        PasswordReset(
+            user_id=user.id,
+            token_hash=security.hash_token(token),
+            expires_at=now + timedelta(minutes=settings.reset_token_minutes),
+        )
+    )
+    await db.commit()
+    link = f"{settings.public_app_url.rstrip('/')}/reset-password?token={token}"
+    message = _reset_email(user, link, settings.reset_token_minutes)
+    tasks.spawn(_deliver(sender or get_sender(settings), message))
+
+
+async def reset_password(
+    db: AsyncSession, *, token: str, new_password: str, settings: Settings
+) -> Session:
+    """Use a reset link: set the password, end every session, sign in here."""
+    now = datetime.now(UTC)
+    reset = await db.scalar(
+        select(PasswordReset).where(PasswordReset.token_hash == security.hash_token(token))
+    )
+    if reset is None or reset.used_at is not None or reset.expires_at <= now:
+        raise AuthError("This reset link has expired or was already used. Ask for a new one.")
+    user = await repo.get_user(db, reset.user_id)
+    if user is None or not user.is_active:
+        raise AuthError("This reset link has expired or was already used. Ask for a new one.")
+    # Every open link for this account stops working too.
+    await db.execute(
+        update(PasswordReset)
+        .where(PasswordReset.user_id == user.id, PasswordReset.used_at.is_(None))
+        .values(used_at=now)
+    )
+    user.password_hash = security.hash_password(new_password)
+    user.email_verified = True  # they just proved they read this inbox
+    user.last_login_at = now
+    await repo.revoke_all_refresh_tokens(db, user.id, now)
     session = await _start_session(db, user, settings)
     await db.commit()
     return session

@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, CalendarClock, Inbox, Radar, TrendingUp, X } from "lucide-react";
+import { BellRing, CalendarClock, FileText, Inbox, Radar, TrendingUp, X } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
@@ -33,12 +33,11 @@ function byProduct(watches: Watch[]): [Watch["product"], Watch[]][] {
 
 function WatchRow({ watch }: { watch: Watch }) {
   const remove = useRemoveWatch();
+  const market = `/app/markets/${watch.product.hs6}/${watch.market.code}`;
+  const from = `?exporter=${watch.exporter.code}`;
   return (
     <li className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-2">
-      <Link
-        href={`/app/markets/${watch.product.hs6}/${watch.market.code}?exporter=${watch.exporter.code}`}
-        className="min-w-0 flex-1"
-      >
+      <Link href={`${market}${from}`} className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{watch.market.name}</span>
         <span className="text-xs text-muted">from {watch.exporter.name}</span>
       </Link>
@@ -51,6 +50,15 @@ function WatchRow({ watch }: { watch: Watch }) {
           Yearly data
         </Badge>
       )}
+      <Link
+        href={`${market}/deal${from}`}
+        aria-label={`Deal sheet for ${watch.market.name}`}
+        title="Deal sheet: costs, route and buyers"
+        className="inline-flex items-center gap-1.5 rounded-lg p-1.5 text-xs font-medium text-muted transition-colors hover:bg-brand-soft hover:text-brand"
+      >
+        <FileText className="h-4 w-4" aria-hidden />
+        <span className="hidden sm:inline">Deal sheet</span>
+      </Link>
       <button
         type="button"
         aria-label={`Stop watching ${watch.market.name}`}

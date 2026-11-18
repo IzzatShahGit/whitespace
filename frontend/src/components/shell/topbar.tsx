@@ -1,7 +1,16 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Monitor, Moon, Search, SlidersHorizontal, Sun, UserRound } from "lucide-react";
+import {
+  BarChart3,
+  LogOut,
+  Monitor,
+  Moon,
+  Search,
+  SlidersHorizontal,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -93,6 +102,11 @@ function ProfileMenu({ user }: { user: User }) {
           <MenuItem icon={<SlidersHorizontal />} href="/app/settings/business" onClick={close}>
             Business preferences
           </MenuItem>
+          {user.is_admin && (
+            <MenuItem icon={<BarChart3 />} href="/app/admin" onClick={close}>
+              Usage (admin)
+            </MenuItem>
+          )}
           <div className="px-2 py-2">
             <p className="mb-1.5 px-1 text-xs font-medium tracking-wide text-subtle uppercase">
               Appearance

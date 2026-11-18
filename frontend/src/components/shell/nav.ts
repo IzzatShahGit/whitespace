@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Bell,
   BookOpen,
   Compass,
@@ -41,9 +42,17 @@ export const SETTINGS: NavItem = {
   hint: "Profile, business and appearance",
 };
 
+/** Admins only: shown when /auth/me says is_admin (the API also refuses everyone else). */
+export const USAGE: NavItem = {
+  href: "/app/admin",
+  label: "Usage",
+  icon: BarChart3,
+  hint: "Visitors, sign-ups and feature use",
+};
+
 /** The section a path belongs to ("/app/markets/630260/DEU" -> Sell). */
 export function activeHref(path: string): string | undefined {
-  const match = [...NAV, LEARN, SETTINGS]
+  const match = [...NAV, LEARN, SETTINGS, USAGE]
     .filter((item) => item.href !== "/app" && path.startsWith(item.href))
     .sort((a, b) => b.href.length - a.href.length)[0];
   return match?.href ?? (path === "/app" ? "/app" : undefined);

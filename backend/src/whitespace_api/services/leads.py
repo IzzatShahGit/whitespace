@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from whitespace_api.agents import llm
 from whitespace_api.agents.brief.facts import sector_term
-from whitespace_api.agents.leads import LeadsDeps, LeadsError, find_leads
+from whitespace_api.agents.leads import LeadsDeps, LeadsError, find_leads, is_past
 from whitespace_api.core import tasks
 from whitespace_api.core.config import Settings
 from whitespace_api.core.http import http_client
@@ -54,10 +54,17 @@ def _out(row: TradeLeads | None, side: LeadSide, settings: Settings) -> LeadsOut
     if row is None:
         return LeadsOut(status="missing", side=side)
     stale = row.updated_at < datetime.now(UTC) - timedelta(days=settings.leads_cache_days)
+    content = LeadsContent.model_validate(row.content) if row.content else None
+    if content is not None:
+        # Fairs found weeks ago may have taken place since.
+        today = date.today()
+        content.events = [
+            e for e in content.events if not is_past(e.name, e.when, today.year, today.month)
+        ]
     return LeadsOut(
         status=row.status,
         side=side,
-        content=LeadsContent.model_validate(row.content) if row.content else None,
+        content=content,
         error=row.error,
         generated_at=row.updated_at if row.status == "ready" else None,
         stale=stale and row.status == "ready",
@@ -140,6 +147,7 @@ async def _generate(*, hs6: str, country: str, side: LeadSide, settings: Setting
                 country=place,
                 side=side,
                 year=date.today().year,
+                month=date.today().month,
                 sector=sector_term(hs6, product),
                 detail=description,
             )

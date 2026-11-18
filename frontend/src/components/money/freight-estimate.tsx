@@ -7,19 +7,13 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { Segmented } from "@/components/ui/segmented";
 import {
-  type ContainerKind,
+  CONTAINER_OPTIONS,
   type CostRange,
   type FreightEstimate as Estimate,
   useFreight,
   useShipping,
 } from "@/lib/api/freight";
 import { parseKg, perKg, usd, weight } from "@/lib/money";
-
-const CONTAINERS: { value: ContainerKind; label: string }[] = [
-  { value: "20ft", label: "20ft" },
-  { value: "40ft", label: "40ft" },
-  { value: "40hc", label: "40ft high-cube" },
-];
 
 const km = (n: number) => `${Math.round(n).toLocaleString("en")} km`;
 
@@ -88,17 +82,18 @@ function RouteStrip({ e }: { e: Estimate }) {
 
 function Breakdown({ e }: { e: Estimate }) {
   const max = e.total.high;
+  const unit = e.container === "lcl" ? "Your shipment" : "Per container";
   const stages = [
     { key: "to_port", title: `To ${e.route.dest_port}`, subtotal: e.to_port },
     { key: "after_arrival", title: "After arrival", subtotal: e.after_arrival },
   ] as const;
   return (
     <table className="w-full text-sm">
-      <caption className="sr-only">Cost per container: low, typical and high</caption>
+      <caption className="sr-only">{unit}: low, typical and high</caption>
       <thead>
         <tr className="text-left text-xs text-subtle">
           <th scope="col" className="pb-2 font-medium">
-            Per container
+            {unit}
           </th>
           <th scope="col" className="hidden w-28 pb-2 font-medium sm:table-cell">
             <span className="sr-only">Range</span>
@@ -163,6 +158,7 @@ export function FreightEstimate({
   const freight = useFreight(origin, dest, hs6, shipping.container, shipping.load, valueUsdKg);
   const [loadText, setLoadText] = useState(shipping.load ? String(shipping.load) : "");
   const { setLoad } = shipping;
+  const shared = shipping.container === "lcl";
 
   // Apply a typed load once the user pauses; empty means "typical".
   useEffect(() => {
@@ -172,6 +168,14 @@ export function FreightEstimate({
     }, 500);
     return () => clearTimeout(timer);
   }, [loadText, setLoad]);
+
+  function pickContainer(next: typeof shipping.container) {
+    if ((next === "lcl") !== shared) {
+      setLoadText("");
+      setLoad(null);
+    }
+    shipping.setContainer(next);
+  }
 
   if (freight.data === null) return null; // no route between these countries
   const e = freight.data;
@@ -183,7 +187,7 @@ export function FreightEstimate({
         title={title}
         description={
           e
-            ? `${e.origin.name} → ${e.dest.name}, one container. A range, not a quote.`
+            ? `${e.origin.name} → ${e.dest.name}, ${e.container === "lcl" ? "a small shipment in a shared container" : "one container"}. A range, not a quote.`
             : "One container, port to port. A range, not a quote."
         }
       />
@@ -192,11 +196,11 @@ export function FreightEstimate({
         <Segmented
           label="Container size"
           value={shipping.container}
-          onChange={shipping.setContainer}
-          items={CONTAINERS}
+          onChange={pickContainer}
+          items={CONTAINER_OPTIONS}
         />
         <label htmlFor={`${id}-load`} className="flex items-center gap-2 text-sm text-muted">
-          Load
+          {shared ? "Shipment" : "Load"}
           <input
             id={`${id}-load`}
             inputMode="decimal"
@@ -211,7 +215,8 @@ export function FreightEstimate({
       </div>
       {e && (
         <p id={`${id}-load-hint`} className="mt-1.5 text-xs text-subtle sm:text-right">
-          {e.kg_basis}: {weight(e.kg_per_container)} per container
+          {e.kg_basis}: {weight(e.kg_per_container)}
+          {e.container === "lcl" ? `, about ${e.volume_m3} m³` : " per container"}
         </p>
       )}
 

@@ -66,6 +66,29 @@ def test_twenty_foot_dense_goods_hit_the_weight_limit() -> None:
     assert own.kg_per_container == 5000 and own.kg_basis == "Your figure"
 
 
+def test_shared_container_is_priced_per_cubic_metre() -> None:
+    small = build(container="lcl")  # textiles: 5 m3 at 160 kg/m3
+    assert small.kg_per_container == 800 and small.volume_m3 == 5.0
+    sea = next(x for x in small.lines if x.key == "sea").usd.typical
+    full_sea = 450 + 0.24 * 6400
+    assert sea == pytest.approx(full_sea / 58 * 1.5 * 5, abs=0.01)
+    assert small.total.typical < build(container="20ft").total.typical
+    # ...but dearer per kg, and slower (consolidation)
+    assert small.total_usd_kg.typical > build(container="20ft").total_usd_kg.typical
+    assert small.route.days_low > build().route.days_low
+    assert any("shares a container" in n for n in small.notes)
+
+
+def test_big_shared_shipments_suggest_a_full_box() -> None:
+    near_full = build(container="lcl", kg=4000.0)  # 25 m3: sharing costs more than a 20ft
+    assert any("less than sharing" in n for n in near_full.notes)
+    too_big = build(container="lcl", kg=6000.0)  # 37.5 m3: more than a 20ft holds
+    assert any("more than a 20ft" in n for n in too_big.notes)
+    heavy = build(container="lcl", hs6="720810", kg=3000.0)  # steel: charged per tonne
+    sea = next(x for x in heavy.lines if x.key == "sea").usd.typical
+    assert sea == pytest.approx((450 + 0.24 * 6400) / 58 * 1.5 * 3, abs=0.01)
+
+
 def test_backhaul_lanes_are_cheaper() -> None:
     there = build()  # Pakistan -> Germany: with the flow
     back = build(origin=DEU, dest=PAK, reverse=True)  # against it

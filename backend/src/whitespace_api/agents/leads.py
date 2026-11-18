@@ -286,10 +286,42 @@ def is_directory(name: str) -> bool:
     return any(core == d or core.startswith(f"{d} ") for d in NOT_A_COMPANY)
 
 
-def is_past(name: str, when: str | None, year: int | None) -> bool:
-    """A fair whose name and dates mention only years before `year` ("TEXPO 2024")."""
-    years = [int(y) for y in re.findall(r"\b(20\d\d)\b", f"{name} {when or ''}")]
-    return year is not None and bool(years) and max(years) < year
+MONTHS: dict[str, int] = {
+    word: number
+    for number, words in enumerate(
+        (
+            "january jan januar janvier enero",
+            "february feb februar fevrier février febrero",
+            "march mar märz maerz mars marzo",
+            "april apr avril abril",
+            "may mai mayo",
+            "june jun juni juin junio",
+            "july jul juli juillet julio",
+            "august aug août aout agosto",
+            "september sep sept septembre septiembre",
+            "october oct oktober octobre octubre",
+            "november nov novembre noviembre",
+            "december dec dezember décembre decembre diciembre",
+        ),
+        start=1,
+    )
+    for word in words.split()
+}
+
+
+def is_past(name: str, when: str | None, year: int | None, month: int | None = None) -> bool:
+    """A fair that has already happened: its name and dates mention only years before
+    `year` ("TEXPO 2024"), or only months before `month` of this year ("21-24 April 2026"
+    in November). Ranges that reach a later year or month are kept."""
+    text = f"{name} {when or ''}"
+    years = [int(y) for y in re.findall(r"\b(20\d\d)\b", text)]
+    if year is None or not years:
+        return False
+    if max(years) != year:
+        return max(years) < year
+    words = re.findall(r"[^\W\d_]+", (when or "").lower())
+    months = [MONTHS[w] for w in words if w in MONTHS]
+    return month is not None and bool(months) and max(months) < month
 
 
 def check(
@@ -297,6 +329,7 @@ def check(
     sources: list[LeadSource],
     texts: dict[str, str],
     year: int | None = None,
+    month: int | None = None,
 ) -> LeadsContent:
     """Keep only companies and events that their cited page really names (and fairs
     that haven't already happened)."""
@@ -332,7 +365,7 @@ def check(
     for e in found.events if found else []:
         sid = e.source.strip()
         fair = event_key(e.name)
-        if fair in fairs or is_past(e.name, e.when, year):
+        if fair in fairs or is_past(e.name, e.when, year, month):
             continue
         if sid in by_id and on_page(e.name, pages[sid]):
             fairs.add(fair)
@@ -436,6 +469,7 @@ async def find_leads(
     country: str,
     side: LeadSide,
     year: int,
+    month: int | None = None,
     sector: str | None = None,
     detail: str | None = None,
 ) -> LeadsRun:
@@ -501,7 +535,7 @@ async def find_leads(
             merged.events.extend(parsed.events)
     if read == 0:
         raise LeadsError("The company list couldn't be read right now. Please try again.")
-    content = check(merged, sources, texts, year)
+    content = check(merged, sources, texts, year, month)
     return LeadsRun(
         content=content,
         searches=searches,

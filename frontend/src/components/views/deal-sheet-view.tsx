@@ -28,6 +28,8 @@ import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { Segmented } from "@/components/ui/segmented";
 import {
+  boxName,
+  CONTAINER_OPTIONS,
   type ContainerKind,
   type FreightEstimate,
   useFreight,
@@ -44,14 +46,9 @@ import {
   useRequestLeads,
 } from "@/lib/api/queries";
 import { money, percent, signedPercent } from "@/lib/format";
-import { perKg, usd, weight } from "@/lib/money";
+import { track } from "@/lib/analytics";
+import { parseKg, perKg, usd, weight } from "@/lib/money";
 import { useExporter, withExporter } from "@/lib/use-exporter";
-
-const CONTAINERS: { value: ContainerKind; label: string }[] = [
-  { value: "20ft", label: "20ft" },
-  { value: "40ft", label: "40ft" },
-  { value: "40hc", label: "40ft HC" },
-];
 
 function Section({
   icon,
@@ -151,7 +148,9 @@ function Numbers({
               Per kg
             </th>
             <th scope="col" className="pb-2 pl-4 text-right font-medium">
-              {containers} × {freight.container} ({weight(orderKg)})
+              {freight.container === "lcl"
+                ? `Shared container (${weight(orderKg)})`
+                : `${containers} × ${freight.container} (${weight(orderKg)})`}
             </th>
           </tr>
         </thead>
@@ -351,7 +350,7 @@ function Steps({
         {
           title: "Get two or three freight quotes",
           detail: freight
-            ? `Ask forwarders for a ${freight.container} ${freight.route.origin_port} → ${freight.route.dest_port}. Expect about ${usd(freight.to_port.low)}–${usd(freight.to_port.high)} to the port.`
+            ? `Ask forwarders for ${boxName(freight.container)}, ${freight.route.origin_port} → ${freight.route.dest_port}. Expect about ${usd(freight.to_port.low)}–${usd(freight.to_port.high)} to the port.`
             : "Ask forwarders for a container rate to the market's main port.",
         },
         {
@@ -402,9 +401,32 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
   const priceParam = Number(search.get("price"));
   const price = priceParam > 0 && priceParam <= 10_000 ? priceParam : null;
   const countParam = Number(search.get("n"));
+  const shared = shipping.container === "lcl";
   const containers =
-    Number.isInteger(countParam) && countParam >= 1 && countParam <= 100 ? countParam : 1;
+    !shared && Number.isInteger(countParam) && countParam >= 1 && countParam <= 100
+      ? countParam
+      : 1;
   const [priceText, setPriceText] = useState(price ? String(price) : "");
+  const [orderText, setOrderText] = useState(shared && shipping.load ? String(shipping.load) : "");
+  const { setLoad } = shipping;
+
+  // The order size, when sharing a container; empty means a typical small order.
+  useEffect(() => {
+    if (!shared) return;
+    const timer = setTimeout(() => {
+      const kg = orderText.trim() ? parseKg(orderText) : null;
+      if (!orderText.trim() || (kg !== null && kg > 0 && kg <= 30_000)) setLoad(kg);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [orderText, shared, setLoad]);
+
+  function pickContainer(next: ContainerKind) {
+    if ((next === "lcl") !== shared) {
+      setOrderText("");
+      replaceSearchParams({ load: null, n: null });
+    }
+    shipping.setContainer(next);
+  }
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -457,6 +479,7 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
+      track("deal_sheet_copy_link");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -488,7 +511,12 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
             <Button variant="secondary" onClick={() => void copyLink()}>
               {copied ? <Check /> : <Link2 />} {copied ? "Copied" : "Copy link"}
             </Button>
-            <Button onClick={() => window.print()}>
+            <Button
+              onClick={() => {
+                track("deal_sheet_print");
+                window.print();
+              }}
+            >
               <Printer /> Print / PDF
             </Button>
           </div>
@@ -550,24 +578,39 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
               className="h-10 w-36 rounded-lg border border-line bg-surface px-3 text-base text-fg tabular-nums outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10 sm:text-sm"
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-muted">
-            Containers per order
-            <input
-              type="number"
-              min={1}
-              max={100}
-              value={containers}
-              onChange={(e) =>
-                replaceSearchParams({ n: Number(e.target.value) > 1 ? e.target.value : null })
-              }
-              className="h-10 w-24 rounded-lg border border-line bg-surface px-3 text-base text-fg tabular-nums outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10 sm:text-sm"
-            />
-          </label>
+          {shared ? (
+            <label className="flex flex-col gap-1 text-xs text-muted">
+              Order size (kg)
+              <input
+                inputMode="decimal"
+                value={orderText}
+                onChange={(e) => setOrderText(e.target.value)}
+                placeholder={
+                  freight.data ? String(Math.round(freight.data.kg_per_container)) : "1000"
+                }
+                className="h-10 w-28 rounded-lg border border-line bg-surface px-3 text-base text-fg tabular-nums outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10 sm:text-sm"
+              />
+            </label>
+          ) : (
+            <label className="flex flex-col gap-1 text-xs text-muted">
+              Containers per order
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={containers}
+                onChange={(e) =>
+                  replaceSearchParams({ n: Number(e.target.value) > 1 ? e.target.value : null })
+                }
+                className="h-10 w-24 rounded-lg border border-line bg-surface px-3 text-base text-fg tabular-nums outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10 sm:text-sm"
+              />
+            </label>
+          )}
           <Segmented
             label="Container size"
             value={shipping.container}
-            onChange={shipping.setContainer}
-            items={CONTAINERS}
+            onChange={pickContainer}
+            items={CONTAINER_OPTIONS}
           />
         </div>
         {!used ? (
@@ -621,10 +664,15 @@ export function DealSheetView({ params }: { params: Promise<{ hs6: string; marke
               ["Route", `${freight.data.route.origin_port} → ${freight.data.route.dest_port}`],
               ["Time", `${freight.data.route.days_low}–${freight.data.route.days_high} days`],
               [
-                `Per ${freight.data.container}`,
+                shared ? "Your shipment" : `Per ${freight.data.container}`,
                 `${usd(freight.data.total.low)}–${usd(freight.data.total.high)}`,
               ],
-              ["Load", `${weight(freight.data.kg_per_container)} per container`],
+              [
+                "Load",
+                shared
+                  ? `${weight(freight.data.kg_per_container)}, about ${freight.data.volume_m3} m³`
+                  : `${weight(freight.data.kg_per_container)} per container`,
+              ],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl bg-surface-2/60 p-3">
                 <dt className="text-xs text-muted">{label}</dt>

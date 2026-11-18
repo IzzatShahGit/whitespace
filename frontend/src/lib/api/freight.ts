@@ -13,9 +13,27 @@ export type ContainerKind = FreightEstimate["container"];
 export type CostRange = components["schemas"]["CostRange"];
 
 const HOUR = 60 * 60 * 1000;
-const KINDS: ContainerKind[] = ["20ft", "40ft", "40hc"];
+const KINDS: ContainerKind[] = ["20ft", "40ft", "40hc", "lcl"];
 
-/** The shipping choice, kept in the URL (?ship=20ft&load=8000) so every panel agrees. */
+/** The size picker. "lcl": a share of a container, for small orders. */
+export const CONTAINER_OPTIONS: { value: ContainerKind; label: string }[] = [
+  { value: "lcl", label: "Shared" },
+  { value: "20ft", label: "20ft" },
+  { value: "40ft", label: "40ft" },
+  { value: "40hc", label: "40ft HC" },
+];
+
+/** "a 20ft container", "a shared container (LCL)": for sentences. */
+export function boxName(kind: ContainerKind): string {
+  if (kind === "lcl") return "a shared container (LCL)";
+  if (kind === "40hc") return "a 40ft high-cube container";
+  return `a ${kind} container`;
+}
+
+/**
+ * The shipping choice, kept in the URL (?ship=20ft&load=8000) so every panel agrees.
+ * `load` is kg per container, or the whole shipment when sharing a container.
+ */
 export function useShipping() {
   const search = useSearchParams();
   const ship = search.get("ship");

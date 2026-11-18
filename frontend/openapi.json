@@ -459,6 +459,88 @@
         }
       }
     },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Forgot Password",
+        "description": "Email a reset link if the account exists. The answer is the same either way.",
+        "operationId": "forgot_password_api_v1_auth_password_forgot_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Reset Password",
+        "description": "Set a new password from an emailed link, and sign in. Other sessions end.",
+        "operationId": "reset_password_api_v1_auth_password_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/delete-account": {
       "post": {
         "tags": [
@@ -1708,7 +1790,8 @@
               "enum": [
                 "20ft",
                 "40ft",
-                "40hc"
+                "40hc",
+                "lcl"
               ],
               "type": "string",
               "default": "40ft",
@@ -1730,10 +1813,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Your load; default: typical",
+              "description": "Kg per box (per shipment if lcl)",
               "title": "Kg Per Container"
             },
-            "description": "Your load; default: typical"
+            "description": "Kg per box (per shipment if lcl)"
           },
           {
             "name": "value_usd_kg",
@@ -3696,10 +3779,161 @@
           }
         }
       }
+    },
+    "/api/v1/events": {
+      "post": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Track",
+        "description": "Count one page view or action. No cookies; nothing that identifies a person.",
+        "operationId": "track_api_v1_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/stats": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Stats",
+        "description": "Visitors, sign-ups and feature use over the last 30 days. Admins only.",
+        "operationId": "stats_api_v1_admin_stats_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdminStats": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date",
+            "title": "Since"
+          },
+          "until": {
+            "type": "string",
+            "format": "date",
+            "title": "Until"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals",
+            "description": "Over the period, except users and active_7d"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayStats"
+            },
+            "type": "array",
+            "title": "Days"
+          },
+          "top_pages": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Top Pages"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Actions",
+            "description": "Feature use over the period"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "until",
+          "totals",
+          "days",
+          "top_pages",
+          "actions"
+        ],
+        "title": "AdminStats"
+      },
       "BestMove": {
         "properties": {
           "product": {
@@ -4496,7 +4730,7 @@
           },
           "usd": {
             "$ref": "#/components/schemas/CostRange",
-            "description": "Per container"
+            "description": "Per container (per shipment if lcl)"
           }
         },
         "type": "object",
@@ -4530,6 +4764,24 @@
           "high"
         ],
         "title": "CostRange"
+      },
+      "Count": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "Count"
       },
       "CountryOut": {
         "properties": {
@@ -4640,6 +4892,35 @@
           "version"
         ],
         "title": "DataWindow"
+      },
+      "DayStats": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "page_views": {
+            "type": "integer",
+            "title": "Page Views"
+          },
+          "visitors": {
+            "type": "integer",
+            "title": "Visitors"
+          },
+          "sign_ups": {
+            "type": "integer",
+            "title": "Sign Ups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "page_views",
+          "visitors",
+          "sign_ups"
+        ],
+        "title": "DayStats"
       },
       "DeleteAccountRequest": {
         "properties": {
@@ -4887,6 +5168,52 @@
         "title": "DutyRate",
         "description": "One country's import duty on the product, and where the figure comes from."
       },
+      "EventIn": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "page_view",
+              "deal_sheet_print",
+              "deal_sheet_copy_link",
+              "email_draft_open",
+              "intro_copy"
+            ],
+            "title": "Event"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event"
+        ],
+        "title": "EventIn"
+      },
+      "ForgotPasswordRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordRequest"
+      },
       "FreightEstimate": {
         "properties": {
           "origin": {
@@ -4903,13 +5230,20 @@
             "enum": [
               "20ft",
               "40ft",
-              "40hc"
+              "40hc",
+              "lcl"
             ],
             "title": "Container"
           },
           "kg_per_container": {
             "type": "number",
-            "title": "Kg Per Container"
+            "title": "Kg Per Container",
+            "description": "Kg in the box, or in the shipment if lcl"
+          },
+          "volume_m3": {
+            "type": "number",
+            "title": "Volume M3",
+            "description": "Roughly how much space the load takes"
           },
           "kg_basis": {
             "type": "string",
@@ -4989,6 +5323,7 @@
           "route",
           "container",
           "kg_per_container",
+          "volume_m3",
           "kg_basis",
           "value_usd_kg",
           "value_basis",
@@ -6839,6 +7174,11 @@
           "google": {
             "type": "boolean",
             "title": "Google"
+          },
+          "password_reset": {
+            "type": "boolean",
+            "title": "Password Reset",
+            "default": false
           }
         },
         "type": "object",
@@ -7067,6 +7407,28 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "ResetPasswordRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "title": "ResetPasswordRequest"
       },
       "RivalDuty": {
         "properties": {
@@ -7549,6 +7911,40 @@
         ],
         "title": "SupplierOut"
       },
+      "Totals": {
+        "properties": {
+          "users": {
+            "type": "integer",
+            "title": "Users"
+          },
+          "active_7d": {
+            "type": "integer",
+            "title": "Active 7D",
+            "description": "Signed in during the last 7 days"
+          },
+          "sign_ups": {
+            "type": "integer",
+            "title": "Sign Ups"
+          },
+          "visitors": {
+            "type": "integer",
+            "title": "Visitors"
+          },
+          "page_views": {
+            "type": "integer",
+            "title": "Page Views"
+          }
+        },
+        "type": "object",
+        "required": [
+          "users",
+          "active_7d",
+          "sign_ups",
+          "visitors",
+          "page_views"
+        ],
+        "title": "Totals"
+      },
       "TrendCard": {
         "properties": {
           "type": {
@@ -7666,6 +8062,12 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin",
+            "description": "Can open the usage page",
+            "default": false
           }
         },
         "type": "object",

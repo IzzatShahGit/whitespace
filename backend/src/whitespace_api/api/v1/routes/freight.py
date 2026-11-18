@@ -26,7 +26,7 @@ async def estimate(
     hs6: Annotated[str, Query(pattern=HS6_PATTERN)],
     container: ContainerKind = "40ft",
     kg_per_container: Annotated[
-        float | None, Query(gt=0, le=30_000, description="Your load; default: typical")
+        float | None, Query(gt=0, le=30_000, description="Kg per box (per shipment if lcl)")
     ] = None,
     value_usd_kg: Annotated[
         float | None, Query(gt=0, le=10_000, description="Goods value for insurance")

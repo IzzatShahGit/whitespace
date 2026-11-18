@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
+import { track } from "@/lib/analytics";
 import { Segmented } from "@/components/ui/segmented";
 import {
   type Lead,
@@ -129,6 +130,7 @@ function IntroBox({
   async function copy() {
     try {
       await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
+      track("intro_copy");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -163,7 +165,7 @@ function IntroBox({
         <Button size="sm" variant="secondary" onClick={() => void copy()}>
           {copied ? <Check /> : <Copy />} {copied ? "Copied" : "Copy"}
         </Button>
-        <a href={mailto} className={linkClass}>
+        <a href={mailto} className={linkClass} onClick={() => track("email_draft_open")}>
           <Mail className="h-3.5 w-3.5" aria-hidden /> Open in my email app
         </a>
       </div>

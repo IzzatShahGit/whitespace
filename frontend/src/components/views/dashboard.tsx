@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowRight, Globe2, Layers, Rocket, Sparkles, TrendingUp, Trophy } from "lucide-react";
+import {
+  ArrowRight,
+  FileText,
+  Globe2,
+  Layers,
+  Rocket,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
@@ -129,23 +138,33 @@ function BestMoves({ data }: { data: DashboardData }) {
       <CardHeader icon={<Rocket />} title="Your best moves" description="Where the data says go." />
       <ul className="flex flex-col gap-2">
         {data.best_moves.map(({ product, market }) => (
-          <li key={`${product.hs6}-${market.market.code}`}>
+          <li
+            key={`${product.hs6}-${market.market.code}`}
+            className="relative flex flex-col gap-2 rounded-xl border border-line p-3.5 transition-all focus-within:border-accent/40 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-card"
+          >
+            <div className="flex items-center justify-between gap-2">
+              {/* The whole card opens the market; the deal sheet link sits above it. */}
+              <Link
+                href={`/app/markets/${product.hs6}/${market.market.code}`}
+                className="font-medium outline-none after:absolute after:inset-0 after:rounded-xl"
+              >
+                {market.market.name}
+              </Link>
+              <VerdictBadge verdict={market.verdict} />
+            </div>
+            <p className="text-xs text-muted">
+              {capitalize(product.name)} · {money(market.market_imports_usd)} ·{" "}
+              {signedPercent(market.import_growth_3y)}/yr
+            </p>
+            <p className="text-xs leading-5 text-muted">
+              <span className="font-medium text-fg">Next: </span>
+              {market.verdict.next_step}
+            </p>
             <Link
-              href={`/app/markets/${product.hs6}/${market.market.code}`}
-              className="group flex flex-col gap-2 rounded-xl border border-line p-3.5 transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-card"
+              href={`/app/markets/${product.hs6}/${market.market.code}/deal`}
+              className="relative z-10 inline-flex items-center gap-1.5 self-start rounded-md text-xs font-medium text-brand hover:underline"
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">{market.market.name}</span>
-                <VerdictBadge verdict={market.verdict} />
-              </div>
-              <p className="text-xs text-muted">
-                {capitalize(product.name)} · {money(market.market_imports_usd)} ·{" "}
-                {signedPercent(market.import_growth_3y)}/yr
-              </p>
-              <p className="text-xs leading-5 text-muted">
-                <span className="font-medium text-fg">Next: </span>
-                {market.verdict.next_step}
-              </p>
+              <FileText className="h-3.5 w-3.5" aria-hidden /> Deal sheet: costs and buyers
             </Link>
           </li>
         ))}
