@@ -23,6 +23,9 @@ class BusinessIn(BaseModel):
     email: str | None = Field(default=None, max_length=320)
     website: str | None = Field(default=None, max_length=255)
     tax_id: str | None = Field(default=None, max_length=60, description="NTN / VAT / EORI")
+    rex_number: str | None = Field(
+        default=None, max_length=40, description="Registered Exporter (REX) number, for GSP"
+    )
     bank_details: str | None = Field(default=None, max_length=600)
 
 
@@ -89,6 +92,7 @@ class QuoteOut(BaseModel):
     hs6: str
     description: str
     market: str
+    exporter: str | None = Field(default=None, description="Shipping from, ISO alpha-3")
     incoterm: Incoterm
     named_place: str = Field(description="e.g. Karachi (FOB) or Bremerhaven (CIF)")
     origin_port: str
@@ -110,6 +114,7 @@ class QuoteOut(BaseModel):
 
 class QuoteSummary(BaseModel):
     id: uuid.UUID
+    contact_id: uuid.UUID | None = None
     number: str
     kind: QuoteKind
     buyer_name: str

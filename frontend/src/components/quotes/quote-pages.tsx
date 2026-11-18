@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, FilePlus2, FileText, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, FilePlus2, FileText, Printer, Ship, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { use } from "react";
 
 import { QuoteDocument } from "@/components/quotes/quote-document";
@@ -11,6 +11,8 @@ import { Card, Page, PageHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { track } from "@/lib/analytics";
 import { useDeleteQuote, useQuote, useQuotes } from "@/lib/api/quotes";
+import { useT } from "@/lib/i18n";
+import { useCreateShipment } from "@/lib/api/shipments";
 
 const usd = (n: number) => `US$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
@@ -20,6 +22,7 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const quote = useQuote(id);
   const remove = useDeleteQuote();
+  const ship = useCreateShipment();
   if (quote.isPending)
     return (
       <Page>
@@ -57,6 +60,15 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
             <Trash2 /> Delete
           </Button>
           <Button
+            variant="secondary"
+            disabled={ship.isPending}
+            onClick={() =>
+              ship.mutate(id, { onSuccess: (s) => router.push(`/app/shipments/${s.id}`) })
+            }
+          >
+            <Ship /> Prepare shipping documents
+          </Button>
+          <Button
             onClick={() => {
               track("deal_sheet_print");
               window.print();
@@ -66,6 +78,7 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
           </Button>
         </div>
       </div>
+      {ship.isError && <p className="no-print text-sm text-negative">{ship.error.message}</p>}
       <div className="mx-auto w-full max-w-3xl">
         <QuoteDocument quote={q} />
       </div>
@@ -85,15 +98,21 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
 
 /** Every quote and proforma the user issued. */
 export function QuotesList() {
-  const quotes = useQuotes();
+  const t = useT();
+  const all = useQuotes();
+  const contact = useSearchParams().get("contact");
+  const quotes = {
+    ...all,
+    data: contact ? all.data?.filter((q) => q.contact_id === contact) : all.data,
+  };
   return (
     <Page>
       <PageHeader
-        title="Quotes"
-        description="Quotes and proforma invoices you’ve issued. Each keeps the prices it was issued with."
+        title={t("quotes.listTitle")}
+        description={t("quotes.listDesc")}
         actions={
           <ButtonLink href="/app/quotes/new">
-            <FilePlus2 /> New quote
+            <FilePlus2 /> {t("quotes.new")}
           </ButtonLink>
         }
       />
@@ -103,8 +122,8 @@ export function QuotesList() {
         <Card className="p-6">
           <EmptyState
             icon={<FileText />}
-            title="No quotes yet"
-            action={<ButtonLink href="/app/quotes/new">Make your first quote</ButtonLink>}
+            title={t("quotes.emptyTitle")}
+            action={<ButtonLink href="/app/quotes/new">{t("quotes.makeFirst")}</ButtonLink>}
           >
             Turn a deal sheet into a quote buyers can sign: FOB, CFR, CIF or DAP, with your payment
             terms.

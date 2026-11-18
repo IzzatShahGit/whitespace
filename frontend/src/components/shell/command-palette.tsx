@@ -14,6 +14,7 @@ import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 
 import { LEARN, NAV, SETTINGS } from "@/components/shell/nav";
 import { useProductSearch, useProfile } from "@/lib/api/queries";
 import { capitalize } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useDebounced } from "@/lib/use-debounced";
 
 type Result = { key: string; icon: ReactNode; title: string; detail: string; href: string };
@@ -30,6 +31,7 @@ export function openSearch() {
  * question for the guide.
  */
 export function CommandPalette() {
+  const t = useT();
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -64,8 +66,13 @@ export function CommandPalette() {
   }, []);
 
   const lower = query.toLowerCase();
+  // Matches the English words and the user's language.
   const sections = [...NAV, LEARN, SETTINGS].filter(
-    (n) => !lower || n.label.toLowerCase().includes(lower) || n.hint.toLowerCase().includes(lower),
+    (n) =>
+      !lower ||
+      [n.label, n.hint, t(`nav.${n.id}`), t(`nav.${n.id}Hint`)].some((w) =>
+        w.toLowerCase().includes(lower),
+      ),
   );
   const results: Result[] = [
     ...(query.length >= 2
@@ -93,11 +100,11 @@ export function CommandPalette() {
       detail: `${p.count} supplier countries · HS ${p.hs6}`,
       href: `/app/buy/${p.hs6}`,
     })),
-    ...sections.map(({ href, label, hint, icon: Icon }) => ({
+    ...sections.map(({ id, href, icon: Icon }) => ({
       key: href,
       icon: <Icon className="h-4 w-4 text-subtle" />,
-      title: capitalize(label),
-      detail: hint,
+      title: capitalize(t(`nav.${id}`)),
+      detail: t(`nav.${id}Hint`),
       href,
     })),
   ];

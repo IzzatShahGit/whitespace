@@ -18,6 +18,7 @@ from whitespace_api.schemas.auth import (
     DigestIn,
     DigestOut,
     ForgotPasswordRequest,
+    LocaleIn,
     LoginRequest,
     ProvidersOut,
     RegisterRequest,
@@ -122,6 +123,16 @@ async def update_me(
     body: UpdateMeRequest, user: CurrentUser, db: DbSession, settings: AppSettings
 ) -> UserOut:
     return _out(await auth_service.update_name(db, user, full_name=body.full_name), settings)
+
+
+@router.put("/me/locale", response_model=UserOut)
+async def set_locale(
+    body: LocaleIn, user: CurrentUser, db: DbSession, settings: AppSettings
+) -> UserOut:
+    """The interface language, kept with the account so every device uses it."""
+    user.locale = body.locale
+    await db.commit()
+    return _out(user, settings)
 
 
 @router.post("/password", response_model=UserOut)

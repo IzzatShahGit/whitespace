@@ -10,6 +10,8 @@ import { Topbar } from "@/components/shell/topbar";
 import { NotificationsBell } from "@/components/watch/notifications-bell";
 import { Loading } from "@/components/views/states";
 import { ApiError, useMe } from "@/lib/api/queries";
+import { useLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n/locales";
 
 function makeClient() {
   return new QueryClient({
@@ -29,6 +31,14 @@ function SessionGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const me = useMe();
   const signedOut = me.error instanceof ApiError && me.error.status === 401;
+  const { locale, setLocale } = useLocale();
+  const saved = me.data?.locale;
+
+  // The account's language wins over this device's (set once per sign-in load).
+  useEffect(() => {
+    if (isLocale(saved) && saved !== locale) setLocale(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the account's value arrives
+  }, [saved]);
 
   useEffect(() => {
     if (signedOut) router.replace(`/login?next=${encodeURIComponent(pathname)}`);

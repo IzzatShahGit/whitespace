@@ -10,21 +10,26 @@ import { PasswordField } from "@/components/auth/password-field";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { providers, signIn, signUp } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 
 type Mode = "login" | "signup";
 
-const copy: Record<Mode, { title: string; subtitle: string; submit: string; pending: string }> = {
+const copy: Record<
+  Mode,
+  { title: MessageKey; subtitle: MessageKey; submit: MessageKey; pending: MessageKey }
+> = {
   login: {
-    title: "Welcome back",
-    subtitle: "Sign in to see your markets.",
-    submit: "Sign in",
-    pending: "Signing in…",
+    title: "auth.loginTitle",
+    subtitle: "auth.loginSubtitle",
+    submit: "auth.loginSubmit",
+    pending: "auth.loginPending",
   },
   signup: {
-    title: "Create your free account",
-    subtitle: "Free to start. No card needed.",
-    submit: "Create account",
-    pending: "Creating your account…",
+    title: "auth.signupTitle",
+    subtitle: "auth.signupSubtitle",
+    submit: "auth.signupSubmit",
+    pending: "auth.signupPending",
   },
 };
 
@@ -38,6 +43,7 @@ function safeNext(value: string | null): string {
 const GOOGLE_ERROR = "Google sign-in didn't complete. Please try again.";
 
 export function AuthForm({ mode }: { mode: Mode }) {
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
@@ -75,8 +81,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const carry = next === "/app" ? "" : `?next=${encodeURIComponent(next)}`;
   return (
     <div className="rise-in w-full max-w-sm">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{text.title}</h1>
-      <p className="mt-2 text-muted">{text.subtitle}</p>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t(text.title)}</h1>
+      <p className="mt-2 text-muted">{t(text.subtitle)}</p>
 
       <div className="mt-8">
         <GoogleButton next={next} />
@@ -87,7 +93,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <Field
             id="full_name"
             name="full_name"
-            label="Your name"
+            label={t("auth.name")}
             autoComplete="name"
             required
             maxLength={120}
@@ -97,7 +103,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           id="email"
           name="email"
           type="email"
-          label="Email"
+          label={t("auth.email")}
           autoComplete="email"
           inputMode="email"
           required
@@ -105,9 +111,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <PasswordField
           id="password"
           name="password"
-          label="Password"
+          label={t("auth.password")}
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          hint={mode === "signup" ? "At least 8 characters." : undefined}
+          hint={mode === "signup" ? t("auth.passwordHint") : undefined}
           minLength={mode === "signup" ? 8 : undefined}
           maxLength={128}
           required
@@ -117,7 +123,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             href="/forgot-password"
             className="-mt-2 self-end text-sm text-muted underline-offset-4 hover:text-fg hover:underline"
           >
-            Forgot your password?
+            {t("auth.forgot")}
           </Link>
         )}
 
@@ -133,19 +139,33 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
         <Button type="submit" size="lg" disabled={pending} className="mt-2 w-full">
           {pending && <LoaderCircle aria-hidden className="animate-spin" />}
-          {pending ? text.pending : text.submit}
+          {pending ? t(text.pending) : t(text.submit)}
         </Button>
         {mode === "signup" && (
           <p className="text-center text-xs leading-5 text-subtle">
-            By creating an account you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-2 hover:text-fg">
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-fg">
-              Privacy policy
-            </Link>
-            .
+            {t("auth.agree", { terms: "\u0000", privacy: "\u0001" })
+              .split(/(\u0000|\u0001)/)
+              .map((part, i) =>
+                part === "\u0000" ? (
+                  <Link
+                    key={i}
+                    href="/terms"
+                    className="underline underline-offset-2 hover:text-fg"
+                  >
+                    {t("auth.terms")}
+                  </Link>
+                ) : part === "\u0001" ? (
+                  <Link
+                    key={i}
+                    href="/privacy"
+                    className="underline underline-offset-2 hover:text-fg"
+                  >
+                    {t("auth.privacy")}
+                  </Link>
+                ) : (
+                  part
+                ),
+              )}
           </p>
         )}
       </form>
@@ -153,22 +173,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <p className="mt-8 text-center text-sm text-muted">
         {mode === "login" ? (
           <>
-            New to Whitespace?{" "}
+            {t("auth.newHere")}{" "}
             <Link
               href={`/signup${carry}`}
               className="font-medium text-brand underline-offset-4 hover:underline"
             >
-              Create a free account
+              {t("auth.createFree")}
             </Link>
           </>
         ) : (
           <>
-            Already have an account?{" "}
+            {t("auth.haveAccount")}{" "}
             <Link
               href={`/login${carry}`}
               className="font-medium text-brand underline-offset-4 hover:underline"
             >
-              Sign in
+              {t("auth.loginSubmit")}
             </Link>
           </>
         )}

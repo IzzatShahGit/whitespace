@@ -6,12 +6,14 @@ import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { inputClass } from "@/components/ui/field";
 import { EU, useCompanyCheck, useVatCheck } from "@/lib/api/tenders";
+import { useT } from "@/lib/i18n";
 
 /**
  * Is this company registered? Looks the name up in GLEIF (legal entities) and, for EU
  * companies, checks a VAT number with VIES. Confirms registration, not payment record.
  */
 export function CompanyCheckBox({ name, country }: { name: string; country: string }) {
+  const t = useT();
   const check = useCompanyCheck();
   const vat = useVatCheck();
   const [number, setNumber] = useState("");
@@ -33,7 +35,7 @@ export function CompanyCheckBox({ name, country }: { name: string; country: stri
           disabled={check.isPending}
           onClick={() => check.mutate({ name, country })}
         >
-          <ShieldCheck /> {check.isPending ? "Checking…" : "Check the company register"}
+          <ShieldCheck /> {check.isPending ? t("pipeline.checking") : t("pipeline.checkRegister")}
         </Button>
       )}
       {check.isError && <p className="text-negative">{check.error.message}</p>}
@@ -93,7 +95,7 @@ export function CompanyCheckBox({ name, country }: { name: string; country: stri
             className={`${inputClass} h-8 w-60 py-0 text-xs`}
           />
           <Button size="sm" variant="ghost" type="submit" disabled={vat.isPending}>
-            Check VAT
+            {t("pipeline.checkVat")}
           </Button>
           {vat.data && (
             <span className={vat.data.valid ? "text-positive" : "text-negative"}>

@@ -24,6 +24,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { track } from "@/lib/analytics";
 import { sameCompany, useAddContact, usePipeline } from "@/lib/api/pipeline";
+import { useT } from "@/lib/i18n";
 import { Segmented } from "@/components/ui/segmented";
 import {
   type Lead,
@@ -195,6 +196,7 @@ function SaveToPipeline({
   side: LeadSide;
   sourceUrl?: string;
 }) {
+  const t = useT();
   const pipeline = usePipeline();
   const add = useAddContact();
   const saved = pipeline.data?.some(
@@ -203,7 +205,7 @@ function SaveToPipeline({
   if (saved || add.isSuccess) {
     return (
       <Link href="/app/pipeline" className={`${linkClass} text-positive`}>
-        <BookmarkCheck className="h-3.5 w-3.5" aria-hidden /> In pipeline
+        <BookmarkCheck className="h-3.5 w-3.5" aria-hidden /> {t("pipeline.inPipeline")}
       </Link>
     );
   }
@@ -226,7 +228,7 @@ function SaveToPipeline({
       className={`${linkClass} text-brand`}
     >
       <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
-      {add.isError ? "Couldn’t save, retry" : "Save to pipeline"}
+      {add.isError ? t("common.retry") : t("pipeline.saveToPipeline")}
     </button>
   );
 }

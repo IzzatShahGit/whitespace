@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -29,6 +30,7 @@ class UserOut(BaseModel):
     created_at: datetime
     is_admin: bool = Field(default=False, description="Can open the usage page")
     digest_enabled: bool = False
+    locale: str | None = None
 
 
 class UpdateMeRequest(BaseModel):
@@ -55,6 +57,13 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str = Field(min_length=20, max_length=200)
     new_password: str = Field(min_length=8, max_length=128)
+
+
+Locale = Literal["en", "ur", "bn", "vi", "tr", "es", "pt", "id", "ar"]
+
+
+class LocaleIn(BaseModel):
+    locale: Locale
 
 
 class DigestIn(BaseModel):

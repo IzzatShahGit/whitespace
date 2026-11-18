@@ -50,19 +50,25 @@ import {
 } from "@/lib/api/queries";
 import { money, percent, points, signedPercent } from "@/lib/format";
 import { markStep } from "@/lib/steps";
+import { useT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 import { useExporter, withExporter } from "@/lib/use-exporter";
 
 const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as CSSProperties;
 
 type TabKey = "overview" | "needs" | "buyers" | "competitors" | "prices" | "recent";
 
-const TABS: Record<TabKey, { short: string; long: string; icon: ReactNode }> = {
-  overview: { short: "Overview", long: "Overview", icon: <LayoutGrid /> },
-  needs: { short: "Rules", long: "What you need", icon: <ClipboardCheck /> },
-  buyers: { short: "Buyers", long: "Who to contact", icon: <Building2 /> },
-  competitors: { short: "Rivals", long: "Competitors", icon: <Users /> },
-  prices: { short: "Prices", long: "Prices & costs", icon: <Scale /> },
-  recent: { short: "Monthly", long: "Latest months", icon: <CalendarClock /> },
+const TABS: Record<TabKey, { short: MessageKey; long: MessageKey; icon: ReactNode }> = {
+  overview: { short: "market.tabOverview", long: "market.tabOverview", icon: <LayoutGrid /> },
+  needs: { short: "market.tabNeedsShort", long: "market.tabNeeds", icon: <ClipboardCheck /> },
+  buyers: { short: "market.tabBuyersShort", long: "market.tabBuyers", icon: <Building2 /> },
+  competitors: {
+    short: "market.tabCompetitorsShort",
+    long: "market.tabCompetitors",
+    icon: <Users />,
+  },
+  prices: { short: "market.tabPricesShort", long: "market.tabPrices", icon: <Scale /> },
+  recent: { short: "market.tabRecentShort", long: "market.tabRecent", icon: <CalendarClock /> },
 };
 
 function BackLink({ href, children }: { href: string; children: ReactNode }) {
@@ -99,6 +105,7 @@ function DetailSkeleton() {
 
 /** One market in depth: the verdict and next step, four numbers, then the evidence in tabs. */
 export function MarketDetailView({ params }: { params: Promise<{ hs6: string; market: string }> }) {
+  const t = useT();
   const { hs6, market } = use(params);
   const search = useSearchParams();
   const override = search.get("exporter");
@@ -168,8 +175,8 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
     label: (
       <>
         <span className="hidden sm:inline-flex [&>svg]:h-4 [&>svg]:w-4">{TABS[key].icon}</span>
-        <span className="sm:hidden">{TABS[key].short}</span>
-        <span className="hidden sm:inline">{TABS[key].long}</span>
+        <span className="sm:hidden">{t(TABS[key].short)}</span>
+        <span className="hidden sm:inline">{t(TABS[key].long)}</span>
       </>
     ),
   }));
@@ -201,6 +208,7 @@ function Detail({
   onTab: (tab: TabKey) => void;
   ownCountry: boolean;
 }) {
+  const t = useT();
   const { exporter: exp, product, data: years, market: m, suppliers } = data;
   const signal = (kind: Signal["kind"]) => m.signals.find((s) => s.kind === kind);
   const tone = (s?: Signal) => s?.tone ?? "neutral";
@@ -329,7 +337,7 @@ function Detail({
         <div
           key={tab}
           role="tabpanel"
-          aria-label={TABS[tab].long}
+          aria-label={t(TABS[tab].long)}
           className="flex flex-col gap-4 transition-[opacity,translate] duration-200 motion-reduce:transition-none starting:translate-y-1 starting:opacity-0"
         >
           {tab === "overview" && (

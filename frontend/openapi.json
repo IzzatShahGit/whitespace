@@ -383,6 +383,82 @@
         }
       }
     },
+    "/api/v1/auth/me/locale": {
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Set Locale",
+        "description": "The interface language, kept with the account so every device uses it.",
+        "operationId": "set_locale_api_v1_auth_me_locale_put",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocaleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/password": {
       "post": {
         "tags": [
@@ -5645,6 +5721,374 @@
           }
         }
       }
+    },
+    "/api/v1/shipments": {
+      "post": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "Create",
+        "description": "Documents for the deal behind a quote (one set per quote; asking again opens it).",
+        "operationId": "create_api_v1_shipments_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shipment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "List Shipments",
+        "operationId": "list_shipments_api_v1_shipments_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShipmentSummary"
+                  },
+                  "title": "Response List Shipments Api V1 Shipments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/shipments/{shipment_id}": {
+      "get": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "Get",
+        "operationId": "get_api_v1_shipments__shipment_id__get",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shipment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "Update",
+        "description": "Fill in shipping details. Send the version you last saw; stale edits get 409.",
+        "operationId": "update_api_v1_shipments__shipment_id__patch",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shipment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "Remove",
+        "operationId": "remove_api_v1_shipments__shipment_id__delete",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6112,6 +6556,19 @@
             "title": "Tax Id",
             "description": "NTN / VAT / EORI"
           },
+          "rex_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rex Number",
+            "description": "Registered Exporter (REX) number, for GSP"
+          },
           "bank_details": {
             "anyOf": [
               {
@@ -6202,6 +6659,19 @@
             ],
             "title": "Tax Id",
             "description": "NTN / VAT / EORI"
+          },
+          "rex_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rex Number",
+            "description": "Registered Exporter (REX) number, for GSP"
           },
           "bank_details": {
             "anyOf": [
@@ -6663,6 +7133,34 @@
           "updated_at"
         ],
         "title": "ChatThreadOut"
+      },
+      "ChecklistItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "fill_in",
+              "from_others"
+            ],
+            "title": "Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "status",
+          "detail"
+        ],
+        "title": "ChecklistItem"
       },
       "CompanyCheck": {
         "properties": {
@@ -8563,6 +9061,30 @@
         ],
         "title": "LeiMatch"
       },
+      "LocaleIn": {
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ur",
+              "bn",
+              "vi",
+              "tr",
+              "es",
+              "pt",
+              "id",
+              "ar"
+            ],
+            "title": "Locale"
+          }
+        },
+        "type": "object",
+        "required": [
+          "locale"
+        ],
+        "title": "LocaleIn"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -9212,6 +9734,44 @@
           "items"
         ],
         "title": "NotificationsPage"
+      },
+      "OriginStatement": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "eu_gsp_statement",
+              "certificate"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "The statement to print, when we know its wording"
+          },
+          "guidance": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Guidance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "text",
+          "guidance"
+        ],
+        "title": "OriginStatement"
       },
       "Party": {
         "properties": {
@@ -10065,6 +10625,18 @@
             "type": "string",
             "title": "Market"
           },
+          "exporter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter",
+            "description": "Shipping from, ISO alpha-3"
+          },
           "incoterm": {
             "type": "string",
             "enum": [
@@ -10218,6 +10790,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Id"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
           },
           "number": {
             "type": "string",
@@ -10811,6 +11395,649 @@
           "niches"
         ],
         "title": "SectorOut"
+      },
+      "Shipment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "quote_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id"
+          },
+          "quote_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Number"
+          },
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number"
+          },
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "market": {
+            "type": "string",
+            "title": "Market"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Party"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/Party"
+          },
+          "bank_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Details"
+          },
+          "incoterm": {
+            "type": "string",
+            "title": "Incoterm"
+          },
+          "named_place": {
+            "type": "string",
+            "title": "Named Place"
+          },
+          "origin_port": {
+            "type": "string",
+            "title": "Origin Port"
+          },
+          "dest_port": {
+            "type": "string",
+            "title": "Dest Port"
+          },
+          "origin_country": {
+            "type": "string",
+            "title": "Origin Country"
+          },
+          "quantity_kg": {
+            "type": "number",
+            "title": "Quantity Kg"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total_usd": {
+            "type": "number",
+            "title": "Total Usd"
+          },
+          "payment_text": {
+            "type": "string",
+            "title": "Payment Text"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ShipmentDetails"
+          },
+          "volume_m3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume M3",
+            "description": "From package size and count"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/OriginStatement"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItem"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Missing or inconsistent details, for the seller"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "quote_id",
+          "quote_number",
+          "invoice_number",
+          "hs6",
+          "market",
+          "description",
+          "seller",
+          "buyer",
+          "bank_details",
+          "incoterm",
+          "named_place",
+          "origin_port",
+          "dest_port",
+          "origin_country",
+          "quantity_kg",
+          "lines",
+          "total_usd",
+          "payment_text",
+          "details",
+          "volume_m3",
+          "origin",
+          "checklist",
+          "warnings",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Shipment"
+      },
+      "ShipmentDetails": {
+        "properties": {
+          "invoice_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date"
+          },
+          "consignee_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consignee Address"
+          },
+          "notify_party": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify Party"
+          },
+          "vessel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vessel"
+          },
+          "voyage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voyage"
+          },
+          "bl_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bl Number"
+          },
+          "containers": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containers",
+            "description": "Container numbers"
+          },
+          "seals": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seals"
+          },
+          "final_destination": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Destination"
+          },
+          "packages": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packages"
+          },
+          "package_type": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Package Type",
+            "default": "cartons"
+          },
+          "net_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Kg"
+          },
+          "gross_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Kg"
+          },
+          "package_size_cm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Size Cm",
+            "description": "Length x width x height, e.g. \"60x40x40\""
+          },
+          "marks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marks",
+            "description": "Shipping marks"
+          },
+          "origin_criterion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Criterion",
+            "description": "\"P\" (wholly obtained) or \"W\" + HS heading"
+          }
+        },
+        "type": "object",
+        "title": "ShipmentDetails",
+        "description": "What the exporter fills in; everything is optional until they print."
+      },
+      "ShipmentIn": {
+        "properties": {
+          "quote_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Quote Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quote_id"
+        ],
+        "title": "ShipmentIn"
+      },
+      "ShipmentPatch": {
+        "properties": {
+          "invoice_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date"
+          },
+          "consignee_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consignee Address"
+          },
+          "notify_party": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify Party"
+          },
+          "vessel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vessel"
+          },
+          "voyage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voyage"
+          },
+          "bl_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bl Number"
+          },
+          "containers": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containers",
+            "description": "Container numbers"
+          },
+          "seals": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seals"
+          },
+          "final_destination": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Destination"
+          },
+          "packages": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packages"
+          },
+          "package_type": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Package Type",
+            "default": "cartons"
+          },
+          "net_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Kg"
+          },
+          "gross_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Kg"
+          },
+          "package_size_cm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Size Cm",
+            "description": "Length x width x height, e.g. \"60x40x40\""
+          },
+          "marks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marks",
+            "description": "Shipping marks"
+          },
+          "origin_criterion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Criterion",
+            "description": "\"P\" (wholly obtained) or \"W\" + HS heading"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "title": "ShipmentPatch"
+      },
+      "ShipmentSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number"
+          },
+          "buyer_name": {
+            "type": "string",
+            "title": "Buyer Name"
+          },
+          "market": {
+            "type": "string",
+            "title": "Market"
+          },
+          "total_usd": {
+            "type": "number",
+            "title": "Total Usd"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_number",
+          "buyer_name",
+          "market",
+          "total_usd",
+          "created_at"
+        ],
+        "title": "ShipmentSummary"
       },
       "Signal": {
         "properties": {
@@ -11564,6 +12791,17 @@
             "type": "boolean",
             "title": "Digest Enabled",
             "default": false
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locale"
           }
         },
         "type": "object",
