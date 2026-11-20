@@ -1,0 +1,10 @@
+flowchart LR
+    S1[CEPII BACI<br/>~200 countries × 5,000 products] --> BR
+    S2[Port list +<br/>searoute] --> BR
+    BR[🥉 Bronze<br/>raw release, versioned] --> SI[🥈 Silver<br/>typed, cleaned Parquet]
+    SI --> GO[🥇 Gold<br/>opportunity scores · supplier landscape<br/>unit prices · sea routes]
+    GO -->|bulk load| PG[(PostgreSQL)]
+    GO -->|descriptions + everyday names| EM[Gemini embeddings<br/>768-d, changed rows only]
+    EM -->|pgvector| PG
+    S3[Sanctions lists<br/>OFAC · UN · EU · UK] -->|daily job · checksum skip<br/>atomic swap per list| PG
+    L1[Live APIs<br/>Eurostat · US Census · WITS<br/>HMRC · FRED · FX · TED] -->|cached on demand| PG

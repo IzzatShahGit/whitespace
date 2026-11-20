@@ -47,18 +47,10 @@ Data platform     Scoring model     Grounded AI       Rules in code     Product
 
 A batch pipeline on a **medallion architecture** turns raw customs data into analysis-ready gold tables. The API reads those tables in milliseconds, with no heavy queries at request time.
 
-```mermaid
-flowchart LR
-    S1[CEPII BACI<br/>~200 countries × 5,000 products] --> BR
-    S2[Port list +<br/>searoute] --> BR
-    BR[🥉 Bronze<br/>raw release, versioned] --> SI[🥈 Silver<br/>typed, cleaned Parquet]
-    SI --> GO[🥇 Gold<br/>opportunity scores · supplier landscape<br/>unit prices · sea routes]
-    GO -->|bulk load| PG[(PostgreSQL)]
-    GO -->|descriptions + everyday names| EM[Gemini embeddings<br/>768-d, changed rows only]
-    EM -->|pgvector| PG
-    S3[Sanctions lists<br/>OFAC · UN · EU · UK] -->|daily job · checksum skip<br/>atomic swap per list| PG
-    L1[Live APIs<br/>Eurostat · US Census · WITS<br/>HMRC · FRED · FX · TED] -->|cached on demand| PG
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/data-platform-dark.png">
+  <img src="docs/diagrams/data-platform.png" alt="Data pipeline: BACI and ports through bronze, silver and gold into PostgreSQL, plus embeddings, sanctions lists and live APIs" width="100%"/>
+</picture>
 
 | Layer | What happens | Tech |
 |---|---|---|
@@ -93,16 +85,10 @@ A market qualifies only if it imports **≥ $10M** of p a year and E has a **rev
 
 Seven AI agents, with the brief and the guide built as **LangGraph** graphs. They share one rule: **a model may write, but code decides what is true.** Every number and every claim is checked against data or a cited source before a user sees it.
 
-```mermaid
-flowchart LR
-    Q[Question] --> P[Plan<br/>templated searches]
-    P --> R[Research<br/>web + local language]
-    R --> X[Extract<br/>small model, cited claims]
-    X --> W[Write<br/>main model]
-    W --> C{Check<br/>in code}
-    C -->|every figure traced| OK[✅ Shown]
-    C -->|unsupported| D[❌ Removed and counted]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/grounded-ai-dark.png">
+  <img src="docs/diagrams/grounded-ai.png" alt="Agent loop: plan, research, extract, write, then a code check that shows or removes each claim" width="100%"/>
+</picture>
 
 | Agent | What it does | How it stays honest |
 |---|---|---|
@@ -129,23 +115,10 @@ flowchart LR
 
 Exporters often don't know their product's customs code, and every other feature starts from it. The finder combines three retrievers, fuses them and lets a model choose only from what was retrieved.
 
-```mermaid
-flowchart LR
-    IN[Description<br/>or photo] --> PH{Photo?}
-    PH -->|yes| VI[Vision model<br/>describes it in customs terms]
-    PH -->|no| Q[Query]
-    VI --> Q
-    Q --> N[Everyday names<br/>alias table]
-    Q --> F[Customs wording<br/>Postgres full-text]
-    Q --> E[Meaning<br/>pgvector cosine]
-    N --> RRF[Reciprocal rank fusion<br/>top 15 candidates]
-    F --> RRF
-    E --> RRF
-    RRF --> M[Model picks up to 3<br/>with reasons and the<br/>questions that decide]
-    M --> C{In the<br/>candidate list?}
-    C -->|yes| OK[✅ Shown with confidence]
-    C -->|no| D[❌ Dropped]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/hs-finder-dark.png">
+  <img src="docs/diagrams/hs-finder.png" alt="HS code finder: three retrievers fused by reciprocal rank fusion, then a model picks only from the candidates" width="100%"/>
+</picture>
 
 - **Three kinds of match.** Everyday names catch "hoodie", full-text search catches customs wording, and embeddings catch meaning when no words overlap.
 - **Rank fusion, not score tuning.** Reciprocal rank fusion merges the lists without calibrating scores across retrievers.
@@ -165,22 +138,10 @@ flowchart LR
 
 Before money moves, two checks answer *is this buyer real?* and *is this document safe to accept?* Both are built mainly from **fixed rules and free public data**, so the same input always gives the same answer, and every finding comes with its source.
 
-```mermaid
-flowchart LR
-    B[Buyer name, website,<br/>email, VAT number] --> S[Sanctions<br/>OFAC · UN · EU · UK<br/>fuzzy trigram match]
-    B --> R[Registers<br/>GLEIF · EU VIES]
-    B --> DM[Domain<br/>age via RDAP · webmail<br/>· lookalike]
-    B --> CT[Country risk]
-    B --> TX[Email wording<br/>scam patterns]
-    S --> V{Verdict}
-    R --> V
-    DM --> V
-    CT --> V
-    TX --> V
-    V --> G[🟢 Green]
-    V --> A[🟠 Amber: verify]
-    V --> X[🔴 Red: stop]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/buyer-check-dark.png">
+  <img src="docs/diagrams/buyer-check.png" alt="Buyer check: sanctions, registers, domain, country and wording checks combined into a green, amber or red verdict" width="100%"/>
+</picture>
 
 | Check | What it does | How it stays honest |
 |---|---|---|
@@ -246,40 +207,10 @@ flowchart LR
 
 ## 🏗️ Architecture
 
-```mermaid
-flowchart TB
-    U[Browser] --> W[Next.js 16 · React 19<br/>9 languages · typed API client]
-    W -->|/api proxy · first-party cookies| API[FastAPI<br/>async SQLAlchemy]
-
-    API --> AI
-    API --> RULES
-    API --> EXT[Live APIs<br/>trade · tariffs · FX · TED<br/>GLEIF · VIES · RDAP]
-
-    subgraph AI[AI layer]
-        AG[Agents<br/>brief · guide · requirements<br/>leads · outreach · PO and LC reader]
-        RAG[Hybrid RAG<br/>HS code finder]
-    end
-
-    subgraph RULES[Rules in code]
-        BC[Buyer check<br/>sanctions · registers · domains]
-        DR[Document rules<br/>MT700 · UCP 600 · soft clauses]
-    end
-
-    AI --> LLM[Gemini / Groq<br/>key rotation · fallback]
-
-    subgraph DB[PostgreSQL 16]
-        GOLD[(Gold tables<br/>scores · prices · routes)]
-        APP[(App data<br/>pipeline · quotes · shipments)]
-        TRG[(pg_trgm<br/>sanctioned names)]
-        VEC[(pgvector<br/>product embeddings)]
-    end
-
-    API --> GOLD
-    API --> APP
-    RAG --> VEC
-    BC --> TRG
-    JOB[Lease-based scheduler<br/>alerts · reminders · digests<br/>sanctions refresh] --> DB
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/architecture-dark.png">
+  <img src="docs/diagrams/architecture.png" alt="Architecture: Next.js to FastAPI, AI layer, rules in code, live APIs, PostgreSQL with pgvector and pg_trgm, and a scheduler" width="100%"/>
+</picture>
 
 - **One typed contract, end to end.** The frontend's API client is generated from the backend's OpenAPI spec, so changing an endpoint breaks the frontend build, not production.
 - **Correct under concurrency.** Quote and invoice numbers are gapless and allocated under row locks. Pipeline cards use version-checked writes. Scheduled jobs hold database leases. A model is never called while a row is locked.
@@ -338,7 +269,7 @@ backend/    FastAPI: API, AI agents, integrations, jobs, migrations, evals
 pipeline/   Data pipeline: bronze → silver → gold → load
 shared/     Gold-table schemas shared by the pipeline and the API
 deploy/     Production container build
-docs/       Architecture decisions and screenshots
+docs/       Architecture decisions, diagrams (Mermaid sources + renders) and screenshots
 ```
 
 </details>

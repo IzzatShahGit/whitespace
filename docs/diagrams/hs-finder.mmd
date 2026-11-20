@@ -1,0 +1,15 @@
+flowchart LR
+    IN[Description<br/>or photo] --> PH{Photo?}
+    PH -->|yes| VI[Vision model<br/>describes it in customs terms]
+    PH -->|no| Q[Query]
+    VI --> Q
+    Q --> N[Everyday names<br/>alias table]
+    Q --> F[Customs wording<br/>Postgres full-text]
+    Q --> E[Meaning<br/>pgvector cosine]
+    N --> RRF[Reciprocal rank fusion<br/>top 15 candidates]
+    F --> RRF
+    E --> RRF
+    RRF --> M[Model picks up to 3<br/>with reasons and the<br/>questions that decide]
+    M --> C{In the<br/>candidate list?}
+    C -->|yes| OK[✅ Shown with confidence]
+    C -->|no| D[❌ Dropped]

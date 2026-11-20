@@ -1,0 +1,32 @@
+flowchart TB
+    U[Browser] --> W[Next.js 16 · React 19<br/>9 languages · typed API client]
+    W -->|/api proxy · first-party cookies| API[FastAPI<br/>async SQLAlchemy]
+
+    API --> AI
+    API --> RULES
+    API --> EXT[Live APIs<br/>trade · tariffs · FX · TED<br/>GLEIF · VIES · RDAP]
+
+    subgraph AI[AI layer]
+        AG[Agents<br/>brief · guide · requirements<br/>leads · outreach · PO and LC reader]
+        RAG[Hybrid RAG<br/>HS code finder]
+    end
+
+    subgraph RULES[Rules in code]
+        BC[Buyer check<br/>sanctions · registers · domains]
+        DR[Document rules<br/>MT700 · UCP 600 · soft clauses]
+    end
+
+    AI --> LLM[Gemini / Groq<br/>key rotation · fallback]
+
+    subgraph DB[PostgreSQL 16]
+        GOLD[(Gold tables<br/>scores · prices · routes)]
+        APP[(App data<br/>pipeline · quotes · shipments)]
+        TRG[(pg_trgm<br/>sanctioned names)]
+        VEC[(pgvector<br/>product embeddings)]
+    end
+
+    API --> GOLD
+    API --> APP
+    RAG --> VEC
+    BC --> TRG
+    JOB[Lease-based scheduler<br/>alerts · reminders · digests<br/>sanctions refresh] --> DB

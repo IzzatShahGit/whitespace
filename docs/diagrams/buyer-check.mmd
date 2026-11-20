@@ -1,0 +1,14 @@
+flowchart LR
+    B[Buyer name, website,<br/>email, VAT number] --> S[Sanctions<br/>OFAC · UN · EU · UK<br/>fuzzy trigram match]
+    B --> R[Registers<br/>GLEIF · EU VIES]
+    B --> DM[Domain<br/>age via RDAP · webmail<br/>· lookalike]
+    B --> CT[Country risk]
+    B --> TX[Email wording<br/>scam patterns]
+    S --> V{Verdict}
+    R --> V
+    DM --> V
+    CT --> V
+    TX --> V
+    V --> G[🟢 Green]
+    V --> A[🟠 Amber: verify]
+    V --> X[🔴 Red: stop]

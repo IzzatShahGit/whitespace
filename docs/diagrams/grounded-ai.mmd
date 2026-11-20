@@ -1,0 +1,8 @@
+flowchart LR
+    Q[Question] --> P[Plan<br/>templated searches]
+    P --> R[Research<br/>web + local language]
+    R --> X[Extract<br/>small model, cited claims]
+    X --> W[Write<br/>main model]
+    W --> C{Check<br/>in code}
+    C -->|every figure traced| OK[✅ Shown]
+    C -->|unsupported| D[❌ Removed and counted]
