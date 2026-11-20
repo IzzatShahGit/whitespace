@@ -6,11 +6,12 @@ from whitespace_api.models.brief import MarketBrief
 from whitespace_api.models.chat import ChatMessage, ChatThread
 from whitespace_api.models.jobs import EmailSend, EmailVerification, JobLease
 from whitespace_api.models.lead import TradeLeads
-from whitespace_api.models.pipeline import PipelineContact, PipelineEvent
+from whitespace_api.models.pipeline import PipelineContact, PipelineEvent, PipelineMessage
 from whitespace_api.models.profile import UserProfile
 from whitespace_api.models.quotes import BusinessDetails, Quote
 from whitespace_api.models.recent import MonthlyTradeCache
 from whitespace_api.models.requirements import MarketRequirements, RequirementCheck
+from whitespace_api.models.screening import BuyerCheck, SanctionName, SanctionSource
 from whitespace_api.models.shipments import Shipment
 from whitespace_api.models.tariff import TariffCache
 from whitespace_api.models.tenders import TenderCache
@@ -19,6 +20,7 @@ from whitespace_api.models.trade import (
     MarketOpportunity,
     MarketSupplier,
     Product,
+    ProductEmbedding,
     SeaRoute,
     SupplierLandscape,
 )
@@ -31,6 +33,7 @@ __all__ = [
     "AnalyticsVisitor",
     "Base",
     "BusinessDetails",
+    "BuyerCheck",
     "ChatMessage",
     "ChatThread",
     "Country",
@@ -46,10 +49,14 @@ __all__ = [
     "PasswordReset",
     "PipelineContact",
     "PipelineEvent",
+    "PipelineMessage",
     "Product",
+    "ProductEmbedding",
     "Quote",
     "RefreshToken",
     "RequirementCheck",
+    "SanctionName",
+    "SanctionSource",
     "SeaRoute",
     "Shipment",
     "SupplierLandscape",

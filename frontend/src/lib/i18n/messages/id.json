@@ -171,10 +171,7 @@
       "negotiating": "Negosiasi",
       "won": "Berhasil",
       "lost": "Ditutup"
-    },
-    "checkRegister": "Periksa registri perusahaan",
-    "checking": "Memeriksa…",
-    "checkVat": "Periksa PPN"
+    }
   },
   "requirements": {
     "title": "Yang Anda butuhkan untuk mengirim ke {market}",

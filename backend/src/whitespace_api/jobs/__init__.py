@@ -34,6 +34,12 @@ async def _tenders(settings: Settings) -> str:
     return await tenders.run(settings)
 
 
+async def _sanctions(settings: Settings) -> str:
+    from whitespace_api.jobs import sanctions
+
+    return await sanctions.run(settings)
+
+
 def scheduled_jobs() -> list[Job]:
     return [
         Job("follow_up_reminders", every=timedelta(hours=1), lease=timedelta(minutes=10),
@@ -43,4 +49,6 @@ def scheduled_jobs() -> list[Job]:
             run=_tenders),
         Job("watchlist_alerts", every=timedelta(hours=24), lease=timedelta(minutes=45),
             run=_alerts),
+        Job("sanctions_lists", every=timedelta(hours=24), lease=timedelta(minutes=30),
+            run=_sanctions),
     ]  # fmt: skip

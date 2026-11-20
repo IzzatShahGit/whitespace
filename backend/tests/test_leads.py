@@ -21,6 +21,7 @@ from whitespace_api.core.config import Settings, get_settings
 from whitespace_api.main import app
 from whitespace_api.schemas.lead import LeadsContent, LeadSource
 from whitespace_api.services import leads as service
+from whitespace_api.services import outreach
 
 RAW = AIMessage(
     content="",
@@ -191,7 +192,7 @@ def searches(
         return agent.LeadsRun(content=content, searches=4, pages_read=1, calls=[agent._usage(RAW)])
 
     def fake_model(spec: CallSpec, settings: Any = None) -> Any:
-        draft = service.IntroDraft(subject="Towels for Hansen", body="Dear Hansen team, ...")
+        draft = outreach.EmailDraft(subject="Towels for Hansen", body="Dear Hansen team, ...")
         return RunnableLambda(lambda _: {"raw": RAW, "parsed": draft})
 
     monkeypatch.setattr(service, "find_leads", fake_find)
@@ -246,6 +247,7 @@ async def test_intro_draft_and_limit(user: AsyncClient, searches: list[str]) -> 
         "subject": "Towels for Hansen",
         "body": "Dear Hansen team, ...",
         "drafted_by": "ai",
+        "checks": [],
     }
     assert (await user.post("/api/v1/leads/intro", json=body)).status_code == 429
 
@@ -263,7 +265,8 @@ async def test_intro_falls_back_to_template(
     body = {"hs6": TOWELS, "country": "DEU", "side": "suppliers", "company": "Hansen Textil"}
     out = (await user.post("/api/v1/leads/intro", json=body)).json()
     assert out["drafted_by"] == "template"
-    assert "Dear Hansen Textil team" in out["body"] and "[Your name]" in out["body"]
+    assert "Dear Hansen Textil team" in out["body"] and "[Your company]" in out["body"]
+    assert "Fill in [Your company]" in out["checks"]
 
 
 async def test_requires_sign_in(client: AsyncClient) -> None:

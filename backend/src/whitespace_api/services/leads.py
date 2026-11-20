@@ -11,7 +11,6 @@ import logging
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from whitespace_api.agents import llm
@@ -23,9 +22,7 @@ from whitespace_api.core.http import http_client
 from whitespace_api.models.lead import TradeLeads
 from whitespace_api.models.user import User
 from whitespace_api.repositories import leads as repo
-from whitespace_api.repositories import profiles as profile_repo
 from whitespace_api.repositories import trade as trade_repo
-from whitespace_api.repositories import usage as usage_repo
 from whitespace_api.schemas.lead import (
     IntroIn,
     IntroOut,
@@ -34,12 +31,12 @@ from whitespace_api.schemas.lead import (
     LeadsOut,
     LeadsUsage,
 )
+from whitespace_api.services import outreach, pipeline
 from whitespace_shared.naming import everyday_name
 
 log = logging.getLogger(__name__)
 
 ABANDONED_AFTER = timedelta(minutes=3)
-INTRO_KIND = "intro"
 
 
 class NotFoundError(Exception):
@@ -177,77 +174,44 @@ async def _generate(*, hs6: str, country: str, side: LeadSide, settings: Setting
 # --- intro emails -------------------------------------------------------------------
 
 
-class IntroDraft(BaseModel):
-    subject: str = Field(description="At most 10 words")
-    body: str = Field(description="Under 150 words, plain text, with [placeholders]")
-
-
-INTRO_SPEC = llm.CallSpec(tier="small", max_output_tokens=500, schema=IntroDraft)
-
-INTRO_SYSTEM = """You write short, polite first-contact business emails for small \
-traders. Plain text, under 150 words, no hype, no invented facts about either company. \
-Use placeholders in square brackets for anything you don't know: [Your name], \
-[Your company], [Website], [Phone]. Propose one concrete next step (a catalogue, price \
-list or samples). Never claim certifications, volumes or prices. Format: greeting line, \
-two short paragraphs, sign-off, separated by blank lines."""
-
-
-def _intro_template(
-    *, side: LeadSide, company: str, product: str, place: str, home: str | None
-) -> IntroOut:
-    origin = f" based in {home}" if home else ""
-    if side == "buyers":
-        subject = f"{product.capitalize()} supplier for {company}"
-        ask = (
-            f"We're a {product} supplier{origin} and are looking for importers and "
-            f"distributors in {place}. I'd be glad to send our catalogue and price list, "
-            "and samples if useful."
-        )
-    else:
-        subject = f"Sourcing enquiry: {product}"
-        ask = (
-            f"We're a buyer{origin} looking for reliable {product} manufacturers in "
-            f"{place}. Could you share your catalogue, minimum order quantity and prices?"
-        )
-    body = (
-        f"Dear {company} team,\n\n{ask}\n\nWould you be open to a short call next week?"
-        "\n\nKind regards,\n[Your name]\n[Your company]\n[Website] · [Phone]"
-    )
-    return IntroOut(subject=subject, body=body, drafted_by="template")
-
-
 async def draft_intro(db: AsyncSession, user: User, body: IntroIn, settings: Settings) -> IntroOut:
+    """A first email to a company on a lead list (same writer and checks as the pipeline)."""
     product, place = await _names(db, body.hs6, body.country)
-    profile = await profile_repo.get_profile(db, user.id)
-    home_country = (
-        await trade_repo.get_country(db, profile.exporter) if profile is not None else None
-    )
-    home = home_country.name if home_country else None
-    count = await usage_repo.consume(
-        db, user_id=user.id, kind=INTRO_KIND, day=date.today(), limit=settings.intro_daily_limit
-    )
-    if count is None:
-        raise LimitError(f"You've reached today's limit of {settings.intro_daily_limit} drafts.")
-    await db.commit()
-    fallback = _intro_template(
-        side=body.side, company=body.company, product=product, place=place, home=home
-    )
-    role = "a supplier selling to" if body.side == "buyers" else "a buyer sourcing from"
-    ask = (
-        f"Write a first email from {role} this company.\n"
-        f"Sender: a small business{f' in {home}' if home else ''}.\n"
-        f"Recipient: {body.company} ({body.kind}) in {place}"
-        f"{f', which deals in {body.handles}' if body.handles else ''}.\n"
-        f"Product: {product}."
-    )
+    me = await outreach.sender(db, user)
     try:
-        out = await llm.get_chat_model(INTRO_SPEC, settings=settings).ainvoke(
-            [("system", INTRO_SYSTEM), ("human", ask)]
-        )
-    except Exception as exc:
-        log.warning("Intro draft fell back to the template: %s", type(exc).__name__)
-        return fallback
-    draft: IntroDraft | None = out.get("parsed")
-    if draft is None or not draft.body.strip():
-        return fallback
-    return IntroOut(subject=draft.subject.strip(), body=draft.body.strip(), drafted_by="ai")
+        await outreach.spend(db, user, settings)
+    except pipeline.LimitError as exc:
+        raise LimitError(str(exc)) from exc
+    role = "importer" if body.side == "suppliers" else "supplier"
+    facts = [
+        f"Product: {product} (HS {body.hs6})",
+        f"Recipient: {body.company} ({body.kind}), {place}"
+        + (f"; deals in {body.handles}" if body.handles else ""),
+        f"The sender is a {role} writing to them about this product",
+        *me.lines,
+    ]
+    fallback = outreach.template(
+        purpose="first",
+        company=body.company,
+        product=product,
+        place=place,
+        home=me.home,
+        side=body.side,
+        signature=me.signature,
+    )
+    written = await outreach.write_email(
+        settings,
+        purpose="first",
+        language=body.language,
+        facts=facts,
+        signature=me.signature,
+        thread=[],
+        notes=None,
+        fallback=fallback,
+    )
+    return IntroOut(
+        subject=written.subject,
+        body=written.body,
+        drafted_by=written.drafted_by,
+        checks=outreach.draft_checks(f"{written.subject}\n{written.body}", [*facts, me.signature]),
+    )

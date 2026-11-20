@@ -171,10 +171,7 @@
       "negotiating": "দরকষাকষি চলছে",
       "won": "জিতেছে",
       "lost": "বন্ধ"
-    },
-    "checkRegister": "কোম্পানি নিবন্ধন যাচাই করুন",
-    "checking": "যাচাই হচ্ছে…",
-    "checkVat": "VAT যাচাই করুন"
+    }
   },
   "requirements": {
     "title": "{market}-এ পাঠাতে যা প্রয়োজন",

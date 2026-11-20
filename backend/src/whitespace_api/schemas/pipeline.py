@@ -61,6 +61,11 @@ class ContactOut(BaseModel):
     follow_up_on: date | None
     due: bool = Field(description="A follow-up is due today or overdue")
     last_contacted_at: datetime | None
+    emails: int = Field(default=0, description="Emails in the conversation")
+    reply_waiting: bool = Field(default=False, description="They wrote last: your turn")
+    check_verdict: Literal["green", "amber", "red"] | None = Field(
+        default=None, description="The latest buyer check, if any"
+    )
     version: int
     created_at: datetime
     updated_at: datetime

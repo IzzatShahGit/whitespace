@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import (
     CHAR,
@@ -18,6 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from whitespace_api.models.base import Base
@@ -74,3 +76,24 @@ class PipelineEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (Index("ix_pipeline_events_contact_created", "contact_id", "created_at"),)
+
+
+class PipelineMessage(Base):
+    """One email in the conversation with a contact: one the user sent ("out") or a
+    reply they pasted in ("in"). A reply keeps what was read from it (`analysis`), each
+    item checked in code against the reply's own words."""
+
+    __tablename__ = "pipeline_messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    contact_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipeline_contacts.id", ondelete="CASCADE")
+    )
+    direction: Mapped[str] = mapped_column(String(3))  # out | in
+    subject: Mapped[str | None] = mapped_column(String(200))
+    body: Mapped[str] = mapped_column(Text)
+    language: Mapped[str | None] = mapped_column(String(8))
+    analysis: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (Index("ix_pipeline_messages_contact_created", "contact_id", "created_at"),)

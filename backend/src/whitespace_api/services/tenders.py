@@ -23,7 +23,8 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from whitespace_api.agents.leads import _norm, core_name
+from whitespace_api.core.names import core_name
+from whitespace_api.core.names import norm as _norm
 from whitespace_api.integrations import registers, ted
 from whitespace_api.integrations.monthly_trade import EU_MEMBERS
 from whitespace_api.models.profile import UserProfile
@@ -221,7 +222,9 @@ async def check_company(
     if code is None:
         return CompanyCheck(name=name, country=country, matches=[], available=False, checked_at=now)
     try:
-        records = await registers.find_lei(http, name, code)
+        # Search on the identifying part: the register's full-text search misses
+        # "Vossen GmbH & Co. KG" but finds "Vossen" (stored as "Vossen GmbH & Co.KG").
+        records = await registers.find_lei(http, core_name(name) or name, code)
     except registers.RegisterError as exc:
         log.info("Company check unavailable: %s", exc)
         return CompanyCheck(name=name, country=country, matches=[], available=False, checked_at=now)

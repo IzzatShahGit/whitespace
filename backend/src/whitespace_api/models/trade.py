@@ -5,6 +5,7 @@ Table names come from the shared contract, so neither side hard-codes them.
 
 from __future__ import annotations
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import CHAR, Float, Index, Integer, SmallInteger, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -123,3 +124,16 @@ class SeaRoute(Base):
     dest_port_code: Mapped[str] = mapped_column(String(5))
     origin_inland_km: Mapped[int] = mapped_column(Integer)
     dest_inland_km: Mapped[int] = mapped_column(Integer)
+
+
+class ProductEmbedding(Base):
+    """A product's meaning as a vector (its description plus everyday names), for search
+    by description. `text_hash` lets a refresh re-embed only products whose text changed.
+    No vector index: an exact scan of ~5,400 rows takes milliseconds and never misses."""
+
+    __tablename__ = "product_embeddings"
+
+    hs6: Mapped[str] = mapped_column(CHAR(6), primary_key=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(768))
+    model: Mapped[str] = mapped_column(String(40))
+    text_hash: Mapped[str] = mapped_column(String(64))

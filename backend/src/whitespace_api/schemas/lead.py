@@ -82,9 +82,13 @@ class IntroIn(BaseModel):
     company: str = Field(min_length=1, max_length=120)
     kind: CompanyKind = "other"
     handles: str = Field(default="", max_length=200)
+    language: str = Field(default="en", pattern=r"^[a-z]{2}(-[A-Z]{2})?$")
 
 
 class IntroOut(BaseModel):
     subject: str
     body: str
     drafted_by: Literal["ai", "template"]
+    checks: list[str] = Field(
+        default_factory=list, description="Figures to verify and placeholders to fill"
+    )

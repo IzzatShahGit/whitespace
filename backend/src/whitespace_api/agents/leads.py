@@ -14,7 +14,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -26,6 +25,8 @@ from pydantic import BaseModel, Field
 
 from whitespace_api.agents.brief.research import matches, rank
 from whitespace_api.agents.llm import CallSpec
+from whitespace_api.core.names import core_name
+from whitespace_api.core.names import norm as _norm
 from whitespace_api.integrations import tavily
 from whitespace_api.schemas.lead import (
     CompanyKind,
@@ -53,13 +54,6 @@ NOT_A_COMPANY = {
     "panjiva", "importgenius", "import genius", "zauba", "yellow pages", "yellowpages",
     "dnb", "dun bradstreet", "zoominfo", "amazon", "ebay", "tridge", "seair", "eximpedia",
     "tradewheel", "ec21", "ecplaza", "thomasnet", "wikipedia",
-}  # fmt: skip
-# Dropped from the end of a name before checking the page: "Hansen Textil GmbH & Co. KG".
-LEGAL_SUFFIXES = {
-    "gmbh", "ltd", "limited", "inc", "llc", "co", "corp", "corporation", "company", "plc",
-    "pvt", "private", "sa", "sas", "sarl", "srl", "spa", "bv", "nv", "ag", "kg", "ab", "oy",
-    "as", "aps", "pty", "pte", "sdn", "bhd", "jsc", "ooo", "llp", "lda", "ltda", "sl", "kk",
-    "tic", "san", "ve", "s", "p", "a", "l", "k",
 }  # fmt: skip
 # B2B marketplaces hold anonymous buy requests, not company names: ranked last, never read.
 MARKETPLACES = (
@@ -230,25 +224,6 @@ def _message(sources: list[LeadSource], texts: dict[str, str]) -> str:
 
 
 # --- checking ---------------------------------------------------------------------
-
-
-def _norm(text: str) -> str:
-    """Casefolded words without accents or punctuation: "MÖVE GmbH." -> "move gmbh"."""
-    plain = "".join(
-        ch for ch in unicodedata.normalize("NFKD", text.casefold()) if not unicodedata.combining(ch)
-    )
-    return " ".join(re.sub(r"[\W_]+", " ", plain).split())
-
-
-def core_name(name: str) -> str:
-    """ "The Hansen Textil GmbH & Co. KG" -> "hansen textil": what must appear on the page."""
-    tokens = _norm(name).split()
-    while tokens and tokens[-1] in LEGAL_SUFFIXES:
-        tokens.pop()
-    for prefix in (["the"], ["m", "s"], ["messrs"]):  # "M/s. Al-Karam" is "Al-Karam"
-        if tokens[: len(prefix)] == prefix:
-            tokens = tokens[len(prefix) :]
-    return " ".join(tokens)
 
 
 def on_page(name: str, page: str) -> bool:
