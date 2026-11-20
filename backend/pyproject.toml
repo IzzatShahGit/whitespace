@@ -28,6 +28,8 @@ dependencies = [
     "email-validator>=2.2",
     # country codes (ISO alpha-2 for the company registers)
     "pycountry>=24.6",
+    "pypdf>=7.1.1",
+    "python-multipart>=0.0.34",
 ]
 
 [project.scripts]

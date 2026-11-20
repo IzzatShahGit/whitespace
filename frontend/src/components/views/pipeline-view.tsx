@@ -8,8 +8,11 @@ import {
   Globe,
   History,
   KanbanSquare,
-  Ship,
   Mail,
+  MailOpen,
+  MessagesSquare,
+  ShieldCheck,
+  Ship,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -17,7 +20,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { replaceSearchParams } from "@/components/markets/url-state";
-import { CompanyCheckBox } from "@/components/pipeline/company-check";
+import { ContactCheck, VerdictBadge } from "@/components/checks/buyer-check";
+import { Conversation } from "@/components/pipeline/conversation";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
@@ -69,6 +73,8 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
   const remove = useRemoveContact();
   const [note, setNote] = useState(contact.note ?? "");
   const [history, setHistory] = useState(false);
+  const [emails, setEmails] = useState(open || contact.reply_waiting);
+  const [checking, setChecking] = useState(false);
   const market = `/app/markets/${contact.hs6}/${contact.market}`;
 
   // A newer version from the server (another tab, or a reload after a conflict) wins.
@@ -93,13 +99,22 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           <p dir="auto" className="font-medium text-fg">
             {contact.name}
           </p>
+          {contact.check_verdict && (
+            <div className="mt-1">
+              <VerdictBadge verdict={contact.check_verdict} />
+            </div>
+          )}
           <p className="text-xs text-muted">
             {capitalize(contact.product_name)} · {contact.market_name}
             {contact.city ? ` · ${contact.city}` : ""}
             {contact.side === "suppliers" ? " · supplier" : ""}
           </p>
         </div>
-        {contact.due ? (
+        {contact.reply_waiting ? (
+          <Badge tone="brand" icon={<MailOpen />}>
+            {t("outreach.replyWaiting")}
+          </Badge>
+        ) : contact.due ? (
           <Badge tone="caution" icon={<AlarmClock />}>
             {t("pipeline.followUp", {
               date: contact.follow_up_on ? fmtDay(contact.follow_up_on) : "",
@@ -144,8 +159,19 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
             />
           </label>
         )}
+        <Button
+          size="sm"
+          variant={emails ? "ghost" : "secondary"}
+          aria-expanded={emails}
+          onClick={() => setEmails((e) => !e)}
+        >
+          <MessagesSquare />{" "}
+          {contact.emails
+            ? t("outreach.emails", { count: contact.emails })
+            : t("outreach.writeEmail")}
+        </Button>
         {contact.stage === "to_contact" && (
-          <Button size="sm" variant="secondary" onClick={() => save({ stage: "emailed" })}>
+          <Button size="sm" variant="ghost" onClick={() => save({ stage: "emailed" })}>
             <Mail /> {t("pipeline.emailedThem")}
           </Button>
         )}
@@ -171,6 +197,8 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           {update.error.message}
         </p>
       )}
+
+      {emails && <Conversation contact={contact} />}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <Link
@@ -220,6 +248,15 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
         )}
         <button
           type="button"
+          aria-expanded={checking}
+          onClick={() => setChecking((c) => !c)}
+          className="inline-flex items-center gap-1 text-muted hover:text-fg"
+        >
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden />{" "}
+          {contact.check_verdict ? t("checks.cardResult") : t("checks.cardButton")}
+        </button>
+        <button
+          type="button"
           aria-expanded={history}
           onClick={() => setHistory((h) => !h)}
           className="inline-flex items-center gap-1 text-muted hover:text-fg"
@@ -238,9 +275,7 @@ function ContactCard({ contact, open }: { contact: Contact; open: boolean }) {
           <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t("common.remove")}
         </button>
       </div>
-      {contact.side === "buyers" && (
-        <CompanyCheckBox name={contact.name} country={contact.market} />
-      )}
+      {checking && <ContactCheck contact={contact} />}
       {history && <Events id={contact.id} />}
     </li>
   );

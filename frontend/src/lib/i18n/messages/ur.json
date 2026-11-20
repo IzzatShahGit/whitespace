@@ -171,10 +171,7 @@
       "negotiating": "بات چیت جاری",
       "won": "کامیاب",
       "lost": "بند"
-    },
-    "checkRegister": "کمپنی رجسٹر چیک کریں",
-    "checking": "چیک ہو رہا ہے…",
-    "checkVat": "VAT چیک کریں"
+    }
   },
   "requirements": {
     "title": "{market} بھیجنے کے لیے آپ کو کیا چاہیے",

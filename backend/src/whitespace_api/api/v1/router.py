@@ -5,10 +5,13 @@ from whitespace_api.api.v1.routes import (
     auth,
     briefs,
     chat,
+    checks,
+    documents,
     freight,
     fx,
     google,
     health,
+    hs,
     landed_cost,
     leads,
     me,
@@ -44,3 +47,6 @@ api_router.include_router(pipeline.router)
 api_router.include_router(quotes.router)
 api_router.include_router(tenders.router)
 api_router.include_router(shipments.router)
+api_router.include_router(checks.router)
+api_router.include_router(documents.router)
+api_router.include_router(hs.router)

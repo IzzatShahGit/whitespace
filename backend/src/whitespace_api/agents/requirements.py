@@ -27,8 +27,9 @@ from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
 from whitespace_api.agents.brief.research import matches, rank
-from whitespace_api.agents.leads import _norm, _usage
+from whitespace_api.agents.leads import _usage
 from whitespace_api.agents.llm import CallSpec
+from whitespace_api.core.names import norm as _norm
 from whitespace_api.integrations import tavily
 from whitespace_api.integrations.monthly_trade import EU_MEMBERS
 from whitespace_api.schemas.requirements import (

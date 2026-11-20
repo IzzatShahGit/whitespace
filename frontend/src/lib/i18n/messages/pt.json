@@ -171,10 +171,7 @@
       "negotiating": "Negociando",
       "won": "Ganha",
       "lost": "Encerrada"
-    },
-    "checkRegister": "Consultar o registro da empresa",
-    "checking": "Consultando…",
-    "checkVat": "Consultar IVA"
+    }
   },
   "requirements": {
     "title": "O que você precisa para enviar para {market}",

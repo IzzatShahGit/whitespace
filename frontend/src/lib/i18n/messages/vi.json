@@ -171,10 +171,7 @@
       "negotiating": "Đang đàm phán",
       "won": "Thành công",
       "lost": "Đã đóng"
-    },
-    "checkRegister": "Kiểm tra đăng ký doanh nghiệp",
-    "checking": "Đang kiểm tra…",
-    "checkVat": "Kiểm tra VAT"
+    }
   },
   "requirements": {
     "title": "Những gì bạn cần để xuất hàng sang {market}",

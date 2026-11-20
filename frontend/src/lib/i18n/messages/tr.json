@@ -171,10 +171,7 @@
       "negotiating": "Pazarlık aşamasında",
       "won": "Kazanıldı",
       "lost": "Kapandı"
-    },
-    "checkRegister": "Şirket sicilini kontrol et",
-    "checking": "Kontrol ediliyor…",
-    "checkVat": "VAT kontrol et"
+    }
   },
   "requirements": {
     "title": "{market} ülkesine gönderim için ihtiyaçlarınız",

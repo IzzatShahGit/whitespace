@@ -79,6 +79,15 @@ check-keys: ## Test every API key in .env (prints pass/fail per slot, never the 
 alerts: ## Check watched markets for new monthly data and notify watchers (cron-safe)
 	cd backend && uv run python -m whitespace_api.jobs.alerts
 
+sanctions: ## Load the OFAC, UN, EU and UK sanctions lists now (the app also refreshes daily)
+	cd backend && uv run python -m whitespace_api.jobs.sanctions
+
+embed: ## Embed products for HS-code search (only new or changed ones; run after a data load)
+	cd backend && uv run python -m whitespace_api.jobs.embed_products
+
+eval-hs: ## Score the HS-code finder on backend/evals/hs_codes.jsonl (add ARGS=--pick for the AI step)
+	cd backend && uv run python -m whitespace_api.tools.eval_hs $(ARGS)
+
 # ---------- codegen ----------
 gen-client: ## Regenerate frontend API types from the backend
 	uv run python -c "import json; from whitespace_api.main import app; print(json.dumps(app.openapi(), indent=2))" > frontend/openapi.json
@@ -89,4 +98,4 @@ gen-client: ## Regenerate frontend API types from the backend
 snapdeploy: ## Build the ARM64 web+API image for SnapDeploy -> dist/whitespace-snapdeploy.tar
 	scripts/snapdeploy-build.sh
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts gen-client snapdeploy
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions embed eval-hs gen-client snapdeploy

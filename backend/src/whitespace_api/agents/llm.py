@@ -43,6 +43,11 @@ def _pools() -> dict[str, KeyPool]:
     }
 
 
+def key_pool(provider: str) -> KeyPool:
+    """The process-wide key pool of one provider (shared with non-chat calls)."""
+    return _pools()[provider]
+
+
 def is_key_refused(exc: BaseException) -> bool:
     """The key itself is unusable (invalid, no billing, no access): no point retrying soon."""
     if getattr(exc, "status_code", None) in (401, 403) or getattr(exc, "code", None) in (401, 403):

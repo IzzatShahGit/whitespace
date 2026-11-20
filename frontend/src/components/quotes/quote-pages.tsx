@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, FilePlus2, FileText, Printer, Ship, Trash2 } from "lucide-react";
+import { ArrowLeft, FilePlus2, FileSearch, FileText, Printer, Ship, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { use } from "react";
@@ -48,7 +48,7 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
         >
           <ArrowLeft className="h-4 w-4" aria-hidden /> All quotes
         </Link>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="ghost"
             onClick={() => {
@@ -59,6 +59,9 @@ export function QuoteView({ params }: { params: Promise<{ id: string }> }) {
           >
             <Trash2 /> Delete
           </Button>
+          <ButtonLink variant="ghost" href={`/app/check?tab=document&quote=${id}`}>
+            <FileSearch /> Check their PO or LC
+          </ButtonLink>
           <Button
             variant="secondary"
             disabled={ship.isPending}

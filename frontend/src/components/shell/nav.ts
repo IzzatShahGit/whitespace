@@ -11,6 +11,7 @@ import {
   PackageSearch,
   Settings,
   Ship,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export type NavId =
   | "buy"
   | "ask"
   | "pipeline"
+  | "check"
   | "quotes"
   | "shipments"
   | "tenders"
@@ -50,6 +52,13 @@ export const NAV: NavItem[] = [
     label: "Pipeline",
     icon: KanbanSquare,
     hint: "Companies you're contacting",
+  },
+  {
+    id: "check",
+    href: "/app/check",
+    label: "Check a buyer",
+    icon: ShieldCheck,
+    hint: "Is this buyer real? Sanctions, registers, scam signs",
   },
   {
     id: "quotes",

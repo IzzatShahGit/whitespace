@@ -149,7 +149,16 @@ class Settings(BaseSettings):
     # Company leads (buyers / suppliers) change slowly; one search serves every user.
     leads_cache_days: int = Field(default=30, ge=1)
     leads_daily_limit: int = Field(default=10, ge=1, description="New lead searches per user/day")
-    intro_daily_limit: int = Field(default=20, ge=1, description="Intro emails per user per day")
+    buyer_check_daily_limit: int = Field(default=30, ge=1, description="Buyer checks per user/day")
+    hs_finder_daily_limit: int = Field(
+        default=30, ge=1, description="HS code searches per user/day"
+    )
+    doc_check_daily_limit: int = Field(
+        default=10, ge=1, description="PO / letter-of-credit documents read by AI per user/day"
+    )
+    intro_daily_limit: int = Field(
+        default=30, ge=1, description="AI email actions (drafts, reading replies) per user/day"
+    )
     # Import requirements per (product, market, exporter): rules change slowly.
     requirements_cache_days: int = Field(default=45, ge=1)
     requirements_daily_limit: int = Field(

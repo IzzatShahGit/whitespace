@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, Callout } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
@@ -98,6 +98,7 @@ function IntroBox({
   country: string;
   side: LeadSide;
 }) {
+  const t = useT();
   const draft = useDraftIntro();
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -106,7 +107,15 @@ function IntroBox({
 
   useEffect(() => {
     mutate(
-      { hs6, country, side, company: lead.name, kind: lead.kind, handles: lead.handles },
+      {
+        hs6,
+        country,
+        side,
+        company: lead.name,
+        kind: lead.kind,
+        handles: lead.handles,
+        language: "en",
+      },
       {
         onSuccess: (d) => {
           setSubject(d.subject);
@@ -146,6 +155,16 @@ function IntroBox({
   const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   return (
     <div className="mt-3 flex flex-col gap-2 rounded-xl border border-line bg-surface-2/50 p-3">
+      {(draft.data?.checks ?? []).length > 0 && (
+        <Callout tone="caution">
+          <p className="font-medium">{t("outreach.beforeSending")}</p>
+          <ul className="mt-1 list-disc ps-5 text-xs">
+            {(draft.data?.checks ?? []).map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+        </Callout>
+      )}
       <label className="text-xs font-medium text-muted" htmlFor={`subject-${lead.name}`}>
         Subject
       </label>

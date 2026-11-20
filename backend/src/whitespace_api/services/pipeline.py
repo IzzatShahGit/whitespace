@@ -14,12 +14,14 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import delete, func, select
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects.postgresql import aggregate_order_by, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from whitespace_api.agents.leads import _norm, core_name
 from whitespace_api.core.config import Settings
-from whitespace_api.models.pipeline import PipelineContact, PipelineEvent
+from whitespace_api.core.names import core_name
+from whitespace_api.core.names import norm as _norm
+from whitespace_api.models.pipeline import PipelineContact, PipelineEvent, PipelineMessage
+from whitespace_api.models.screening import BuyerCheck
 from whitespace_api.models.user import User
 from whitespace_api.repositories import trade as trade_repo
 from whitespace_api.schemas.pipeline import (
@@ -30,6 +32,7 @@ from whitespace_api.schemas.pipeline import (
     ContactPatch,
     EventOut,
     PipelineSummary,
+    Stage,
 )
 from whitespace_shared.naming import everyday_name
 
@@ -65,9 +68,35 @@ def name_key(name: str) -> str:
     return (core_name(name) or _norm(name))[:160]
 
 
-async def _out(db: AsyncSession, rows: list[PipelineContact]) -> list[ContactOut]:
+async def _threads(db: AsyncSession, ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[int, bool]]:
+    """Per contact: (emails in the conversation, whether they wrote last)."""
+    if not ids:
+        return {}
+    last = func.array_agg(
+        aggregate_order_by(PipelineMessage.direction, PipelineMessage.created_at.desc())
+    )[1]
+    rows = await db.execute(
+        select(PipelineMessage.contact_id, func.count(), last)
+        .where(PipelineMessage.contact_id.in_(ids))
+        .group_by(PipelineMessage.contact_id)
+    )
+    return {cid: (n, direction == "in") for cid, n, direction in rows.all()}
+
+
+async def _checks(db: AsyncSession, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    if not ids:
+        return {}
+    rows = await db.execute(
+        select(BuyerCheck.contact_id, BuyerCheck.verdict).where(BuyerCheck.contact_id.in_(ids))
+    )
+    return {row.contact_id: row.verdict for row in rows}
+
+
+async def out(db: AsyncSession, rows: list[PipelineContact]) -> list[ContactOut]:
     products = await trade_repo.products_by_code(db, sorted({r.hs6 for r in rows}))
     countries = await trade_repo.countries_by_code(db, sorted({r.market for r in rows}))
+    threads = await _threads(db, [r.id for r in rows])
+    checks = await _checks(db, [r.id for r in rows])
     now = today()
 
     def one(r: PipelineContact) -> ContactOut:
@@ -89,6 +118,9 @@ async def _out(db: AsyncSession, rows: list[PipelineContact]) -> list[ContactOut
             follow_up_on=r.follow_up_on,
             due=r.follow_up_on is not None and r.follow_up_on <= now and r.stage in ACTIVE,
             last_contacted_at=r.last_contacted_at,
+            emails=threads.get(r.id, (0, False))[0],
+            reply_waiting=threads.get(r.id, (0, False))[1] and r.stage in ACTIVE,
+            check_verdict=checks.get(r.id),
             version=r.version,
             created_at=r.created_at,
             updated_at=r.updated_at,
@@ -103,7 +135,7 @@ async def list_contacts(db: AsyncSession, user: User) -> list[ContactOut]:
         .where(PipelineContact.user_id == user.id)
         .order_by(PipelineContact.updated_at.desc())
     )
-    return await _out(db, list(rows))
+    return await out(db, list(rows))
 
 
 async def add(db: AsyncSession, user: User, body: ContactIn, settings: Settings) -> ContactAdded:
@@ -150,12 +182,11 @@ async def add(db: AsyncSession, user: User, body: ContactIn, settings: Settings)
         )
     )
     assert row is not None
-    return ContactAdded(contact=(await _out(db, [row]))[0], created=new_id is not None)
+    return ContactAdded(contact=(await out(db, [row]))[0], created=new_id is not None)
 
 
-async def update(
-    db: AsyncSession, user: User, contact_id: uuid.UUID, body: ContactPatch
-) -> ContactOut:
+async def lock(db: AsyncSession, user: User, contact_id: uuid.UUID) -> PipelineContact:
+    """The user's contact, row-locked until commit; NotFoundError (after rollback) if not."""
     row = await db.scalar(
         select(PipelineContact)
         .where(PipelineContact.id == contact_id, PipelineContact.user_id == user.id)
@@ -164,26 +195,50 @@ async def update(
     if row is None:
         await db.rollback()
         raise NotFoundError("Not in your pipeline")
+    return row
+
+
+def move_stage(row: PipelineContact, stage: Stage, now: datetime) -> list[tuple[str, str]]:
+    """Set the stage and what goes with it; the events to record (none if unchanged)."""
+    if stage == row.stage:
+        return []
+    event = ("stage", f"{STAGE_WORDS[row.stage]} → {STAGE_WORDS[stage]}")
+    if stage == "emailed":
+        row.last_contacted_at = now
+    row.stage = stage
+    if stage not in ACTIVE:
+        row.follow_up_on = None  # won or lost: nothing to chase
+    return [event]
+
+
+def record(db: AsyncSession, row: PipelineContact, events: list[tuple[str, str]]) -> None:
+    """Log the changes and bump the version, so stale edits from other tabs are refused."""
+    if events:
+        row.version += 1
+        row.updated_at = datetime.now(UTC)
+        db.add_all(PipelineEvent(contact_id=row.id, kind=k, detail=d[:300]) for k, d in events)
+
+
+async def update(
+    db: AsyncSession, user: User, contact_id: uuid.UUID, body: ContactPatch
+) -> ContactOut:
+    row = await lock(db, user, contact_id)
     if row.version != body.version:
         await db.rollback()
         raise ConflictError("This company was changed elsewhere. Reload to see the latest.")
     fields = body.model_fields_set
     events: list[tuple[str, str]] = []
     now = datetime.now(UTC)
-    stage = body.stage if body.stage is not None else row.stage
     if "note" in fields and ((body.note or "").strip() or None) != row.note:
         row.note = (body.note or "").strip() or None
         events.append(("note", "Note updated"))
     follow_up = body.follow_up_on if "follow_up_on" in fields else row.follow_up_on
-    if stage != row.stage:
-        events.append(("stage", f"{STAGE_WORDS[row.stage]} → {STAGE_WORDS[stage]}"))
-        if stage == "emailed":
-            row.last_contacted_at = now
-            if "follow_up_on" not in fields and follow_up is None:
-                follow_up = today() + FOLLOW_UP_AFTER
-        row.stage = stage
-    if stage not in ACTIVE:
-        follow_up = None  # won or lost: nothing to chase
+    if body.stage is not None and (moved := move_stage(row, body.stage, now)):
+        events += moved
+        if row.stage == "emailed" and "follow_up_on" not in fields and follow_up is None:
+            follow_up = today() + FOLLOW_UP_AFTER
+    if row.stage not in ACTIVE:
+        follow_up = None
     if follow_up != row.follow_up_on:
         if "follow_up_on" in fields:  # the user's own change (automatic ones go unlogged)
             events.append(
@@ -192,12 +247,9 @@ async def update(
                 else ("follow_up", "Follow-up cleared")
             )
         row.follow_up_on = follow_up
-    if events:
-        row.version += 1
-        row.updated_at = now
-        db.add_all(PipelineEvent(contact_id=row.id, kind=k, detail=d) for k, d in events)
+    record(db, row, events)
     await db.commit()
-    return (await _out(db, [row]))[0]
+    return (await out(db, [row]))[0]
 
 
 async def remove(db: AsyncSession, user: User, contact_id: uuid.UUID) -> None:
@@ -251,5 +303,5 @@ async def summary(db: AsyncSession, user: User) -> PipelineSummary:
     return PipelineSummary(
         total=sum(counts.values()),
         by_stage={stage: counts.get(stage, 0) for stage in STAGE_WORDS},
-        due=await _out(db, list(due)),
+        due=await out(db, list(due)),
     )

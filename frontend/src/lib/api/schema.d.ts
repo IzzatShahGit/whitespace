@@ -1119,6 +1119,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pipeline/{contact_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thread
+         * @description Emails sent and replies received, oldest first, with the languages to write in.
+         */
+        get: operations["thread_api_v1_pipeline__contact_id__messages_get"];
+        put?: never;
+        /**
+         * Log Sent
+         * @description Log an email you sent: "To contact" moves to "Emailed", follow-up in five days.
+         */
+        post: operations["log_sent_api_v1_pipeline__contact_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pipeline/{contact_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft
+         * @description Draft the next email (first, follow-up or reply) from your quote and the thread.
+         *     Nothing is saved: edit it, send it yourself, then log it.
+         */
+        post: operations["draft_api_v1_pipeline__contact_id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pipeline/{contact_id}/replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Reply
+         * @description Paste their reply: it's saved with what they ask for (each in their own words),
+         *     warning signs, and the stage it suggests.
+         */
+        post: operations["read_reply_api_v1_pipeline__contact_id__replies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pipeline/{contact_id}/messages/{message_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Message */
+        delete: operations["remove_message_api_v1_pipeline__contact_id__messages__message_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business": {
         parameters: {
             query?: never;
@@ -1319,6 +1402,110 @@ export interface paths {
         patch: operations["update_api_v1_shipments__shipment_id__patch"];
         trace?: never;
     };
+    "/api/v1/buyer-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check
+         * @description Check a company. With `contact_id`, its website and pasted replies are included
+         *     and the result is kept on the pipeline card.
+         */
+        post: operations["check_api_v1_buyer_checks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/buyer-checks/lists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lists
+         * @description The sanctions lists we screen against, and when each was last loaded.
+         */
+        get: operations["lists_api_v1_buyer_checks_lists_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/buyer-checks/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Latest
+         * @description The last check of a pipeline contact.
+         */
+        get: operations["latest_api_v1_buyer_checks_contacts__contact_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check
+         * @description Read the document (SWIFT MT700 text is read in code; anything else by a model that
+         *     must quote it), then flag risky clauses, tight dates, sanctioned parties and every
+         *     difference from your quote. The document isn't stored.
+         */
+        post: operations["check_api_v1_documents_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/identify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Identify
+         * @description Up to three likely codes, each with how sure and why, plus questions that would
+         *     decide between them. The photo isn't stored.
+         */
+        post: operations["identify_api_v1_products_identify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1347,10 +1534,50 @@ export interface components {
              */
             actions: components["schemas"]["Count"][];
         };
+        /** Ask */
+        Ask: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "price" | "moq" | "samples" | "catalogue" | "specification" | "certification" | "payment_terms" | "delivery_time" | "meeting" | "other";
+            /**
+             * Detail
+             * @description What they want, in a few words
+             */
+            detail: string;
+            /**
+             * Quote
+             * @description Their own words, as written in the email
+             */
+            quote: string;
+        };
         /** BestMove */
         BestMove: {
             product: components["schemas"]["ProductOut"];
             market: components["schemas"]["MarketItem"];
+        };
+        /** Body_check_api_v1_documents_check_post */
+        Body_check_api_v1_documents_check_post: {
+            /**
+             * File
+             * @description The PO or credit, as a PDF
+             */
+            file?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Quote Id */
+            quote_id?: string | null;
+        };
+        /** Body_identify_api_v1_products_identify_post */
+        Body_identify_api_v1_products_identify_post: {
+            /** Description */
+            description?: string | null;
+            /**
+             * Photo
+             * @description JPEG, PNG or WebP, up to 4 MB
+             */
+            photo?: string | null;
         };
         /** BriefClaim */
         BriefClaim: {
@@ -1541,6 +1768,38 @@ export interface components {
              */
             complete: boolean;
         };
+        /** BuyerCheckOut */
+        BuyerCheckOut: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "green" | "amber" | "red";
+            /**
+             * Findings
+             * @description Most serious first
+             */
+            findings: components["schemas"]["Finding"][];
+            /** Sanctions */
+            sanctions: components["schemas"]["SanctionHit"][];
+            /** Lists */
+            lists: components["schemas"]["ListInfo"][];
+            /** Name */
+            name: string;
+            /** Country */
+            country: string;
+            /** Website Domain */
+            website_domain: string | null;
+            /** Email Domain */
+            email_domain: string | null;
+            /** Contact Id */
+            contact_id: string | null;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+        };
         /** CardMarket */
         CardMarket: {
             market: components["schemas"]["CountryOut"];
@@ -1681,6 +1940,38 @@ export interface components {
              */
             updated_at: string;
         };
+        /** CheckIn */
+        CheckIn: {
+            /**
+             * Name
+             * @description The company's name
+             */
+            name: string;
+            /** Country */
+            country: string;
+            /** Website */
+            website?: string | null;
+            /**
+             * Email
+             * @description The address they use
+             */
+            email?: string | null;
+            /**
+             * Vat
+             * @description EU VAT number, if given
+             */
+            vat?: string | null;
+            /**
+             * Message
+             * @description Their email
+             */
+            message?: string | null;
+            /**
+             * Contact Id
+             * @description A pipeline contact: its website and replies are used too
+             */
+            contact_id?: string | null;
+        };
         /** ChecklistItem */
         ChecklistItem: {
             /** Title */
@@ -1790,6 +2081,23 @@ export interface components {
             due: boolean;
             /** Last Contacted At */
             last_contacted_at: string | null;
+            /**
+             * Emails
+             * @description Emails in the conversation
+             * @default 0
+             */
+            emails: number;
+            /**
+             * Reply Waiting
+             * @description They wrote last: your turn
+             * @default false
+             */
+            reply_waiting: boolean;
+            /**
+             * Check Verdict
+             * @description The latest buyer check, if any
+             */
+            check_verdict?: ("green" | "amber" | "red") | null;
             /** Version */
             version: number;
             /**
@@ -1924,6 +2232,103 @@ export interface components {
              */
             verification_sent: boolean;
         };
+        /** DocCheckOut */
+        DocCheckOut: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "green" | "amber" | "red";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "letter_of_credit" | "purchase_order" | "other";
+            /**
+             * Read By
+             * @enum {string}
+             */
+            read_by: "swift" | "ai" | "ai_scan";
+            /**
+             * Fields
+             * @description What we read, for you to compare
+             */
+            fields: components["schemas"]["ReadField"][];
+            terms: components["schemas"]["Terms"];
+            /**
+             * Findings
+             * @description Most serious first
+             */
+            findings: components["schemas"]["Finding"][];
+            /**
+             * Quote Number
+             * @description The quote it was compared with
+             */
+            quote_number: string | null;
+            /**
+             * Removed
+             * @description Values dropped: not found in the document
+             * @default 0
+             */
+            removed: number;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+        };
+        /** DraftIn */
+        DraftIn: {
+            /**
+             * Purpose
+             * @description Default: first if nothing was sent, reply if they wrote last
+             */
+            purpose?: ("first" | "follow_up" | "reply") | null;
+            /**
+             * Language
+             * @description Default: the market's best
+             */
+            language?: string | null;
+            /**
+             * Quote Id
+             * @description Quote to refer to. Default: this contact's latest
+             */
+            quote_id?: string | null;
+            /**
+             * Notes
+             * @description What you want to say, in your own words
+             */
+            notes?: string | null;
+        };
+        /** DraftOut */
+        DraftOut: {
+            /** Subject */
+            subject: string;
+            /** Body */
+            body: string;
+            /** Language */
+            language: string;
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "first" | "follow_up" | "reply";
+            /**
+             * Drafted By
+             * @enum {string}
+             */
+            drafted_by: "ai" | "template";
+            /**
+             * Quote Number
+             * @description The quote the draft refers to, if any
+             */
+            quote_number: string | null;
+            /**
+             * Checks
+             * @description Things to look at before sending: figures not found in your quote or the conversation, placeholders left to fill
+             */
+            checks: string[];
+        };
         /** DutyCard */
         DutyCard: {
             /**
@@ -2050,6 +2455,30 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** Finding */
+        Finding: {
+            /** Code */
+            code: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "high" | "medium" | "ok" | "info";
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            /**
+             * Quote
+             * @description The words that raised it
+             */
+            quote?: string | null;
+            /**
+             * Url
+             * @description Where to see it yourself
+             */
+            url?: string | null;
         };
         /** ForgotPasswordRequest */
         ForgotPasswordRequest: {
@@ -2197,6 +2626,64 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** HsFinderOut */
+        HsFinderOut: {
+            /**
+             * Query
+             * @description The description searched (from the photo, if any)
+             */
+            query: string;
+            /** From Photo */
+            from_photo: boolean;
+            /**
+             * Picks
+             * @description Best first; empty if nothing fits
+             */
+            picks: components["schemas"]["HsPick"][];
+            /**
+             * Questions
+             * @description Answers that would decide between the picks
+             */
+            questions: string[];
+            /**
+             * Others
+             * @description Other close products, to browse
+             */
+            others: components["schemas"]["ProductOut"][];
+            /**
+             * Method
+             * @description search: AI unavailable, closest words
+             * @enum {string}
+             */
+            method: "ai" | "search";
+            /**
+             * Semantic
+             * @description False if meaning-based search was unavailable
+             */
+            semantic: boolean;
+        };
+        /** HsPick */
+        HsPick: {
+            /** Hs6 */
+            hs6: string;
+            /**
+             * Description
+             * @description The official wording
+             */
+            description: string;
+            /**
+             * Name
+             * @description Everyday name
+             */
+            name: string;
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "high" | "medium" | "low";
+            /** Why */
+            why: string;
+        };
         /** IntroIn */
         IntroIn: {
             /** Hs6 */
@@ -2221,6 +2708,11 @@ export interface components {
              * @default
              */
             handles: string;
+            /**
+             * Language
+             * @default en
+             */
+            language: string;
         };
         /** IntroOut */
         IntroOut: {
@@ -2233,6 +2725,11 @@ export interface components {
              * @enum {string}
              */
             drafted_by: "ai" | "template";
+            /**
+             * Checks
+             * @description Figures to verify and placeholders to fill
+             */
+            checks?: string[];
         };
         /** LandedCost */
         LandedCost: {
@@ -2329,6 +2826,13 @@ export interface components {
              * @description Sea rate multiplier for this direction
              */
             factor: number;
+        };
+        /** LanguageOption */
+        LanguageOption: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
         };
         /** Lead */
         Lead: {
@@ -2469,6 +2973,19 @@ export interface components {
              */
             exact: boolean;
         };
+        /** ListInfo */
+        ListInfo: {
+            /** Source */
+            source: string;
+            /** Label */
+            label: string;
+            /** Loaded At */
+            loaded_at: string | null;
+            /** Names */
+            names: number;
+            /** Error */
+            error: string | null;
+        };
         /** LocaleIn */
         LocaleIn: {
             /**
@@ -2600,6 +3117,36 @@ export interface components {
             offset: number;
             /** Items */
             items: components["schemas"]["MarketItem"][];
+        };
+        /** MessageOut */
+        MessageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "out" | "in";
+            /** Subject */
+            subject: string | null;
+            /** Body */
+            body: string;
+            /** Language */
+            language: string | null;
+            analysis: components["schemas"]["ReplyAnalysis"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** MessageSaved */
+        MessageSaved: {
+            message: components["schemas"]["MessageOut"];
+            contact: components["schemas"]["ContactOut"];
         };
         /** MoneyCard */
         MoneyCard: {
@@ -3206,6 +3753,18 @@ export interface components {
             /** @description Its best market */
             top: components["schemas"]["MarketItem"];
         };
+        /** ReadField */
+        ReadField: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+            /**
+             * Quote
+             * @description Where the document says so
+             */
+            quote?: string | null;
+        };
         /** ReadinessResponse */
         ReadinessResponse: {
             /**
@@ -3283,6 +3842,20 @@ export interface components {
              */
             share_before: number | null;
         };
+        /** RedFlag */
+        RedFlag: {
+            /** Code */
+            code: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "high" | "medium";
+            /** Label */
+            label: string;
+            /** Quote */
+            quote: string;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /**
@@ -3294,6 +3867,61 @@ export interface components {
             full_name: string;
             /** Password */
             password: string;
+        };
+        /** ReplyAnalysis */
+        ReplyAnalysis: {
+            /**
+             * Intent
+             * @enum {string}
+             */
+            intent: "interested" | "question" | "order" | "negotiating" | "not_interested" | "out_of_office" | "other";
+            /**
+             * Summary
+             * @description One sentence, in English
+             */
+            summary: string;
+            /**
+             * Language
+             * @description Language the reply is written in
+             */
+            language: string | null;
+            /**
+             * Asks
+             * @description Only items whose quote was found in the reply
+             */
+            asks: components["schemas"]["Ask"][];
+            /**
+             * Deadline
+             * @description A date or time limit they set, as written
+             */
+            deadline: string | null;
+            /** Red Flags */
+            red_flags: components["schemas"]["RedFlag"][];
+            /**
+             * Suggested Stage
+             * @description Where this contact now belongs
+             */
+            suggested_stage: ("to_contact" | "emailed" | "replied" | "samples" | "negotiating" | "won" | "lost") | null;
+            /**
+             * Removed
+             * @description Items dropped: not found in the reply
+             * @default 0
+             */
+            removed: number;
+            /**
+             * Read By
+             * @description template: the model was unavailable
+             * @enum {string}
+             */
+            read_by: "ai" | "template";
+        };
+        /** ReplyIn */
+        ReplyIn: {
+            /**
+             * Text
+             * @description Their email
+             */
+            text: string;
         };
         /** Requirement */
         Requirement: {
@@ -3434,12 +4062,41 @@ export interface components {
              */
             advantage_pts: number;
         };
+        /** SanctionHit */
+        SanctionHit: {
+            /** Source */
+            source: string;
+            /** Source Label */
+            source_label: string;
+            /** Name */
+            name: string;
+            /** Program */
+            program: string | null;
+            /** Url */
+            url: string | null;
+            /**
+             * Grade
+             * @enum {string}
+             */
+            grade: "strong" | "possible";
+            /** Score */
+            score: number;
+        };
         /** SectorOut */
         SectorOut: {
             /** Name */
             name: string;
             /** Niches */
             niches: components["schemas"]["NicheSummary"][];
+        };
+        /** SentIn */
+        SentIn: {
+            /** Subject */
+            subject?: string | null;
+            /** Body */
+            body: string;
+            /** Language */
+            language?: string | null;
         };
         /** Shipment */
         Shipment: {
@@ -3865,6 +4522,99 @@ export interface components {
              * @description Product names searched
              */
             products: string[];
+        };
+        /**
+         * Terms
+         * @description What the document says, normalised. None where it doesn't say.
+         */
+        Terms: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "letter_of_credit" | "purchase_order" | "other";
+            /** Number */
+            number?: string | null;
+            /** Issued */
+            issued?: string | null;
+            /**
+             * Buyer
+             * @description Applicant / buyer
+             */
+            buyer?: string | null;
+            /**
+             * Seller
+             * @description Beneficiary / seller
+             */
+            seller?: string | null;
+            /** Issuing Bank */
+            issuing_bank?: string | null;
+            /**
+             * Revocable
+             * @default false
+             */
+            revocable: boolean;
+            /** Currency */
+            currency?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Tolerance Pct */
+            tolerance_pct?: number | null;
+            /** Incoterm */
+            incoterm?: string | null;
+            /** Named Place */
+            named_place?: string | null;
+            /** Port Of Loading */
+            port_of_loading?: string | null;
+            /** Port Of Discharge */
+            port_of_discharge?: string | null;
+            /** Latest Shipment */
+            latest_shipment?: string | null;
+            /** Expiry */
+            expiry?: string | null;
+            /** Presentation Days */
+            presentation_days?: number | null;
+            /** Partial Shipments */
+            partial_shipments?: string | null;
+            /** Transhipment */
+            transhipment?: string | null;
+            /**
+             * Payment
+             * @description e.g. at sight, 60 days after B/L
+             */
+            payment?: string | null;
+            /** Confirmation */
+            confirmation?: string | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Unit Price */
+            unit_price?: number | null;
+            /** Goods */
+            goods?: string | null;
+            /** Documents */
+            documents?: string[];
+            /** Conditions */
+            conditions?: string[];
+        };
+        /** ThreadOut */
+        ThreadOut: {
+            /**
+             * Messages
+             * @description Oldest first
+             */
+            messages: components["schemas"]["MessageOut"][];
+            /**
+             * Languages
+             * @description For this market, best first
+             */
+            languages: components["schemas"]["LanguageOption"][];
+            /**
+             * Next Purpose
+             * @enum {string}
+             */
+            next_purpose: "first" | "follow_up" | "reply";
         };
         /** TokenIn */
         TokenIn: {
@@ -6431,6 +7181,192 @@ export interface operations {
             };
         };
     };
+    thread_api_v1_pipeline__contact_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    log_sent_api_v1_pipeline__contact_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageSaved"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_api_v1_pipeline__contact_id__draft_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_reply_api_v1_pipeline__contact_id__replies_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageSaved"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_message_api_v1_pipeline__contact_id__messages__message_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+                message_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_business_api_v1_business_get: {
         parameters: {
             query?: never;
@@ -6981,6 +7917,185 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Shipment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_api_v1_buyer_checks_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lists_api_v1_buyer_checks_lists_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListInfo"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    latest_api_v1_buyer_checks_contacts__contact_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_api_v1_documents_check_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_check_api_v1_documents_check_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identify_api_v1_products_identify_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_identify_api_v1_products_identify_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsFinderOut"];
                 };
             };
             /** @description Validation Error */

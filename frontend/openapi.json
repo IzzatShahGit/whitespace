@@ -4919,6 +4919,416 @@
         }
       }
     },
+    "/api/v1/pipeline/{contact_id}/messages": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Thread",
+        "description": "Emails sent and replies received, oldest first, with the languages to write in.",
+        "operationId": "thread_api_v1_pipeline__contact_id__messages_get",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Log Sent",
+        "description": "Log an email you sent: \"To contact\" moves to \"Emailed\", follow-up in five days.",
+        "operationId": "log_sent_api_v1_pipeline__contact_id__messages_post",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageSaved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/{contact_id}/draft": {
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Draft",
+        "description": "Draft the next email (first, follow-up or reply) from your quote and the thread.\nNothing is saved: edit it, send it yourself, then log it.",
+        "operationId": "draft_api_v1_pipeline__contact_id__draft_post",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/{contact_id}/replies": {
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Read Reply",
+        "description": "Paste their reply: it's saved with what they ask for (each in their own words),\nwarning signs, and the stage it suggests.",
+        "operationId": "read_reply_api_v1_pipeline__contact_id__replies_post",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageSaved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/{contact_id}/messages/{message_id}": {
+      "delete": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Remove Message",
+        "operationId": "remove_message_api_v1_pipeline__contact_id__messages__message_id__delete",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Message Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/business": {
       "get": {
         "tags": [
@@ -6089,6 +6499,378 @@
           }
         }
       }
+    },
+    "/api/v1/buyer-checks": {
+      "post": {
+        "tags": [
+          "buyer checks"
+        ],
+        "summary": "Check",
+        "description": "Check a company. With `contact_id`, its website and pasted replies are included\nand the result is kept on the pipeline card.",
+        "operationId": "check_api_v1_buyer_checks_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buyer-checks/lists": {
+      "get": {
+        "tags": [
+          "buyer checks"
+        ],
+        "summary": "Lists",
+        "description": "The sanctions lists we screen against, and when each was last loaded.",
+        "operationId": "lists_api_v1_buyer_checks_lists_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListInfo"
+                  },
+                  "title": "Response Lists Api V1 Buyer Checks Lists Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buyer-checks/contacts/{contact_id}": {
+      "get": {
+        "tags": [
+          "buyer checks"
+        ],
+        "summary": "Latest",
+        "description": "The last check of a pipeline contact.",
+        "operationId": "latest_api_v1_buyer_checks_contacts__contact_id__get",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/check": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Check",
+        "description": "Read the document (SWIFT MT700 text is read in code; anything else by a model that\nmust quote it), then flag risky clauses, tight dates, sanctioned parties and every\ndifference from your quote. The document isn't stored.",
+        "operationId": "check_api_v1_documents_check_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_check_api_v1_documents_check_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/identify": {
+      "post": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Identify",
+        "description": "Up to three likely codes, each with how sure and why, plus questions that would\ndecide between them. The photo isn't stored.",
+        "operationId": "identify_api_v1_products_identify_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_identify_api_v1_products_identify_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HsFinderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6143,6 +6925,43 @@
         ],
         "title": "AdminStats"
       },
+      "Ask": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "price",
+              "moq",
+              "samples",
+              "catalogue",
+              "specification",
+              "certification",
+              "payment_terms",
+              "delivery_time",
+              "meeting",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "What they want, in a few words"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote",
+            "description": "Their own words, as written in the email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "detail",
+          "quote"
+        ],
+        "title": "Ask"
+      },
       "BestMove": {
         "properties": {
           "product": {
@@ -6158,6 +6977,80 @@
           "market"
         ],
         "title": "BestMove"
+      },
+      "Body_check_api_v1_documents_check_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "The PO or credit, as a PDF"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "quote_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id"
+          }
+        },
+        "type": "object",
+        "title": "Body_check_api_v1_documents_check_post"
+      },
+      "Body_identify_api_v1_products_identify_post": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "photo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo",
+            "description": "JPEG, PNG or WebP, up to 4 MB"
+          }
+        },
+        "type": "object",
+        "title": "Body_identify_api_v1_products_identify_post"
       },
       "BriefClaim": {
         "properties": {
@@ -6697,6 +7590,102 @@
         ],
         "title": "BusinessOut"
       },
+      "BuyerCheckOut": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "green",
+              "amber",
+              "red"
+            ],
+            "title": "Verdict"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Most serious first"
+          },
+          "sanctions": {
+            "items": {
+              "$ref": "#/components/schemas/SanctionHit"
+            },
+            "type": "array",
+            "title": "Sanctions"
+          },
+          "lists": {
+            "items": {
+              "$ref": "#/components/schemas/ListInfo"
+            },
+            "type": "array",
+            "title": "Lists"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "website_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Domain"
+          },
+          "email_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Domain"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verdict",
+          "findings",
+          "sanctions",
+          "lists",
+          "name",
+          "country",
+          "website_domain",
+          "email_domain",
+          "contact_id",
+          "checked_at"
+        ],
+        "title": "BuyerCheckOut"
+      },
       "CardMarket": {
         "properties": {
           "market": {
@@ -7134,6 +8123,92 @@
         ],
         "title": "ChatThreadOut"
       },
+      "CheckIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Name",
+            "description": "The company's name"
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]{2}$",
+            "title": "Country"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "The address they use"
+          },
+          "vat": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vat",
+            "description": "EU VAT number, if given"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Their email"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id",
+            "description": "A pipeline contact: its website and replies are used too"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country"
+        ],
+        "title": "CheckIn"
+      },
       "ChecklistItem": {
         "properties": {
           "title": {
@@ -7443,6 +8518,35 @@
               }
             ],
             "title": "Last Contacted At"
+          },
+          "emails": {
+            "type": "integer",
+            "title": "Emails",
+            "description": "Emails in the conversation",
+            "default": 0
+          },
+          "reply_waiting": {
+            "type": "boolean",
+            "title": "Reply Waiting",
+            "description": "They wrote last: your turn",
+            "default": false
+          },
+          "check_verdict": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "green",
+                  "amber",
+                  "red"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check Verdict",
+            "description": "The latest buyer check, if any"
           },
           "version": {
             "type": "integer",
@@ -7807,6 +8911,217 @@
         ],
         "title": "DigestOut"
       },
+      "DocCheckOut": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "green",
+              "amber",
+              "red"
+            ],
+            "title": "Verdict"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "letter_of_credit",
+              "purchase_order",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "read_by": {
+            "type": "string",
+            "enum": [
+              "swift",
+              "ai",
+              "ai_scan"
+            ],
+            "title": "Read By"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/ReadField"
+            },
+            "type": "array",
+            "title": "Fields",
+            "description": "What we read, for you to compare"
+          },
+          "terms": {
+            "$ref": "#/components/schemas/Terms"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Most serious first"
+          },
+          "quote_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Number",
+            "description": "The quote it was compared with"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed",
+            "description": "Values dropped: not found in the document",
+            "default": 0
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verdict",
+          "kind",
+          "read_by",
+          "fields",
+          "terms",
+          "findings",
+          "quote_number",
+          "checked_at"
+        ],
+        "title": "DocCheckOut"
+      },
+      "DraftIn": {
+        "properties": {
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "first",
+                  "follow_up",
+                  "reply"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose",
+            "description": "Default: first if nothing was sent, reply if they wrote last"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Default: the market's best"
+          },
+          "quote_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id",
+            "description": "Quote to refer to. Default: this contact's latest"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "What you want to say, in your own words"
+          }
+        },
+        "type": "object",
+        "title": "DraftIn"
+      },
+      "DraftOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "first",
+              "follow_up",
+              "reply"
+            ],
+            "title": "Purpose"
+          },
+          "drafted_by": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "template"
+            ],
+            "title": "Drafted By"
+          },
+          "quote_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Number",
+            "description": "The quote the draft refers to, if any"
+          },
+          "checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "Things to look at before sending: figures not found in your quote or the conversation, placeholders left to fill"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "body",
+          "language",
+          "purpose",
+          "drafted_by",
+          "quote_number",
+          "checks"
+        ],
+        "title": "DraftOut"
+      },
       "DutyCard": {
         "properties": {
           "type": {
@@ -8089,6 +9404,64 @@
           "created_at"
         ],
         "title": "EventOut"
+      },
+      "Finding": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "ok",
+              "info"
+            ],
+            "title": "Severity"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote",
+            "description": "The words that raised it"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "Where to see it yourself"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "title",
+          "detail"
+        ],
+        "title": "Finding"
       },
       "ForgotPasswordRequest": {
         "properties": {
@@ -8400,6 +9773,108 @@
         ],
         "title": "HealthResponse"
       },
+      "HsFinderOut": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "The description searched (from the photo, if any)"
+          },
+          "from_photo": {
+            "type": "boolean",
+            "title": "From Photo"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/components/schemas/HsPick"
+            },
+            "type": "array",
+            "title": "Picks",
+            "description": "Best first; empty if nothing fits"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Questions",
+            "description": "Answers that would decide between the picks"
+          },
+          "others": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "type": "array",
+            "title": "Others",
+            "description": "Other close products, to browse"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "search"
+            ],
+            "title": "Method",
+            "description": "search: AI unavailable, closest words"
+          },
+          "semantic": {
+            "type": "boolean",
+            "title": "Semantic",
+            "description": "False if meaning-based search was unavailable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "from_photo",
+          "picks",
+          "questions",
+          "others",
+          "method",
+          "semantic"
+        ],
+        "title": "HsFinderOut"
+      },
+      "HsPick": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "The official wording"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Everyday name"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "description",
+          "name",
+          "confidence",
+          "why"
+        ],
+        "title": "HsPick"
+      },
       "IntroIn": {
         "properties": {
           "hs6": {
@@ -8447,6 +9922,12 @@
             "maxLength": 200,
             "title": "Handles",
             "default": ""
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+            "title": "Language",
+            "default": "en"
           }
         },
         "type": "object",
@@ -8475,6 +9956,14 @@
               "template"
             ],
             "title": "Drafted By"
+          },
+          "checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "Figures to verify and placeholders to fill"
           }
         },
         "type": "object",
@@ -8705,6 +10194,24 @@
           "factor"
         ],
         "title": "LaneInfo"
+      },
+      "LanguageOption": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "LanguageOption"
       },
       "Lead": {
         "properties": {
@@ -9060,6 +10567,54 @@
           "exact"
         ],
         "title": "LeiMatch"
+      },
+      "ListInfo": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "loaded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loaded At"
+          },
+          "names": {
+            "type": "integer",
+            "title": "Names"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "label",
+          "loaded_at",
+          "names",
+          "error"
+        ],
+        "title": "ListInfo"
       },
       "LocaleIn": {
         "properties": {
@@ -9430,6 +10985,91 @@
           "items"
         ],
         "title": "MarketsPage"
+      },
+      "MessageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "out",
+              "in"
+            ],
+            "title": "Direction"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "direction",
+          "subject",
+          "body",
+          "language",
+          "analysis",
+          "created_at"
+        ],
+        "title": "MessageOut"
+      },
+      "MessageSaved": {
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/MessageOut"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/ContactOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "contact"
+        ],
+        "title": "MessageSaved"
       },
       "MoneyCard": {
         "properties": {
@@ -10886,6 +12526,36 @@
         "title": "RangeIdea",
         "description": "A product the user could add: same customs family, already exported competitively."
       },
+      "ReadField": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote",
+            "description": "Where the document says so"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "ReadField"
+      },
       "ReadinessResponse": {
         "properties": {
           "status": {
@@ -11042,6 +12712,38 @@
         ],
         "title": "RecentSupplier"
       },
+      "RedFlag": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium"
+            ],
+            "title": "Severity"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "label",
+          "quote"
+        ],
+        "title": "RedFlag"
+      },
       "RegisterRequest": {
         "properties": {
           "email": {
@@ -11069,6 +12771,131 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "ReplyAnalysis": {
+        "properties": {
+          "intent": {
+            "type": "string",
+            "enum": [
+              "interested",
+              "question",
+              "order",
+              "negotiating",
+              "not_interested",
+              "out_of_office",
+              "other"
+            ],
+            "title": "Intent"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "One sentence, in English"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Language the reply is written in"
+          },
+          "asks": {
+            "items": {
+              "$ref": "#/components/schemas/Ask"
+            },
+            "type": "array",
+            "title": "Asks",
+            "description": "Only items whose quote was found in the reply"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline",
+            "description": "A date or time limit they set, as written"
+          },
+          "red_flags": {
+            "items": {
+              "$ref": "#/components/schemas/RedFlag"
+            },
+            "type": "array",
+            "title": "Red Flags"
+          },
+          "suggested_stage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "to_contact",
+                  "emailed",
+                  "replied",
+                  "samples",
+                  "negotiating",
+                  "won",
+                  "lost"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Stage",
+            "description": "Where this contact now belongs"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed",
+            "description": "Items dropped: not found in the reply",
+            "default": 0
+          },
+          "read_by": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "template"
+            ],
+            "title": "Read By",
+            "description": "template: the model was unavailable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent",
+          "summary",
+          "language",
+          "asks",
+          "deadline",
+          "red_flags",
+          "suggested_stage",
+          "read_by"
+        ],
+        "title": "ReplyAnalysis"
+      },
+      "ReplyIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 10,
+            "title": "Text",
+            "description": "Their email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ReplyIn"
       },
       "Requirement": {
         "properties": {
@@ -11375,6 +13202,67 @@
         ],
         "title": "RivalDuty"
       },
+      "SanctionHit": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_label": {
+            "type": "string",
+            "title": "Source Label"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "program": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "strong",
+              "possible"
+            ],
+            "title": "Grade"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "source_label",
+          "name",
+          "program",
+          "url",
+          "grade",
+          "score"
+        ],
+        "title": "SanctionHit"
+      },
       "SectorOut": {
         "properties": {
           "name": {
@@ -11395,6 +13283,45 @@
           "niches"
         ],
         "title": "SectorOut"
+      },
+      "SentIn": {
+        "properties": {
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "SentIn"
       },
       "Shipment": {
         "properties": {
@@ -12592,6 +14519,339 @@
           "products"
         ],
         "title": "TendersOut"
+      },
+      "Terms": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "letter_of_credit",
+              "purchase_order",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "issued": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued"
+          },
+          "buyer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer",
+            "description": "Applicant / buyer"
+          },
+          "seller": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller",
+            "description": "Beneficiary / seller"
+          },
+          "issuing_bank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuing Bank"
+          },
+          "revocable": {
+            "type": "boolean",
+            "title": "Revocable",
+            "default": false
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "tolerance_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerance Pct"
+          },
+          "incoterm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incoterm"
+          },
+          "named_place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Named Place"
+          },
+          "port_of_loading": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port Of Loading"
+          },
+          "port_of_discharge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port Of Discharge"
+          },
+          "latest_shipment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Shipment"
+          },
+          "expiry": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry"
+          },
+          "presentation_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presentation Days"
+          },
+          "partial_shipments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partial Shipments"
+          },
+          "transhipment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transhipment"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment",
+            "description": "e.g. at sight, 60 days after B/L"
+          },
+          "confirmation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "goods": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goods"
+          },
+          "documents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conditions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "Terms",
+        "description": "What the document says, normalised. None where it doesn't say."
+      },
+      "ThreadOut": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageOut"
+            },
+            "type": "array",
+            "title": "Messages",
+            "description": "Oldest first"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/LanguageOption"
+            },
+            "type": "array",
+            "title": "Languages",
+            "description": "For this market, best first"
+          },
+          "next_purpose": {
+            "type": "string",
+            "enum": [
+              "first",
+              "follow_up",
+              "reply"
+            ],
+            "title": "Next Purpose"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages",
+          "languages",
+          "next_purpose"
+        ],
+        "title": "ThreadOut"
       },
       "TokenIn": {
         "properties": {
