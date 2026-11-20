@@ -23,7 +23,10 @@ Task = Literal["RETRIEVAL_DOCUMENT", "RETRIEVAL_QUERY"]
 
 
 class EmbeddingError(RuntimeError):
-    pass
+    @property
+    def daily_cap(self) -> bool:
+        """The free tier's 1,000 texts per key per day are used up: retry tomorrow."""
+        return "per day" in str(self)
 
 
 def unit(values: Sequence[float]) -> list[float]:
@@ -53,4 +56,5 @@ async def embed(texts: list[str], *, task: Task, attempts: int = 3) -> list[list
                 pool.rest(key, seconds=llm.KEY_REFUSED_REST_SECONDS)
             elif llm.is_rate_limited(exc):
                 pool.rest(key)
-    raise EmbeddingError(f"embedding failed: {type(last).__name__ if last else 'no key'}")
+    detail = " ".join(str(last).split())[:300] if last else "no key"
+    raise EmbeddingError(f"embedding failed: {detail}")

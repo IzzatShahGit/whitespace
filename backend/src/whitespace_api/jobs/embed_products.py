@@ -11,7 +11,7 @@ import asyncio
 import hashlib
 import logging
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,9 +34,9 @@ def text_hash(text: str) -> str:
     return hashlib.sha256(f"{embeddings.MODEL}:{embeddings.DIMENSIONS}:{text}".encode()).hexdigest()
 
 
-# Free tier: 100 texts per minute per key. One key per batch (the pool alternates keys),
-# a pause between batches so each key gets one batch a minute, and a full minute's wait
-# after any limit hit (retrying sooner only extends the limit).
+# Free tier, per key: 100 texts a minute and 1,000 a day. One key per batch (the pool
+# alternates keys), a pause so each key gets one batch a minute, a full minute's wait
+# after a limit hit (retrying sooner only extends it), and a clean stop at the daily cap.
 PACE_SECONDS = 31
 LIMIT_WAIT_SECONDS = 65
 MAX_WAITS = 10
@@ -47,7 +47,9 @@ async def _patiently(texts: list[str]) -> list[list[float]]:
         try:
             return await embeddings.embed(texts, task="RETRIEVAL_DOCUMENT", attempts=1)
         except embeddings.EmbeddingError as exc:
-            log.info("Rate-limited (%s); waiting %d s", exc, LIMIT_WAIT_SECONDS)
+            if exc.daily_cap:
+                raise  # nothing to wait for today; progress so far is saved
+            log.info("Rate-limited; waiting %d s", LIMIT_WAIT_SECONDS)
             await asyncio.sleep(LIMIT_WAIT_SECONDS)
     return await embeddings.embed(texts, task="RETRIEVAL_DOCUMENT")
 
@@ -87,7 +89,16 @@ async def run(db: AsyncSession) -> str:
 
 async def main() -> str:
     async with tasks.session_factory() as db:
-        return await run(db)
+        try:
+            return await run(db)
+        except embeddings.EmbeddingError as exc:
+            if not exc.daily_cap:
+                raise
+            done = await db.scalar(select(func.count()).select_from(ProductEmbedding))
+            return (
+                f"Today's free embedding quota is used up ({done} products done, progress "
+                "saved). Run again tomorrow to continue."
+            )
 
 
 if __name__ == "__main__":

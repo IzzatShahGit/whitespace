@@ -52,6 +52,10 @@ def is_key_refused(exc: BaseException) -> bool:
     """The key itself is unusable (invalid, no billing, no access): no point retrying soon."""
     if getattr(exc, "status_code", None) in (401, 403) or getattr(exc, "code", None) in (401, 403):
         return True
+    # A quota message also says "check your plan and billing details": it's a rate
+    # limit (the key recovers in a minute), not a refused key.
+    if is_rate_limited(exc):
+        return False
     name = type(exc).__name__.lower()
     text = str(exc).lower()
     return (
