@@ -91,6 +91,13 @@ export const NAV: NavItem[] = [
   { id: "explore", href: "/app/browse", label: "Explore", icon: Compass, hint: "Browse niches" },
 ];
 
+/** How the sidebar groups NAV: a few top items, then two named sections. */
+export const NAV_GROUPS: { heading: "groupFind" | "groupDeals" | null; ids: NavId[] }[] = [
+  { heading: null, ids: ["home", "ask"] },
+  { heading: "groupFind", ids: ["sell", "buy", "explore", "watchlist"] },
+  { heading: "groupDeals", ids: ["pipeline", "check", "quotes", "shipments", "tenders"] },
+];
+
 export const LEARN: NavItem = {
   id: "learn",
   href: "/app/learn",

@@ -396,7 +396,7 @@ export function Conversation({ contact }: { contact: Contact }) {
   }
   const { messages, next_purpose } = thread.data;
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line p-3">
+    <div className="flex flex-col gap-4">
       {messages.length > 0 ? (
         <ol className="flex flex-col gap-2">
           {messages.map((m) => (

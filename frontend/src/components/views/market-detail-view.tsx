@@ -37,7 +37,7 @@ import { PriceCheck } from "@/components/money/price-check";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
-import { Stat } from "@/components/ui/stat";
+import { Stat, StatGroup } from "@/components/ui/stat";
 import { type TabItem, Tabs } from "@/components/ui/tabs";
 import { DataNote } from "@/components/views/states";
 import { WatchButton } from "@/components/watch/watch-button";
@@ -236,19 +236,16 @@ function Detail({
           <>
             <WatchButton exporter={exp.code} hs6={product.hs6} market={m.market.code} />
             <ButtonLink
-              href={`/app/markets/${product.hs6}/${m.market.code}/deal`}
-              variant="secondary"
-            >
-              <FileText /> Deal sheet
-            </ButtonLink>
-            <ButtonLink
               href={`/app/markets/${product.hs6}/compare?m=${m.market.code}`}
-              variant="secondary"
+              variant="ghost"
             >
               <Columns3 /> Compare
             </ButtonLink>
-            <ButtonLink href={ask} variant="accent">
+            <ButtonLink href={ask} variant="secondary">
               <Sparkles /> Ask about this
+            </ButtonLink>
+            <ButtonLink href={`/app/markets/${product.hs6}/${m.market.code}/deal`}>
+              <FileText /> Deal sheet
             </ButtonLink>
           </>
         }
@@ -275,7 +272,7 @@ function Detail({
         </div>
       </Card>
 
-      <div className="rise-in grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" style={delay(100)}>
+      <StatGroup className="rise-in" style={delay(100)}>
         <Stat
           icon={<BarChart3 />}
           label="Market size"
@@ -330,7 +327,7 @@ function Detail({
           }
           explain={`The biggest other supplier, its share of imports in ${years.end_year} and how it moved ${since}. A rival losing share leaves room for you.`}
         />
-      </div>
+      </StatGroup>
 
       <div className="rise-in flex flex-col gap-4" style={delay(140)}>
         <Tabs label="Market evidence" items={tabs} value={tab} onChange={onTab} />

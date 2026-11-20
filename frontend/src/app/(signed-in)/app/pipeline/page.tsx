@@ -6,7 +6,7 @@ import { PipelineView } from "@/components/views/pipeline-view";
 export const metadata: Metadata = { title: "Pipeline · Whitespace" };
 
 export default function PipelinePage() {
-  // Reads ?stage= and ?contact= from the URL.
+  // Reads ?show= and ?contact= from the URL.
   return (
     <Suspense>
       <PipelineView />

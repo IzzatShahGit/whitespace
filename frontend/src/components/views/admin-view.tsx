@@ -14,7 +14,7 @@ import { useState } from "react";
 
 import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
-import { Stat } from "@/components/ui/stat";
+import { Stat, StatGroup } from "@/components/ui/stat";
 import { LoadError } from "@/components/markets/load-error";
 import { api } from "@/lib/api/client";
 import { isMissing, unwrap } from "@/lib/api/queries";
@@ -185,7 +185,7 @@ export function AdminView() {
         title="Usage"
         description={`${shortDay(s.since)} – ${shortDay(s.until)}. Anonymous counts: no cookies, no addresses.`}
       />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatGroup>
         <Stat
           label="Visitors"
           icon={<Users />}
@@ -201,7 +201,7 @@ export function AdminView() {
           note="signed in, last 7 days"
         />
         <Stat label="All accounts" icon={<FileText />} value={n(t.users)} />
-      </div>
+      </StatGroup>
       <Card className="p-5 sm:p-6">
         <CardHeader
           icon={<BarChart3 />}

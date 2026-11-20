@@ -7,29 +7,31 @@
    unless the user picks one (data-theme on <html>, set before paint). */
 :root {
   color-scheme: light;
-  --canvas: #f5f7f4; /* page */
+  /* Neutral greys (no green cast) so green and orange only appear where they mean
+     something; three clear steps from page to card to inner well. */
+  --canvas: #f2f3f0; /* page */
   --surface: #ffffff; /* cards */
-  --surface-2: #eef2ed; /* wells, hover */
-  --line: #e0e6de; /* borders */
-  --line-strong: #87948b;
-  --fg: #13211a; /* primary text */
-  --muted: #4b5b51; /* secondary text */
-  --subtle: #627166; /* tertiary text, icons */
-  --brand: #2d6a4c; /* actions, active nav */
-  --brand-strong: #1f4d37;
-  --brand-soft: #e7f0ea;
+  --surface-2: #f6f7f4; /* wells inside cards, hover */
+  --line: #e3e5e0; /* borders */
+  --line-strong: #8a908b;
+  --fg: #141a17; /* primary text */
+  --muted: #4d5651; /* secondary text */
+  --subtle: #69716c; /* tertiary text, icons */
+  --brand: #23633f; /* actions, active nav */
+  --brand-strong: #184a2f;
+  --brand-soft: #e5efe8;
   --on-brand: #ffffff;
   --accent: #e27c4c; /* the opportunity: highlights, "go" */
   --accent-strong: #b4501f; /* accent as small text on light */
-  --accent-soft: #fdebe1;
+  --accent-soft: #fcece3;
   --on-accent: #ffffff;
   --action: #bf5524; /* primary buttons: white text passes 4.5:1 */
-  --positive: #17663b;
-  --positive-soft: #e3f3e8;
+  --positive: #16653a;
+  --positive-soft: #e3f2e8;
   --negative: #b3261e;
-  --negative-soft: #fde7e5;
-  --caution: #8a5300;
-  --caution-soft: #fdf1d6;
+  --negative-soft: #fcebe9;
+  --caution: #875200;
+  --caution-soft: #fbf0d8;
   /* Logo tiles: the same in both themes. */
   --tile-1: #8fa98f;
   --tile-2: #739379;
@@ -41,15 +43,15 @@
   --chart-start: #9cc9ae;
   --chart-end: #2c7a52;
   --chart-exporter: #e5733a;
-  --chart-grid: #e6ebe3;
+  --chart-grid: #e7e9e4;
   /* World map: no data, then five steps of opportunity (light -> strong). */
-  --map-empty: #e9ede7;
+  --map-empty: #e8eae5;
   --map-1: #dcebe0;
   --map-2: #b3d5bf;
   --map-3: #7fb796;
   --map-4: #4f9670;
   --map-5: #2b7552;
-  --shadow-card: 0 1px 2px rgb(22 33 27 / 0.04), 0 2px 6px -2px rgb(22 33 27 / 0.06);
+  --shadow-card: 0 1px 2px rgb(20 26 23 / 0.05), 0 1px 4px -1px rgb(20 26 23 / 0.05);
   --shadow-pop: 0 18px 40px -12px rgb(22 33 27 / 0.22), 0 4px 10px -4px rgb(22 33 27 / 0.08);
 }
 
