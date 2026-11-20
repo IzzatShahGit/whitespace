@@ -4,7 +4,7 @@
 
 ### Trade intelligence for exporters, built on a real data platform and grounded AI.
 
-Whitespace processes **a million-plus rows of global customs data** into ranked export opportunities, then uses **source-checked AI agents** to turn each opportunity into a deal: the rules to meet, the buyers to call, the landed cost, the quote and the shipping documents.
+Whitespace processes **a million-plus rows of global customs data** into ranked export opportunities, then uses **source-checked AI agents** to turn each opportunity into a deal: the right HS code, the rules to meet, the buyers to call, whether they are safe to deal with, the landed cost, the quote and the shipping documents.
 
 ![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
@@ -12,6 +12,7 @@ Whitespace processes **a million-plus rows of global customs data** into ranked 
 ![Polars](https://img.shields.io/badge/Polars-CD792C?logo=polars&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-FFF000?logo=duckdb&logoColor=black)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?logo=postgresql&logoColor=white)
+![pgvector](https://img.shields.io/badge/pgvector-hybrid_RAG-336791?logo=postgresql&logoColor=white)
 
 <br/>
 
@@ -19,9 +20,9 @@ Whitespace processes **a million-plus rows of global customs data** into ranked 
 
 <br/>
 
-| **1M+** | **5,384** | **24** | **4,776** | **9** | **300+** |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| supplier–market rows | HS6 products | exporting countries | sea routes | languages | tests |
+| **1M+** | **5,384** | **24** | **4,776** | **87K+** | **9** | **400+** |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| supplier–market rows | HS6 products | exporting countries | sea routes | sanctioned names screened | languages | tests |
 
 </div>
 
@@ -30,13 +31,14 @@ Whitespace processes **a million-plus rows of global customs data** into ranked 
 ## How it works
 
 ```
-   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-   │  DATA        │      │  SCORE       │      │  AI AGENTS   │      │  DEAL        │
-   │  customs,    │ ───► │  rank every  │ ───► │  rules,      │ ───► │  landed cost,│
-   │  tariffs,    │      │  market for  │      │  buyers,     │      │  quote,      │
-   │  freight     │      │  a product   │      │  briefs      │      │  documents   │
-   └──────────────┘      └──────────────┘      └──────────────┘      └──────────────┘
-     Data platform         Scoring model          Grounded AI           Product
+┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐
+│ DATA       │    │ SCORE      │    │ AI AGENTS  │    │ TRUST      │    │ DEAL       │
+│ customs,   │ ─► │ rank every │ ─► │ HS codes,  │ ─► │ sanctions, │ ─► │ landed     │
+│ tariffs,   │    │ market for │    │ rules,     │    │ buyer, PO  │    │ cost,      │
+│ freight,   │    │ a product  │    │ buyers,    │    │ and LC     │    │ quote,     │
+│ sanctions  │    │            │    │ emails     │    │ checks     │    │ documents  │
+└────────────┘    └────────────┘    └────────────┘    └────────────┘    └────────────┘
+Data platform     Scoring model     Grounded AI       Rules in code     Product
 ```
 
 <br/>
@@ -52,6 +54,9 @@ flowchart LR
     BR[🥉 Bronze<br/>raw release, versioned] --> SI[🥈 Silver<br/>typed, cleaned Parquet]
     SI --> GO[🥇 Gold<br/>opportunity scores · supplier landscape<br/>unit prices · sea routes]
     GO -->|bulk load| PG[(PostgreSQL)]
+    GO -->|descriptions + everyday names| EM[Gemini embeddings<br/>768-d, changed rows only]
+    EM -->|pgvector| PG
+    S3[Sanctions lists<br/>OFAC · UN · EU · UK] -->|daily job · checksum skip<br/>atomic swap per list| PG
     L1[Live APIs<br/>Eurostat · US Census · WITS<br/>HMRC · FRED · FX · TED] -->|cached on demand| PG
 ```
 
@@ -60,9 +65,10 @@ flowchart LR
 | **Bronze** | Versioned BACI releases kept exactly as published (≈350 MB) | Python, httpx |
 | **Silver** | Typed, deduplicated, country codes harmonised, columnar (≈340 MB) | Polars, Parquet |
 | **Gold** | Scores, supplier shares, unit prices and routes, compacted to ≈47 MB | Polars, DuckDB |
+| **Enrich** | Every product embedded for meaning search; 87K+ sanctioned names normalised (legal forms stripped) and trigram-indexed for fuzzy matching | Gemini embeddings, pgvector, pg_trgm |
 | **Serve** | Bulk-loaded tables, plus live sources cached with lifetimes that match how often each source updates | PostgreSQL 16, pg_trgm |
 
-**Batch and live, combined.** Annual bilateral trade comes from the batch pipeline. Monthly imports (Eurostat Comext and US Census), tariffs (WITS-TRAINS and HMRC), the Brent oil price (FRED), exchange rates and EU tenders (TED) are fetched live, normalised to one shape and cached. The gold-table schemas live in a **shared package** that both the pipeline and the API import, so the two can never disagree about the data shape.
+**Batch and live, combined.** Annual bilateral trade comes from the batch pipeline. Monthly imports (Eurostat Comext and US Census), tariffs (WITS-TRAINS and HMRC), the Brent oil price (FRED), exchange rates and EU tenders (TED) are fetched live, normalised to one shape and cached. The four official sanctions lists are refreshed by a daily job that skips unchanged files and swaps each list in atomically, so a check never sees a half-loaded list. Product embeddings are incremental: only new or changed text is sent, so re-runs are free and resumable under the embedding API's daily quota. The gold-table schemas live in a **shared package** that both the pipeline and the API import, so the two can never disagree about the data shape.
 
 ### The opportunity model
 
@@ -85,7 +91,7 @@ A market qualifies only if it imports **≥ $10M** of p a year and E has a **rev
 
 ## 🤖 Grounded AI
 
-Five AI agents, with the brief and the guide built as **LangGraph** graphs. They share one rule: **a model may write, but code decides what is true.** Every number and every claim is checked against data or a cited source before a user sees it.
+Seven AI agents, with the brief and the guide built as **LangGraph** graphs. They share one rule: **a model may write, but code decides what is true.** Every number and every claim is checked against data or a cited source before a user sees it.
 
 ```mermaid
 flowchart LR
@@ -104,7 +110,9 @@ flowchart LR
 | **AI guide** (chat) | A tool-using agent with 9 data tools: best markets, market facts, monthly trends, duties, prices, sourcing | Numbers in the answer must appear in tool results; one repair pass, then marked *ungrounded* |
 | **Market requirements** | Certificates, product rules and labelling for one lane | Requirement kept only if its quote appears word for word on the source page; official domains preferred |
 | **Company leads** | Importers and distributors, found with searches in the local language | Lead kept only if the company name appears on the cited page |
-| **Intro emails** | Personalised first-contact emails | Written from the exporter's data and the lead's source |
+| **Outreach and replies** | Drafts first-contact emails in the buyer's language; reads a pasted reply into asks, a deadline and the next pipeline stage | Any figure not in your own data, and any leftover placeholder, is flagged before sending; every ask must quote the reply word for word |
+| **HS code finder** | Finds the six-digit code from a description or a photo, using hybrid RAG (below) | The model can pick only from retrieved candidates, checked in code; scored against an eval set |
+| **PO and LC reader** | Reads a buyer's purchase order or letter of credit | SWIFT MT700 is parsed in code; any other value must quote the document; scanned pages are marked unverified |
 
 <table>
 <tr>
@@ -117,11 +125,68 @@ flowchart LR
 </tr>
 </table>
 
+### 🔎 Hybrid RAG: finding the HS code
+
+Exporters often don't know their product's customs code, and every other feature starts from it. The finder combines three retrievers, fuses them and lets a model choose only from what was retrieved.
+
+```mermaid
+flowchart LR
+    IN[Description<br/>or photo] --> PH{Photo?}
+    PH -->|yes| VI[Vision model<br/>describes it in customs terms]
+    PH -->|no| Q[Query]
+    VI --> Q
+    Q --> N[Everyday names<br/>alias table]
+    Q --> F[Customs wording<br/>Postgres full-text]
+    Q --> E[Meaning<br/>pgvector cosine]
+    N --> RRF[Reciprocal rank fusion<br/>top 15 candidates]
+    F --> RRF
+    E --> RRF
+    RRF --> M[Model picks up to 3<br/>with reasons and the<br/>questions that decide]
+    M --> C{In the<br/>candidate list?}
+    C -->|yes| OK[✅ Shown with confidence]
+    C -->|no| D[❌ Dropped]
+```
+
+- **Three kinds of match.** Everyday names catch "hoodie", full-text search catches customs wording, and embeddings catch meaning when no words overlap.
+- **Rank fusion, not score tuning.** Reciprocal rank fusion merges the lists without calibrating scores across retrievers.
+- **Keeps working when a service is down.** Without the embedding API, names and words still run. Without the model, the closest candidates are shown and labelled as such.
+- **Measured, not assumed.** `make eval-hs` scores both retrieval (is the right code in the top candidates?) and the model's final pick against a 40-case labelled eval set, so every change to the finder can be checked before it ships. **Target: ≥ 92.5% first-pick accuracy and ≥ 95% top-3 recall.**
+
 **Production LLM engineering:**
 - **Two model tiers.** A small model extracts and a main model writes, so each step uses the cheapest model that can do it.
 - **Key rotation and fallback.** Calls rotate round-robin across keys, a rate-limited key rests automatically, and Gemini falls back to Groq. Ollama runs everything offline for development.
 - **Arithmetic in code.** "18 lakh", "2.5 crore" and "5 tons" are parsed deterministically, so the model never does the maths.
 - **Cost control.** Token use is recorded per brief, results are cached and shared across users, and each user has daily caps.
+- **No model where rules will do.** Sanctions, red flags, date rules and SWIFT parsing are plain code: free, instant and the same answer every time.
+
+<br/>
+
+## 🛡️ Trust and compliance
+
+Before money moves, two checks answer *is this buyer real?* and *is this document safe to accept?* Both are built mainly from **fixed rules and free public data**, so the same input always gives the same answer, and every finding comes with its source.
+
+```mermaid
+flowchart LR
+    B[Buyer name, website,<br/>email, VAT number] --> S[Sanctions<br/>OFAC · UN · EU · UK<br/>fuzzy trigram match]
+    B --> R[Registers<br/>GLEIF · EU VIES]
+    B --> DM[Domain<br/>age via RDAP · webmail<br/>· lookalike]
+    B --> CT[Country risk]
+    B --> TX[Email wording<br/>scam patterns]
+    S --> V{Verdict}
+    R --> V
+    DM --> V
+    CT --> V
+    TX --> V
+    V --> G[🟢 Green]
+    V --> A[🟠 Amber: verify]
+    V --> X[🔴 Red: stop]
+```
+
+| Check | What it does | How it stays honest |
+|---|---|---|
+| **Buyer check** | Screens a company against four sanctions lists, legal-entity and VAT registers, website age, email domain and the wording of their emails | Strong and possible matches are graded separately; generic words such as "trading" never match alone; it says what it can't tell you, such as whether they will pay |
+| **PO and LC checker** | Reads a purchase order or letter of credit and compares every term with your quote | Flags soft clauses that let the buyer block payment, dates that leave too little time to ship (UCP 600), and a sanctioned issuing bank; nothing uploaded is stored |
+
 
 <br/>
 
@@ -149,6 +214,7 @@ flowchart LR
 - Watchlists, with alerts when new monthly data moves a market
 
 **Validate**
+- HS code finder from a plain description or a product photo
 - Import duties by partner country, including preferential rates such as GSP+
 - AI market-requirements checklist that users tick off as they prepare
 
@@ -157,14 +223,16 @@ flowchart LR
 - Landed-cost receipt with live exchange rates
 
 **Connect**
-- AI company leads and drafted intro emails
-- Sales pipeline: stages, follow-up reminders, weekly email digest
-- Company checks against the GLEIF and EU VIES registers
+- AI company leads, with first emails drafted in the buyer's language
+- Reply reader: paste a buyer's email to get their asks, deadline and a drafted answer, with the pipeline card updated
+- Sales pipeline: stages, conversation history, follow-up reminders, weekly email digest
+- Buyer check: sanctions, company registers, domain age and scam wording, with a red / amber / green verdict
 - EU public tenders (TED) matched to your products through an HS-to-CPV mapping, with daily alerts
 
 **Close and ship**
 - Deal sheet with the numbers kept in the URL, so a shared link shows the same sheet, plus print to PDF
 - Quotes for FOB, CFR, CIF and DAP, with gapless numbering
+- PO and letter-of-credit checker that compares the buyer's terms with your quote
 - Commercial invoice, packing list, statement on origin and REX-threshold warnings
 
 **Platform**
@@ -179,28 +247,52 @@ flowchart LR
 ## 🏗️ Architecture
 
 ```mermaid
-flowchart LR
-    U[Browser] --> W[Next.js 16<br/>React 19]
+flowchart TB
+    U[Browser] --> W[Next.js 16 · React 19<br/>9 languages · typed API client]
     W -->|/api proxy · first-party cookies| API[FastAPI<br/>async SQLAlchemy]
-    API --> DB[(PostgreSQL 16)]
-    API --> AG[AI agents]
-    API --> EXT[Live data APIs]
-    API --> JOB[Lease-based scheduler<br/>alerts · reminders · digests]
-    AG --> LLM[Gemini / Groq]
+
+    API --> AI
+    API --> RULES
+    API --> EXT[Live APIs<br/>trade · tariffs · FX · TED<br/>GLEIF · VIES · RDAP]
+
+    subgraph AI[AI layer]
+        AG[Agents<br/>brief · guide · requirements<br/>leads · outreach · PO and LC reader]
+        RAG[Hybrid RAG<br/>HS code finder]
+    end
+
+    subgraph RULES[Rules in code]
+        BC[Buyer check<br/>sanctions · registers · domains]
+        DR[Document rules<br/>MT700 · UCP 600 · soft clauses]
+    end
+
+    AI --> LLM[Gemini / Groq<br/>key rotation · fallback]
+
+    subgraph DB[PostgreSQL 16]
+        GOLD[(Gold tables<br/>scores · prices · routes)]
+        APP[(App data<br/>pipeline · quotes · shipments)]
+        TRG[(pg_trgm<br/>sanctioned names)]
+        VEC[(pgvector<br/>product embeddings)]
+    end
+
+    API --> GOLD
+    API --> APP
+    RAG --> VEC
+    BC --> TRG
+    JOB[Lease-based scheduler<br/>alerts · reminders · digests<br/>sanctions refresh] --> DB
 ```
 
 - **One typed contract, end to end.** The frontend's API client is generated from the backend's OpenAPI spec, so changing an endpoint breaks the frontend build, not production.
-- **Correct under concurrency.** Quote and invoice numbers are gapless and allocated under row locks. Pipeline cards use version-checked writes. Scheduled jobs hold database leases.
-- **Secure by default.** Argon2 password hashing, secure HTTP-only cookies, rate limits that trust only known proxy hops, HMAC-signed links, hardened response headers, and an API that is never exposed directly.
+- **Correct under concurrency.** Quote and invoice numbers are gapless and allocated under row locks. Pipeline cards use version-checked writes. Scheduled jobs hold database leases. A model is never called while a row is locked.
+- **Secure by default.** Argon2 password hashing, secure HTTP-only cookies, rate limits that trust only known proxy hops, HMAC-signed links, hardened response headers, uploaded documents checked in memory and never stored, and an API that is never exposed directly.
 - **Built to run on free tiers.** A single ARM64 production image of about 140 MB that idles at about 150 MB of RAM, configured only by environment variables, so it is portable to any host.
 
 | | |
 |---|---|
 | **Frontend** | Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · TanStack Query |
 | **Backend** | FastAPI · SQLAlchemy 2 (async) · Alembic · Pydantic v2 |
-| **Data** | Polars · DuckDB · Parquet · PostgreSQL 16 (pgvector, pg_trgm) |
-| **AI** | LangGraph · LangChain · Gemini · Groq · Ollama · Tavily |
-| **Quality** | pytest · Ruff · mypy · ESLint · GitHub Actions · Docker |
+| **Data** | Polars · DuckDB · Parquet · PostgreSQL 16 (pgvector, pg_trgm, full-text search) |
+| **AI** | LangGraph · LangChain · Gemini (chat, vision, embeddings) · Groq · Ollama · Tavily · hybrid RAG |
+| **Quality** | pytest · eval sets · Ruff · mypy · ESLint · GitHub Actions · Docker |
 
 <br/>
 
@@ -230,6 +322,9 @@ make web         # web app with hot reload on :3400
 make check       # lint + typecheck + tests (what CI runs)
 make gen-client  # regenerate frontend API types after changing an endpoint
 make check-keys  # test every configured API key without printing it
+make sanctions   # load the OFAC, UN, EU and UK sanctions lists (also refreshed daily)
+make embed       # embed products for HS-code search (only new or changed ones)
+make eval-hs     # score the HS-code finder (ARGS=--pick to include the AI step)
 make help        # every command
 ```
 
@@ -239,7 +334,7 @@ make help        # every command
 
 ```
 frontend/   Next.js app: product UI, public pages, i18n
-backend/    FastAPI: API, AI agents, integrations, jobs, migrations
+backend/    FastAPI: API, AI agents, integrations, jobs, migrations, evals
 pipeline/   Data pipeline: bronze → silver → gold → load
 shared/     Gold-table schemas shared by the pipeline and the API
 deploy/     Production container build
