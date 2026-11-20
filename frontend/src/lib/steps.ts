@@ -2,10 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 
-// First-run steps the server can't see (pages opened, tools tried). Kept in this browser
-// only: a convenience for the getting-started checklist, never account data.
+// Steps the server can't see (pages opened, tools tried). Kept in this browser only: a
+// convenience for the journey on Home, never account data.
 
-export type Step = "market" | "price" | "dismissed";
+export type Step = "market" | "rules";
 
 const KEY = "ws-steps";
 const EVENT = "ws-steps-change";

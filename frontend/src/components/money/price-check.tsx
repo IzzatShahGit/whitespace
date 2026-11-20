@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleCheck, Scale, TriangleAlert, TrendingDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { PriceBars, type PriceRow } from "@/components/markets/price-bars";
 import { LandedReceipt } from "@/components/money/landed-cost";
@@ -11,7 +11,6 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { useDuties } from "@/lib/api/landed-cost";
 import type { Supplier } from "@/lib/api/queries";
 import { currencyOf, suggestedCurrencies } from "@/lib/currency";
-import { markStep } from "@/lib/steps";
 import { localMoney, parseAmount, parseKg, perKg, usd, weight } from "@/lib/money";
 
 const COMPETITIVE = -0.1; // cost at least 10% under what the market pays
@@ -105,10 +104,6 @@ export function PriceCheck({
   const value = parseAmount(valueText);
   const kg = parseKg(qtyText);
   const valueUsd = value !== null ? fx.toUsd(value) : undefined;
-  const hasValue = valueUsd !== undefined;
-  useEffect(() => {
-    if (hasValue) markStep("price"); // getting-started checklist
-  }, [hasValue]);
   const cost = valueUsd !== undefined && kg ? valueUsd / kg : undefined;
   const revenue = averagePrice && kg ? averagePrice * kg : undefined;
   const revenueLocal = revenue !== undefined ? fx.toLocal(revenue) : undefined;

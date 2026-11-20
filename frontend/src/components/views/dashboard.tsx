@@ -23,7 +23,7 @@ import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
 import { Stat, StatGroup } from "@/components/ui/stat";
 import { BuyView } from "@/components/views/buy-view";
-import { GettingStarted } from "@/components/views/getting-started";
+import { Journey } from "@/components/views/journey";
 import { GrowRange } from "@/components/views/grow-range";
 import { DataNote, Problem } from "@/components/views/states";
 import {
@@ -397,7 +397,10 @@ function SellHome() {
         />
       </StatGroup>
 
-      <GettingStarted firstProduct={products[0]?.product.hs6} />
+      <Journey
+        market={top ? `/app/markets/${top.product.hs6}/${top.market.market.code}` : undefined}
+        marketName={top?.market.market.name}
+      />
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">

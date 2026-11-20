@@ -111,7 +111,11 @@ export function MarketDetailView({ params }: { params: Promise<{ hs6: string; ma
   const override = search.get("exporter");
   const exporter = useExporter();
   const code = market.toUpperCase();
-  useEffect(() => markStep("market"), []); // getting-started checklist
+  useEffect(() => markStep("market"), []); // the journey on Home
+  const openTab = search.get("tab");
+  useEffect(() => {
+    if (openTab === "needs") markStep("rules");
+  }, [openTab]);
   const detail = useMarketDetail(exporter.code, hs6, code);
   const recent = useRecentMovement(exporter.code, hs6, code);
   const back = withExporter(`/app/markets/${hs6}`, override);
