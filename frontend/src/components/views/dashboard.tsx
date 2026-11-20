@@ -6,7 +6,6 @@ import {
   FileText,
   Gavel,
   Globe2,
-  Layers,
   Rocket,
   Sparkles,
   TrendingUp,
@@ -22,9 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/empty";
-import { Stat } from "@/components/ui/stat";
+import { Stat, StatGroup } from "@/components/ui/stat";
 import { BuyView } from "@/components/views/buy-view";
-import { GettingStarted } from "@/components/views/getting-started";
+import { Journey } from "@/components/views/journey";
 import { GrowRange } from "@/components/views/grow-range";
 import { DataNote, Problem } from "@/components/views/states";
 import {
@@ -75,7 +74,7 @@ function OpportunityMap({ data }: { data: DashboardData }) {
   }));
 
   return (
-    <Card className="rise-in flex flex-col gap-5 p-5 sm:p-6 lg:col-span-2" style={delay(120)}>
+    <Card className="rise-in flex flex-col gap-5 p-5 sm:p-6" style={delay(120)}>
       <CardHeader
         icon={<Globe2 />}
         title={t("dashboard.sellBest", { product: current.product.name })}
@@ -232,11 +231,11 @@ function BestMoves({ data }: { data: DashboardData }) {
         title={t("dashboard.bestMoves")}
         description={t("dashboard.bestMovesDesc")}
       />
-      <ul className="flex flex-col gap-2">
+      <ul className="-mx-2 flex flex-col divide-y divide-line">
         {data.best_moves.map(({ product, market }) => (
           <li
             key={`${product.hs6}-${market.market.code}`}
-            className="relative flex flex-col gap-2 rounded-xl border border-line p-3.5 transition-all focus-within:border-accent/40 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-card"
+            className="relative flex flex-col gap-1.5 rounded-xl px-2 py-3 transition-colors hover:bg-surface-2"
           >
             <div className="flex items-center justify-between gap-2">
               {/* The whole card opens the market; the deal sheet link sits above it. */}
@@ -282,11 +281,7 @@ function AskCard() {
   }
 
   return (
-    <Card className="rise-in relative flex flex-col gap-4 overflow-hidden p-5" style={delay(200)}>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-accent/15 blur-2xl"
-      />
+    <Card className="rise-in flex flex-col gap-4 p-5" style={delay(200)}>
       <CardHeader
         icon={<Sparkles />}
         title={t("dashboard.askWhitespace")}
@@ -298,12 +293,12 @@ function AskCard() {
           onChange={(e) => setText(e.target.value)}
           placeholder={t("dashboard.askPlaceholder")}
           aria-label="Your question"
-          className="h-10 min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 text-sm outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-line bg-surface-2 px-3 text-sm outline-none focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
         />
         <button
           type="submit"
           aria-label="Ask"
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-on-accent transition-transform hover:-translate-y-px"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-on-brand transition-transform hover:-translate-y-px"
         >
           <ArrowRight className="h-4 w-4" />
         </button>
@@ -371,20 +366,15 @@ function SellHome() {
           products: products.map((p) => p.product.name).join(", "),
         })}
         actions={
-          <>
-            {profile.goal === "both" && (
-              <ButtonLink href="/app/buy" variant="secondary">
-                {t("dashboard.findSuppliers")}
-              </ButtonLink>
-            )}
-            <ButtonLink href="/app/ask" variant="accent">
-              <Sparkles /> {t("dashboard.askWhitespace")}
+          profile.goal === "both" ? (
+            <ButtonLink href="/app/buy" variant="secondary">
+              {t("dashboard.findSuppliers")}
             </ButtonLink>
-          </>
+          ) : undefined
         }
       />
 
-      <div className="rise-in grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" style={delay(60)}>
+      <StatGroup columns={3} className="rise-in" style={delay(60)}>
         <Stat
           icon={<Trophy />}
           label={t("dashboard.bestNext")}
@@ -405,27 +395,22 @@ function SellHome() {
           value={ranked.toLocaleString("en")}
           note={t("dashboard.rankedNote", { count: products.length })}
         />
-        <Stat
-          icon={<Layers />}
-          label={t("dashboard.yourProducts")}
-          value={products.length}
-          note={
-            <Link href="/app/settings/business" className="text-brand hover:underline">
-              {t("dashboard.editList")}
-            </Link>
-          }
-        />
-      </div>
+      </StatGroup>
 
-      <GettingStarted firstProduct={products[0]?.product.hs6} />
+      <Journey
+        market={top ? `/app/markets/${top.product.hs6}/${top.market.market.code}` : undefined}
+        marketName={top?.market.market.name}
+      />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <OpportunityMap data={data} />
-        <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+          <OpportunityMap data={data} />
+          <BestMoves data={data} />
+        </div>
+        <div className="flex min-w-0 flex-col gap-4">
           <FollowUps />
           <OpenTenders />
           <AskCard />
-          <BestMoves data={data} />
         </div>
       </div>
 

@@ -41,7 +41,7 @@ import { Button, ButtonLink, buttonClass } from "@/components/ui/button";
 import { Card, CardHeader, Page, PageHeader } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { MenuItem, Popover } from "@/components/ui/menu";
-import { Stat } from "@/components/ui/stat";
+import { Stat, StatGroup } from "@/components/ui/stat";
 import { Tabs } from "@/components/ui/tabs";
 import { DataNote } from "@/components/views/states";
 import {
@@ -523,7 +523,7 @@ function Summary({
   const fastest = maxBy(items, (m) => m.import_growth_3y);
 
   return (
-    <div className="rise-in grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" style={delay(60)}>
+    <StatGroup className="rise-in" style={delay(60)}>
       <Stat
         icon={<Trophy />}
         label="Top pick"
@@ -552,6 +552,6 @@ function Summary({
         note={complete && fastest ? `${fastest.market.name}, a year` : undefined}
         explain="The ranked market whose imports grew fastest each year over the last three years of customs data."
       />
-    </div>
+    </StatGroup>
   );
 }

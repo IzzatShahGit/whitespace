@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { InfoTip } from "@/components/ui/info-tip";
 
@@ -42,5 +42,22 @@ export function Stat({
         </p>
       )}
     </div>
+  );
+}
+
+/** Headline numbers as one card split into columns (hairline dividers), not a row of
+ * separate boxes: the same numbers, a calmer page. */
+export function StatGroup({
+  className = "",
+  columns = 4,
+  ...props
+}: ComponentProps<"div"> & { columns?: 3 | 4 }) {
+  return (
+    <div
+      className={`grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-card ${
+        columns === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
+      } [&>*]:rounded-none [&>*]:border-0 [&>*]:shadow-none max-lg:[&>*:last-child:nth-child(odd)]:col-span-2 ${className}`}
+      {...props}
+    />
   );
 }

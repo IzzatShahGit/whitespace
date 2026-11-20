@@ -4,7 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/brand/logo";
-import { activeHref, LEARN, NAV, SETTINGS, USAGE } from "@/components/shell/nav";
+import {
+  activeHref,
+  LEARN,
+  NAV,
+  NAV_GROUPS,
+  type NavItem,
+  SETTINGS,
+  USAGE,
+} from "@/components/shell/nav";
 import { useChatSuggestions, useMe } from "@/lib/api/queries";
 import { useT } from "@/lib/i18n";
 
@@ -13,90 +21,74 @@ function UsageMeter() {
   const usage = useChatSuggestions();
   if (!usage.data) return null;
   return (
-    <Link
-      href="/app/ask"
-      className="block rounded-2xl border border-line bg-surface p-3 text-xs text-muted transition-colors hover:border-brand/40"
-    >
+    <Link href="/app/ask" className="px-3 py-1 text-xs text-subtle transition-colors hover:text-fg">
       {t("shell.aiLeft", { count: usage.data.remaining_today })}
     </Link>
   );
 }
 
-/** Desktop navigation: always visible, icons + words, the current section highlighted. */
+const itemClass = (active: boolean) =>
+  `group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors duration-150 ${
+    active
+      ? "bg-brand-soft font-medium text-brand-strong"
+      : "text-muted hover:bg-surface-2 hover:text-fg"
+  }`;
+
+function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+  const t = useT();
+  const Icon = item.icon;
+  return (
+    <Link href={item.href} aria-current={active ? "page" : undefined} className={itemClass(active)}>
+      <Icon
+        className={`h-[18px] w-[18px] transition-colors ${active ? "text-brand" : "text-subtle group-hover:text-fg"}`}
+        strokeWidth={1.8}
+      />
+      {t(`nav.${item.id}`)}
+      {item.id === "ask" && (
+        <span className="ml-auto rounded-full bg-accent-soft px-1.5 py-0.5 text-xs font-semibold text-accent-strong">
+          AI
+        </span>
+      )}
+      {item.id === "usage" && (
+        <span className="ml-auto rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-subtle uppercase">
+          {t("nav.admin")}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/** Desktop navigation: always visible, grouped by job, the current section highlighted. */
 export function Sidebar() {
   const t = useT();
   const current = activeHref(usePathname());
   const isAdmin = useMe().data?.is_admin === true;
+  const byId = new Map(NAV.map((item) => [item.id, item]));
   return (
-    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-canvas px-3 py-4 lg:flex">
-      <div className="px-2 pb-6">
+    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-canvas px-3 py-4 lg:flex">
+      <div className="px-2 pb-5">
         <Logo href="/app" />
       </div>
-      <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
-        {NAV.map(({ id, href, icon: Icon }) => {
-          const active = current === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 ${
-                active
-                  ? "bg-surface font-medium text-fg shadow-card"
-                  : "text-muted hover:bg-surface/70 hover:text-fg"
-              }`}
-            >
-              <Icon
-                className={`h-[18px] w-[18px] transition-colors ${active ? "text-brand" : "text-subtle group-hover:text-fg"}`}
-                strokeWidth={1.8}
-              />
-              {t(`nav.${id}`)}
-              {href === "/app/ask" && (
-                <span className="ml-auto rounded-full bg-accent/15 px-1.5 py-0.5 text-xs font-semibold text-accent">
-                  AI
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <nav aria-label="Main" className="flex flex-1 flex-col gap-4">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.heading ?? "top"} className="flex flex-col gap-0.5">
+            {group.heading && (
+              <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-subtle uppercase">
+                {t(`nav.${group.heading}`)}
+              </p>
+            )}
+            {group.ids.map((id) => {
+              const item = byId.get(id);
+              return item ? <NavLink key={id} item={item} active={current === item.href} /> : null;
+            })}
+          </div>
+        ))}
       </nav>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5 border-t border-line pt-3">
         <UsageMeter />
-        {isAdmin && (
-          <Link
-            href={USAGE.href}
-            aria-current={current === USAGE.href ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
-              current === USAGE.href ? "bg-surface text-fg" : "text-muted hover:text-fg"
-            }`}
-          >
-            <USAGE.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-            {t("nav.usage")}
-            <span className="ml-auto rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-subtle uppercase">
-              {t("nav.admin")}
-            </span>
-          </Link>
-        )}
-        <Link
-          href={LEARN.href}
-          aria-current={current === LEARN.href ? "page" : undefined}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
-            current === LEARN.href ? "bg-surface text-fg" : "text-muted hover:text-fg"
-          }`}
-        >
-          <LEARN.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-          {t("nav.learn")}
-        </Link>
-        <Link
-          href={SETTINGS.href}
-          aria-current={current === SETTINGS.href ? "page" : undefined}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
-            current === SETTINGS.href ? "bg-surface text-fg" : "text-muted hover:text-fg"
-          }`}
-        >
-          <SETTINGS.icon className="h-[18px] w-[18px] text-subtle" strokeWidth={1.8} />
-          {t("nav.settings")}
-        </Link>
+        {isAdmin && <NavLink item={USAGE} active={current === USAGE.href} />}
+        <NavLink item={LEARN} active={current === LEARN.href} />
+        <NavLink item={SETTINGS} active={current === SETTINGS.href} />
       </div>
     </aside>
   );

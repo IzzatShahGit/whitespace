@@ -14,6 +14,11 @@ answers one question in plain words first, then shows the evidence on demand.
 6. **Your language, your money.** Local currency (lakh/crore) beside USD; chat replies in the
    user's language (`dir="auto"` on user-written and model-written text).
 7. **Calm density.** Lists and tables over walls of cards; one primary action per view.
+   No box inside a box inside a box: inside a card use rows with dividers or a
+   `bg-surface-2` well, not more bordered cards. A row of numbers is one `<StatGroup>`.
+8. **Orange once per view.** The one orange `<Button>` is the next business step (deal
+   sheet, draft, check). Everything else is `secondary` or `ghost`; AI helpers don't get
+   orange just for being AI.
 
 ## Tokens (src/app/globals.css)
 
@@ -57,6 +62,11 @@ Need something new? Add a new file in `components/ui` rather than changing an ex
 component's API.
 
 ## Patterns
+
+- **Layout grids:** always start with `grid-cols-1` (and give flex/grid children that hold
+  truncated text `min-w-0`), or one long word widens the page on phones.
+- **List + detail:** for many records (pipeline), a compact list on the left and the chosen
+  record on the right; on phones the list, then the record full width with a back link.
 
 - **Page:** `<Page>` → `<PageHeader title description actions>` → content sections.
 - **Headline numbers:** a row of `<Stat>` (2 columns on phones, 4 on desktop).

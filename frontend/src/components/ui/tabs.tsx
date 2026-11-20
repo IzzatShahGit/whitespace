@@ -34,7 +34,7 @@ export function Tabs<T extends string>({
       role="tablist"
       aria-label={label}
       onKeyDown={onKeyDown}
-      className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-surface-2/60 p-1"
+      className="flex gap-1 overflow-x-auto border-b border-line"
     >
       {items.map((item, i) => {
         const selected = item.value === value;
@@ -50,8 +50,10 @@ export function Tabs<T extends string>({
             aria-selected={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(item.value)}
-            className={`flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition-all duration-200 [&>svg]:h-4 [&>svg]:w-4 ${
-              selected ? "bg-surface font-medium text-fg shadow-card" : "text-muted hover:text-fg"
+            className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm transition-colors duration-150 [&>svg]:h-4 [&>svg]:w-4 ${
+              selected
+                ? "border-brand font-medium text-fg [&>svg]:text-brand"
+                : "border-transparent text-muted hover:border-line-strong hover:text-fg"
             }`}
           >
             {item.icon}

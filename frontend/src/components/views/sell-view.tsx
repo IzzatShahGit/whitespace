@@ -67,7 +67,7 @@ export function SellView() {
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold tracking-tight">Your products</h2>
         {dashboard.isPending && sells ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Skeleton className="h-56" />
             <Skeleton className="h-56" />
           </div>
@@ -84,7 +84,7 @@ export function SellView() {
             Add what you export and we’ll keep its best markets one click away.
           </EmptyState>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {dashboard.data.products.map((entry, i) => (
               <Card
                 key={entry.product.hs6}
