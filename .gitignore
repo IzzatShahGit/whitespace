@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!deploy/ec2/.env.deploy.example
 
 # Python
 __pycache__/

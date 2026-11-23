@@ -26,7 +26,7 @@ class EmbeddingError(RuntimeError):
     @property
     def daily_cap(self) -> bool:
         """The free tier's 1,000 texts per key per day are used up: retry tomorrow."""
-        return "per day" in str(self)
+        return "daily quota used up" in str(self)
 
 
 def unit(values: Sequence[float]) -> list[float]:
@@ -56,5 +56,7 @@ async def embed(texts: list[str], *, task: Task, attempts: int = 3) -> list[list
                 pool.rest(key, seconds=llm.KEY_REFUSED_REST_SECONDS)
             elif llm.is_rate_limited(exc):
                 pool.rest(key)
-    detail = " ".join(str(last).split())[:300] if last else "no key"
-    raise EmbeddingError(f"embedding failed: {detail}")
+    text = " ".join(str(last).split()) if last else "no key"
+    # Keep the quota kind ("per day" sits deep in Google's message) before trimming.
+    kind = " (daily quota used up)" if "per day" in text else ""
+    raise EmbeddingError(f"embedding failed{kind}: {text[:300]}")

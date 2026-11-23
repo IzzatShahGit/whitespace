@@ -1,0 +1,51 @@
+# Runs on the EC2 server in /opt/whitespace (copied there by scripts/ec2-deploy.sh).
+#
+#                          /api/*  -> api :8000 (FastAPI) --> Neon Postgres
+#   Browser --HTTPS--> caddy
+#                          else    -> web :3000 (Next.js)
+#
+# Same images as the local stack (backend/Dockerfile, frontend/Dockerfile), built for ARM64
+# by scripts/ec2-build.sh. Only Caddy is published; api and web are reachable from the
+# Docker network alone. DOMAIN comes from /opt/whitespace/.env (written by the deploy).
+services:
+  api:
+    image: whitespace-api:prod
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      # Only Caddy can reach this container, so trust its X-Forwarded-For/-Proto.
+      FORWARDED_ALLOW_IPS: "*"
+    expose:
+      - "8000"
+    # Uvicorn lets in-flight briefs and chat replies finish (up to 25 s) before exiting.
+    stop_grace_period: 35s
+
+  web:
+    image: whitespace-web:prod
+    restart: unless-stopped
+    environment:
+      NODE_OPTIONS: --max-old-space-size=256
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in /opt/whitespace/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # HTTPS certificates live here; keeping them avoids re-issuing on every deploy.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

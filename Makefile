@@ -98,4 +98,7 @@ gen-client: ## Regenerate frontend API types from the backend
 snapdeploy: ## Build the ARM64 web+API image for SnapDeploy -> dist/whitespace-snapdeploy.tar
 	scripts/snapdeploy-build.sh
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions embed eval-hs gen-client snapdeploy
+deploy-ec2: ## Build the ARM64 image and deploy it to the EC2 server (SKIP_BUILD=1 to reuse the last build)
+	scripts/ec2-deploy.sh
+
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions embed eval-hs gen-client snapdeploy deploy-ec2

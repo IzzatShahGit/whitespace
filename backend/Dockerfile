@@ -31,4 +31,6 @@ USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"
-CMD ["uvicorn", "whitespace_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# One process on purpose: AI key rotation and background jobs live in its memory.
+# On stop, in-flight briefs and chat replies get 25 s to finish (core/tasks.py).
+CMD ["uvicorn", "whitespace_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--timeout-graceful-shutdown", "25"]
