@@ -31,6 +31,21 @@ def score(ranked: list[list[str]], wanted: list[list[str]]) -> str:
     return f"top-1 {top1 / n:6.1%}   top-3 {top3 / n:6.1%}"
 
 
+# Weightings to compare: (names, words, meaning).
+TRY_WEIGHTS: list[tuple[float, ...]] = [
+    (1.0, 1.0, 1.0),
+    (1.0, 0.5, 2.0),
+    (1.0, 0.25, 3.0),
+    (0.5, 0.25, 3.0),
+]
+
+
+def within(ranked: list[list[str]], wanted: list[list[str]], n: int = 15) -> str:
+    """How often the right code is in the shortlist the model chooses from."""
+    hits = sum(any(c in w for c in r[:n]) for r, w in zip(ranked, wanted, strict=True))
+    return f"{hits / len(wanted):6.1%}"
+
+
 async def main(pick: bool) -> None:
     cases = [json.loads(line) for line in EVAL_FILE.read_text().splitlines() if line.strip()]
     queries = [c["q"] for c in cases]
@@ -38,6 +53,7 @@ async def main(pick: bool) -> None:
     vectors = await embeddings.embed(queries, task="RETRIEVAL_QUERY")
     stages: dict[str, list[list[str]]] = {k: [] for k in ("words", "names+words", "meaning",
                                                           "fused")}  # fmt: skip
+    tried: dict[tuple[float, ...], list[list[str]]] = {w: [] for w in TRY_WEIGHTS}
     picks: list[list[str]] = []
     misses = []
     async with tasks.session_factory() as db:
@@ -45,7 +61,13 @@ async def main(pick: bool) -> None:
             named = await repo.by_prefixes(db, codes_for(q))
             worded = await repo.by_words(db, q, hs_finder.PER_SEARCH)
             meant = await repo.by_meaning(db, vector, hs_finder.PER_SEARCH)
-            fused = hs_finder.fuse(named[: hs_finder.PER_SEARCH], worded, meant)
+            fused = hs_finder.fuse(
+                named[: hs_finder.PER_SEARCH], worded, meant, weights=hs_finder.WEIGHTS
+            )
+            for weighting in TRY_WEIGHTS:
+                tried[weighting].append(
+                    hs_finder.fuse(named[: hs_finder.PER_SEARCH], worded, meant, weights=weighting)
+                )
             stages["words"].append(worded)
             stages["names+words"].append(hs_finder.fuse(named, worded))
             stages["meaning"].append(meant)
@@ -62,6 +84,10 @@ async def main(pick: bool) -> None:
     print(f"{len(cases)} cases")
     for name, ranked in stages.items():
         print(f"{name:12} {score(ranked, wanted)}")
+    for tried_weights, ranked in tried.items():
+        print(
+            f"fused {tried_weights}  {score(ranked, wanted)}   in top-15 {within(ranked, wanted)}"
+        )
     if pick:
         print(f"{'model pick':12} {score(picks, wanted)}")
         print("Top-1 misses:\n" + "\n".join(misses) if misses else "No top-1 misses.")

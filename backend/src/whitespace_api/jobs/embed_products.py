@@ -56,8 +56,8 @@ async def _patiently(texts: list[str]) -> list[list[float]]:
 
 async def run(db: AsyncSession) -> str:
     products = {p.hs6: p.description for p in await db.scalars(select(Product))}
-    rows = await db.execute(select(ProductEmbedding.hs6, ProductEmbedding.text_hash))
-    stored = {row.hs6: row.text_hash for row in rows}
+    existing = await db.execute(select(ProductEmbedding.hs6, ProductEmbedding.text_hash))
+    stored = {row.hs6: row.text_hash for row in existing}
     texts = {hs6: product_text(hs6, d) for hs6, d in products.items()}
     todo = [hs6 for hs6, t in sorted(texts.items()) if stored.get(hs6) != text_hash(t)]
     gone = set(stored) - set(products)

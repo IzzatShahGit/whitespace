@@ -38,6 +38,9 @@ HS_KIND = "hs"
 PER_SEARCH = 30
 CANDIDATES = 15
 RRF_K = 60
+# How much each search is trusted: (everyday names, customs words, meaning). Measured on
+# backend/evals/hs_codes.jsonl with `make eval-hs`; re-measure before changing.
+WEIGHTS = (1.0, 0.25, 3.0)  # 87.5% top-1, 95% top-3 vs 70% / 90% unweighted (2026-11-23)
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
 IMAGE_TYPES = {b"\xff\xd8\xff": "image/jpeg", b"\x89PNG": "image/png", b"RIFF": "image/webp"}
 
@@ -46,13 +49,17 @@ class FinderError(Exception):
     """The input can't be used. The message is safe to show."""
 
 
-def fuse(*rankings: list[str], k: int = RRF_K) -> list[str]:
-    """Reciprocal rank fusion: a product ranked high by any search, or fairly high by
-    several, comes first. No score calibration between searches needed."""
+def fuse(
+    *rankings: list[str], weights: tuple[float, ...] | None = None, k: int = RRF_K
+) -> list[str]:
+    """Weighted reciprocal rank fusion: a product ranked high by a trusted search, or
+    fairly high by several, comes first. Weights say how much each search is trusted;
+    no score calibration between searches is needed."""
     scores: dict[str, float] = defaultdict(float)
-    for ranking in rankings:
+    for i, ranking in enumerate(rankings):
+        weight = weights[i] if weights else 1.0
         for position, hs6 in enumerate(ranking):
-            scores[hs6] += 1 / (k + position + 1)
+            scores[hs6] += weight / (k + position + 1)
     return sorted(scores, key=lambda h: -scores[h])
 
 
@@ -66,7 +73,8 @@ async def candidates(db: AsyncSession, query: str) -> tuple[list[str], bool]:
     except embeddings.EmbeddingError as exc:
         log.warning("Meaning-based search unavailable: %s", exc)
         meant = []
-    return fuse(named[:PER_SEARCH], worded, meant)[:CANDIDATES], bool(meant)
+    ranked = fuse(named[:PER_SEARCH], worded, meant, weights=WEIGHTS)
+    return ranked[:CANDIDATES], bool(meant)
 
 
 # --- a photo -------------------------------------------------------------------------
