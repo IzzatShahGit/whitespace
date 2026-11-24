@@ -13,11 +13,26 @@ from whitespace_api.schemas.trade import CountryOut, ProductOut, Tone
 DutyKind = Literal["preference", "standard"]
 
 
+class AdditionalDuty(BaseModel):
+    """A duty charged on top of the normal rate (US HTS chapter 99)."""
+
+    name: str = Field(description='e.g. "Section 301 country duty"')
+    heading: str = Field(description='The legal heading, e.g. "9903.05.62"')
+    rate_pct: float = Field(description="Percent of the customs value, added to the normal rate")
+    note: str | None = None
+
+
 class DutyRate(BaseModel):
     """One country's import duty on the product, and where the figure comes from."""
 
     country: CountryOut
-    rate_pct: float = Field(description="Ad valorem duty, percent of the customs value")
+    rate_pct: float = Field(
+        description="Total ad valorem duty, percent of the customs value: normal + additional"
+    )
+    base_pct: float = Field(description="The normal rate alone (MFN or preference)")
+    additional: list[AdditionalDuty] = Field(
+        default_factory=list, description="Duties on top of the normal rate (US only for now)"
+    )
     kind: DutyKind = Field(
         description='"preference": a trade agreement or scheme; "standard": the MFN rate'
     )

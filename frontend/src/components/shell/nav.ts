@@ -10,6 +10,7 @@ import {
   type LucideIcon,
   PackageSearch,
   Settings,
+  ShoppingCart,
   Ship,
   ShieldCheck,
   Sparkles,
@@ -20,6 +21,7 @@ export type NavId =
   | "home"
   | "sell"
   | "buy"
+  | "amazon"
   | "ask"
   | "pipeline"
   | "check"
@@ -45,6 +47,13 @@ export const NAV: NavItem[] = [
   { id: "home", href: "/app", label: "Home", icon: Home, hint: "Your overview" },
   { id: "sell", href: "/app/markets", label: "Sell", icon: TrendingUp, hint: "Where to sell" },
   { id: "buy", href: "/app/buy", label: "Buy", icon: PackageSearch, hint: "Where to buy" },
+  {
+    id: "amazon",
+    href: "/app/fba",
+    label: "Sell on Amazon",
+    icon: ShoppingCart,
+    hint: "Profit per unit on Amazon US: freight, duty, fees",
+  },
   { id: "ask", href: "/app/ask", label: "Ask", icon: Sparkles, hint: "Ask the AI guide" },
   {
     id: "pipeline",
@@ -94,7 +103,7 @@ export const NAV: NavItem[] = [
 /** How the sidebar groups NAV: a few top items, then two named sections. */
 export const NAV_GROUPS: { heading: "groupFind" | "groupDeals" | null; ids: NavId[] }[] = [
   { heading: null, ids: ["home", "ask"] },
-  { heading: "groupFind", ids: ["sell", "buy", "explore", "watchlist"] },
+  { heading: "groupFind", ids: ["sell", "buy", "amazon", "explore", "watchlist"] },
   { heading: "groupDeals", ids: ["pipeline", "check", "quotes", "shipments", "tenders"] },
 ];
 

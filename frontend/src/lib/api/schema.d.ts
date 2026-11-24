@@ -955,6 +955,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/products/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Products
+         * @description Products by everyday name, for the free Amazon calculator's product box.
+         */
+        get: operations["search_products_api_v1_public_products_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events": {
         parameters: {
             query?: never;
@@ -1506,10 +1526,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fba/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estimate
+         * @description Profit per unit, margin, cash needed and a verdict for one product on Amazon US.
+         */
+        post: operations["estimate_api_v1_fba_estimate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/fba/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Public Estimate
+         * @description The same, signed out, for the free calculator: 10 a minute per visitor.
+         */
+        post: operations["public_estimate_api_v1_public_fba_estimate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/fba/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Options
+         * @description Amazon categories, source countries and the fee table's date, for the form.
+         */
+        get: operations["options_api_v1_public_fba_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AdditionalDuty
+         * @description A duty charged on top of the normal rate (US HTS chapter 99).
+         */
+        AdditionalDuty: {
+            /**
+             * Name
+             * @description e.g. "Section 301 country duty"
+             */
+            name: string;
+            /**
+             * Heading
+             * @description The legal heading, e.g. "9903.05.62"
+             */
+            heading: string;
+            /**
+             * Rate Pct
+             * @description Percent of the customs value, added to the normal rate
+             */
+            rate_pct: number;
+            /** Note */
+            note?: string | null;
+        };
         /** AdminStats */
         AdminStats: {
             /**
@@ -1533,6 +1636,23 @@ export interface components {
              * @description Feature use over the period
              */
             actions: components["schemas"]["Count"][];
+        };
+        /** AmazonSize */
+        AmazonSize: {
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "small_standard" | "large_standard";
+            /** Label */
+            label: string;
+            /**
+             * Shipping Weight Lb
+             * @description Unit or dimensional weight, as Amazon bills
+             */
+            shipping_weight_lb: number;
+            /** Cubic Feet */
+            cubic_feet: number;
         };
         /** Ask */
         Ask: {
@@ -2407,9 +2527,19 @@ export interface components {
             country: components["schemas"]["CountryOut"];
             /**
              * Rate Pct
-             * @description Ad valorem duty, percent of the customs value
+             * @description Total ad valorem duty, percent of the customs value: normal + additional
              */
             rate_pct: number;
+            /**
+             * Base Pct
+             * @description The normal rate alone (MFN or preference)
+             */
+            base_pct: number;
+            /**
+             * Additional
+             * @description Duties on top of the normal rate (US only for now)
+             */
+            additional?: components["schemas"]["AdditionalDuty"][];
             /**
              * Kind
              * @description "preference": a trade agreement or scheme; "standard": the MFN rate
@@ -2455,6 +2585,235 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** FbaCategory */
+        FbaCategory: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "home_kitchen" | "beauty_health" | "baby" | "clothing" | "footwear" | "luggage" | "sports" | "toys" | "pet" | "grocery" | "electronics_accessories" | "consumer_electronics" | "furniture" | "jewelry" | "other";
+            /** Label */
+            label: string;
+        };
+        /** FbaCost */
+        FbaCost: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Group
+             * @description landed: to Amazon's door; amazon: Amazon's fees; selling: ads, returns
+             * @enum {string}
+             */
+            group: "landed" | "amazon" | "selling";
+            /** @description Per unit sold */
+            usd: components["schemas"]["CostRange"];
+            /** Note */
+            note?: string | null;
+        };
+        /** FbaEstimate */
+        FbaEstimate: {
+            product: components["schemas"]["ProductOut"];
+            origin: components["schemas"]["CountryOut"];
+            /** Category */
+            category: string;
+            size: components["schemas"]["AmazonSize"];
+            duty: components["schemas"]["DutyRate"];
+            /** Duty Stale */
+            duty_stale: boolean;
+            shipment: components["schemas"]["FbaShipment"];
+            /**
+             * Costs
+             * @description Per unit sold, in the order they're paid
+             */
+            costs: components["schemas"]["FbaCost"][];
+            /** @description Product + freight + duty + import fees + prep */
+            landed_unit: components["schemas"]["CostRange"];
+            /** Amazon Fees Unit */
+            amazon_fees_unit: number;
+            total_cost_unit: components["schemas"]["CostRange"];
+            /** @description low: with the high costs; high: with the low */
+            profit_unit: components["schemas"]["CostRange"];
+            /** @description Profit / price */
+            margin: components["schemas"]["CostRange"];
+            /** @description Profit / landed cost: what each dollar invested earns */
+            roi: components["schemas"]["CostRange"];
+            /**
+             * Break Even Price
+             * @description Lowest price that covers every cost
+             */
+            break_even_price: number | null;
+            /** Months Of Stock */
+            months_of_stock: number;
+            /** @description At your expected sales, after the plan fee */
+            monthly_profit: components["schemas"]["CostRange"];
+            /** @description Money out before the first sale: goods, freight, duty, fees, one month's plan */
+            first_order_cash: components["schemas"]["CostRange"];
+            /**
+             * Payback Months
+             * @description Typical case; None if it doesn't pay back
+             */
+            payback_months: number | null;
+            verdict: components["schemas"]["FbaVerdict"];
+            /** Notes */
+            notes: string[];
+            /** Duty Source Url */
+            duty_source_url: string;
+            /** Fees As Of */
+            fees_as_of: string;
+        };
+        /**
+         * FbaInput
+         * @description One product, one source country, sold on Amazon US. Inches, pounds, US dollars.
+         */
+        FbaInput: {
+            /** Hs6 */
+            hs6: string;
+            /**
+             * Origin
+             * @description Where you buy it (ISO alpha-3)
+             */
+            origin: string;
+            /**
+             * Unit Cost Usd
+             * @description Supplier price per unit, FOB
+             */
+            unit_cost_usd: number;
+            /**
+             * Price Usd
+             * @description Your selling price on Amazon
+             */
+            price_usd: number;
+            /**
+             * Category
+             * @default home_kitchen
+             * @enum {string}
+             */
+            category: "home_kitchen" | "beauty_health" | "baby" | "clothing" | "footwear" | "luggage" | "sports" | "toys" | "pet" | "grocery" | "electronics_accessories" | "consumer_electronics" | "furniture" | "jewelry" | "other";
+            /**
+             * Length In
+             * @description Packed unit, longest side
+             */
+            length_in: number;
+            /** Width In */
+            width_in: number;
+            /** Height In */
+            height_in: number;
+            /**
+             * Weight Lb
+             * @description Packed unit weight
+             */
+            weight_lb: number;
+            /**
+             * Units
+             * @description Units in your first order
+             */
+            units: number;
+            /**
+             * Monthly Sales
+             * @description Units you expect to sell a month
+             */
+            monthly_sales: number;
+            /**
+             * Ad Pct
+             * @description Advertising, % of sales
+             * @default 10
+             */
+            ad_pct: number;
+            /**
+             * Return Pct
+             * @description Returned units, %
+             * @default 3
+             */
+            return_pct: number;
+            /**
+             * Prep Usd
+             * @description Labels and prep, per unit
+             * @default 0
+             */
+            prep_usd: number;
+            /**
+             * Us Shipment Fees Usd
+             * @description Customs broker, bond and delivery to Amazon, per shipment
+             * @default 450
+             */
+            us_shipment_fees_usd: number;
+            /**
+             * Shipping
+             * @default auto
+             * @enum {string}
+             */
+            shipping: "auto" | "lcl" | "20ft" | "40ft";
+            /**
+             * Freight Per Unit Usd
+             * @description Your forwarder's quote; replaces our estimate
+             */
+            freight_per_unit_usd?: number | null;
+        };
+        /** FbaOptions */
+        FbaOptions: {
+            /** Categories */
+            categories: components["schemas"]["FbaCategory"][];
+            /**
+             * Origins
+             * @description Countries we can price shipping from
+             */
+            origins: components["schemas"]["CountryOut"][];
+            /** Fees As Of */
+            fees_as_of: string;
+            /** Plan Usd */
+            plan_usd: number;
+        };
+        /** FbaShipment */
+        FbaShipment: {
+            /**
+             * Container
+             * @description None when you gave your own freight
+             */
+            container: ("20ft" | "40ft" | "40hc" | "lcl") | null;
+            /**
+             * Containers
+             * @description How many boxes of that kind (1 unless very large)
+             */
+            containers: number;
+            /** Label */
+            label: string;
+            /** Volume M3 */
+            volume_m3: number;
+            /** Kg */
+            kg: number;
+            /** @description Whole shipment, to the US port and delivered */
+            freight_usd: components["schemas"]["CostRange"];
+            /**
+             * Import Fees Usd
+             * @description US customs processing and harbour fees
+             */
+            import_fees_usd: number;
+            /** Days Low */
+            days_low: number | null;
+            /** Days High */
+            days_high: number | null;
+            /**
+             * Route
+             * @description e.g. "PKKHI → USLAX"
+             */
+            route: string | null;
+            /** Rates As Of */
+            rates_as_of: string | null;
+        };
+        /** FbaVerdict */
+        FbaVerdict: {
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "positive" | "neutral" | "negative";
+            /** Headline */
+            headline: string;
+            /** Reasons */
+            reasons: string[];
         };
         /** Finding */
         Finding: {
@@ -4025,9 +4384,19 @@ export interface components {
             country: components["schemas"]["CountryOut"];
             /**
              * Rate Pct
-             * @description Ad valorem duty, percent of the customs value
+             * @description Total ad valorem duty, percent of the customs value: normal + additional
              */
             rate_pct: number;
+            /**
+             * Base Pct
+             * @description The normal rate alone (MFN or preference)
+             */
+            base_pct: number;
+            /**
+             * Additional
+             * @description Duties on top of the normal rate (US only for now)
+             */
+            additional?: components["schemas"]["AdditionalDuty"][];
             /**
              * Kind
              * @description "preference": a trade agreement or scheme; "standard": the MFN rate
@@ -6757,6 +7126,37 @@ export interface operations {
             };
         };
     };
+    search_products_api_v1_public_products_search_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceProductMatch"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     track_api_v1_events_post: {
         parameters: {
             query?: never;
@@ -8105,6 +8505,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    estimate_api_v1_fba_estimate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FbaInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FbaEstimate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_estimate_api_v1_public_fba_estimate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FbaInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FbaEstimate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    options_api_v1_public_fba_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FbaOptions"];
                 };
             };
         };

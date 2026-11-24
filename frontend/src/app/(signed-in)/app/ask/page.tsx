@@ -5,6 +5,9 @@ import { ChatView } from "@/components/chat/chat-view";
 import { urduFont } from "@/components/chat/urdu-font";
 import { Loading } from "@/components/views/states";
 
+// Renders after the session check: see (signed-in)/layout.tsx.
+export const instant = false;
+
 export const metadata: Metadata = { title: "Ask Whitespace" };
 
 // The open conversation comes from the URL (?t=), read at request time.

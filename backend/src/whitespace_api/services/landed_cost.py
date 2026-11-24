@@ -6,6 +6,8 @@ the data records it for the country itself, or for a group the country is confir
 be in (`whitespace_shared.tariff_schemes`). Otherwise the standard (MFN) rate is shown,
 labelled "a trade preference may apply": precision over coverage.
 
+US rates add the chapter 99 duties on top (`services.us_duties`).
+
 Landed cost = FOB price + freight and insurance + duty. Most markets charge duty on the
 CIF value (goods plus freight and insurance); those in `FOB_VALUATION` on the FOB value.
 Prices are customs value / weight (FOB), the same basis as a seller's cost.
@@ -35,10 +37,11 @@ from whitespace_api.schemas.landed_cost import (
     StandardRate,
 )
 from whitespace_api.schemas.trade import CountryOut, ProductOut
-from whitespace_api.services import pricing
+from whitespace_api.services import pricing, us_duties
 from whitespace_api.services import trade as trade_service
 from whitespace_api.services.explain import EN_DASH
 from whitespace_api.services.sourcing import kg
+from whitespace_shared import us_tariffs
 from whitespace_shared.tariff_schemes import schemes_for
 
 log = logging.getLogger(__name__)
@@ -156,13 +159,13 @@ def _read(payload: dict[str, Any]) -> _Tariffs | None:
     return _Tariffs(source=payload["source"], url=payload["url"], rows=rows, mfn=mfn)
 
 
-def duty_for(country: CountryOut, data: _Tariffs, *, market: str, reporter: str) -> DutyRate:
-    """The rate `country` pays: its own or a confirmed group's preference, if lower than
-    the MFN rate; otherwise the MFN rate, labelled. Pure."""
+def _base_duty(country: CountryOut, data: _Tariffs, *, market: str, reporter: str) -> DutyRate:
+    """The normal rate `country` pays: its own or a confirmed group's preference, if lower
+    than the MFN rate; otherwise the MFN rate, labelled. Pure."""
     source = SOURCE_NAMES[data.source]
     if market in EU_MEMBERS and country.code in EU_MEMBERS:
         return DutyRate(
-            country=country, rate_pct=0.0, kind="preference", scheme=EU_INTERNAL,
+            country=country, rate_pct=0.0, base_pct=0.0, kind="preference", scheme=EU_INTERNAL,
             year=data.mfn["year"], source="EU customs union",
             note="No customs duties between EU members.",
         )  # fmt: skip
@@ -177,14 +180,53 @@ def duty_for(country: CountryOut, data: _Tariffs, *, market: str, reporter: str)
     best = min(offers, key=lambda r: (r["rate"], -r["year"]), default=None)
     if best is not None and best["rate"] < data.mfn["rate"]:
         return DutyRate(
-            country=country, rate_pct=best["rate"], kind="preference",
+            country=country, rate_pct=best["rate"], base_pct=best["rate"], kind="preference",
             scheme=groups.get(best["partner"]) or best["scheme"], year=best["year"],
             source=source, note=_note(best, data),
         )  # fmt: skip
     return DutyRate(
-        country=country, rate_pct=data.mfn["rate"], kind="standard", scheme=None,
-        year=data.mfn["year"], source=source, note=_note(data.mfn, data),
+        country=country, rate_pct=data.mfn["rate"], base_pct=data.mfn["rate"], kind="standard",
+        scheme=None, year=data.mfn["year"], source=source, note=_note(data.mfn, data),
     )  # fmt: skip
+
+
+def duty_for(
+    country: CountryOut, data: _Tariffs, *, market: str, reporter: str, hs6: str
+) -> DutyRate:
+    """What `country` pays in total: the normal rate, plus the US additional duties
+    (HTS chapter 99) when the market is the US and the schedule is built. Pure."""
+    base = _base_duty(country, data, market=market, reporter=reporter)
+    schedule = us_tariffs.load() if market == "USA" else None
+    if schedule is None:
+        return base
+    extra = us_duties.extras(
+        schedule,
+        origin=country.code,
+        hs6=hs6,
+        base_pct=base.base_pct,
+        duty_free_by_agreement=base.kind == "preference" and base.base_pct == 0,
+        us_lines=data.mfn["lines"],
+    )
+    note = " ".join(filter(None, [base.note, *extra.notes])) or None
+    return base.model_copy(
+        update={
+            "rate_pct": base.base_pct + extra.total_pct,
+            "additional": extra.duties,
+            "note": note,
+        }
+    )
+
+
+def us_note() -> str:
+    """What US rates include, naming the schedule release they come from."""
+    schedule = us_tariffs.load()
+    if schedule is None:
+        return US_EXTRA
+    return (
+        f"US rates include the additional duties in HTS chapter 99 ({schedule.release}, read "
+        f"{schedule.built}): country duties and China's Section 301 lists. Not included: "
+        "Section 232 product duties and product exclusions. See https://hts.usitc.gov/"
+    )
 
 
 async def _load(
@@ -236,7 +278,7 @@ async def _compare(
             f"No percentage import duty is recorded for this product in {place.name}"
         )
 
-    yours = duty_for(you, data, market=market, reporter=reporter)
+    yours = duty_for(you, data, market=market, reporter=reporter, hs6=hs6)
     suppliers = [
         s
         for s in await trade_repo.market_suppliers(db, market=market, hs6=hs6)
@@ -246,7 +288,7 @@ async def _compare(
     prices: dict[str, float] = {}
     for s in suppliers:
         rival = CountryOut(code=s.MarketSupplier.supplier, name=s.supplier_name)
-        duty = duty_for(rival, data, market=market, reporter=reporter)
+        duty = duty_for(rival, data, market=market, reporter=reporter, hs6=hs6)
         rivals.append(
             RivalDuty(
                 **duty.model_dump(),
@@ -269,12 +311,53 @@ async def _compare(
         main_rival=main.country if main else None,
         advantage_pts=main.advantage_pts if main else None,
         summary=_summary(you, place, product, yours, main),
-        notes=([US_EXTRA] if market == "USA" else []) + [NOT_INCLUDED],
+        notes=([us_note()] if market == "USA" else []) + [NOT_INCLUDED],
         source_url=data.url,
         fetched_at=fetched_at,
         stale=stale,
     )
     return comparison, prices
+
+
+@dataclass(frozen=True)
+class ImportDuty:
+    """What `market` charges one origin on one product, with where it comes from."""
+
+    duty: DutyRate
+    notes: list[str]
+    source_url: str
+    stale: bool
+
+
+async def import_duty(
+    db: AsyncSession,
+    http: httpx.AsyncClient,
+    *,
+    origin: str,
+    market: str,
+    hs6: str,
+    settings: Settings,
+) -> ImportDuty:
+    """The total duty on `hs6` from `origin` into `market` (US extras included)."""
+    country = await trade_repo.get_country(db, origin)
+    reporter = tariffs.reporter_for(market)
+    if country is None:
+        raise trade_service.NotFoundError(f"Unknown country {origin}")
+    if reporter is None or origin == market:
+        raise NotCoveredError("No import duty data for this market")
+    payload, _, stale = await _load(db, http, reporter=reporter, hs6=hs6, settings=settings)
+    data = _read(payload)
+    if data is None:
+        raise NotCoveredError("No percentage import duty is recorded for this product")
+    duty = duty_for(
+        CountryOut(code=country.code, name=country.name),
+        data,
+        market=market,
+        reporter=reporter,
+        hs6=hs6,
+    )
+    notes = ([us_note()] if market == "USA" else []) + [NOT_INCLUDED]
+    return ImportDuty(duty=duty, notes=notes, source_url=data.url, stale=stale)
 
 
 async def duties(

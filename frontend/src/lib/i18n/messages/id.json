@@ -38,7 +38,9 @@
     "settingsHint": "Profil, bisnis, dan tampilan",
     "usage": "Penggunaan",
     "usageHint": "Pengunjung, pendaftaran, dan pemakaian fitur",
-    "admin": "Admin"
+    "admin": "Admin",
+    "amazon": "Jual di Amazon",
+    "amazonHint": "Laba per unit di Amazon AS: ongkos kirim, bea, biaya"
   },
   "shell": {
     "search": "Cari produk atau bertanya…",

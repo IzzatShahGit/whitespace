@@ -15,6 +15,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "searoute>=1.6.0",
     "pycountry>=26.2.16",
+    "pypdf>=7.1.1",
 ]
 
 [project.scripts]

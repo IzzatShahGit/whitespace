@@ -1,3 +1,4 @@
+import { AmazonBand } from "@/components/landing/amazon-band";
 import { ClosingCta, Footer } from "@/components/landing/closing-cta";
 import { Features } from "@/components/landing/features";
 import { Hero } from "@/components/landing/hero";
@@ -13,6 +14,7 @@ export default function Home() {
         <Hero />
         <HowItWorks />
         <Features />
+        <AmazonBand />
         <Trust />
         <ClosingCta />
       </main>

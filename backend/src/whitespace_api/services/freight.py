@@ -168,15 +168,19 @@ def build(
     value_usd_kg: float | None,
     value_basis: str | None,
     fuel: brent_feed.Brent,
+    volume_m3: float | None = None,
 ) -> FreightEstimate:
-    """The estimate itself. Pure: no database or network."""
+    """The estimate itself. Pure: no database or network.
+
+    `volume_m3`: the load's measured volume; without it, volume follows from the
+    product's typical packed density."""
     shared = container == "lcl"
     box = None if shared else BOXES[container]
     if kg is None:
         kg, kg_basis = typical_load(hs6, box)
     else:
         kg_basis = "Your figure"
-    volume = kg / density(hs6)[0]
+    volume = volume_m3 or kg / density(hs6)[0]
     if box is None:
         wm = max(1.0, volume, kg / 1000)  # what a shared box is charged on
         sea_mult = LCL_SEA_PREMIUM * wm / FEU_USABLE_M3
@@ -295,7 +299,7 @@ def build(
             full = build(
                 origin=origin, dest=dest, route=route, reverse=reverse, hs6=hs6,
                 container="20ft", kg=kg, value_usd_kg=value_usd_kg,
-                value_basis=value_basis, fuel=fuel,
+                value_basis=value_basis, fuel=fuel, volume_m3=volume_m3,
             ).total.typical  # fmt: skip
             notes.append(
                 f"About {volume:.1f} m³ shares a container with other shippers. A whole 20ft "
@@ -357,6 +361,21 @@ async def _route(db: AsyncSession, origin: str, dest: str) -> tuple[SeaRoute, bo
     return (back, True) if back is not None else None
 
 
+async def origins_to(db: AsyncSession, dest: str) -> list[CountryOut]:
+    """Countries we can price shipping from to `dest` (routes are stored one way)."""
+    rows = await db.execute(
+        select(SeaRoute.origin, SeaRoute.dest).where(
+            (SeaRoute.dest == dest) | (SeaRoute.origin == dest)
+        )
+    )
+    codes = {o if d == dest else d for o, d in rows.all()} - {dest}
+    names = await trade_repo.countries_by_code(db, list(codes))
+    return sorted(
+        (CountryOut(code=c, name=names[c].name) for c in codes if c in names),
+        key=lambda c: c.name,
+    )
+
+
 async def _value(
     db: AsyncSession, *, origin: str, dest: str, hs6: str
 ) -> tuple[float | None, str | None]:
@@ -377,17 +396,10 @@ async def _value(
     return None, None
 
 
-async def estimate(
-    db: AsyncSession,
-    http: httpx.AsyncClient,
-    *,
-    origin: str,
-    dest: str,
-    hs6: str,
-    container: ContainerKind = "40ft",
-    kg: float | None = None,
-    value_usd_kg: float | None = None,
-) -> FreightEstimate:
+async def _inputs(
+    db: AsyncSession, http: httpx.AsyncClient, *, origin: str, dest: str, hs6: str
+) -> tuple[CountryOut, CountryOut, SeaRoute, bool, brent_feed.Brent]:
+    """Everything `build` needs from the database and the fuel feed, fetched once."""
     countries = await trade_repo.countries_by_code(db, [origin, dest])
     if origin not in countries or dest not in countries:
         raise NoRouteError("Unknown country")
@@ -400,18 +412,67 @@ async def estimate(
             f"{countries[dest].name} yet."
         )
     route, reverse = found
+    return (
+        CountryOut(code=origin, name=countries[origin].name),
+        CountryOut(code=dest, name=countries[dest].name),
+        route,
+        reverse,
+        await brent_feed.latest(http),
+    )
+
+
+async def estimate(
+    db: AsyncSession,
+    http: httpx.AsyncClient,
+    *,
+    origin: str,
+    dest: str,
+    hs6: str,
+    container: ContainerKind = "40ft",
+    kg: float | None = None,
+    value_usd_kg: float | None = None,
+) -> FreightEstimate:
+    source, target, route, reverse, fuel = await _inputs(
+        db, http, origin=origin, dest=dest, hs6=hs6
+    )
     basis = "Your price" if value_usd_kg else None
     if not value_usd_kg:
         value_usd_kg, basis = await _value(db, origin=origin, dest=dest, hs6=hs6)
     return build(
-        origin=CountryOut(code=origin, name=countries[origin].name),
-        dest=CountryOut(code=dest, name=countries[dest].name),
-        route=route,
-        reverse=reverse,
-        hs6=hs6,
-        container=container,
-        kg=kg,
-        value_usd_kg=value_usd_kg,
-        value_basis=basis,
-        fuel=await brent_feed.latest(http),
+        origin=source, dest=target, route=route, reverse=reverse, hs6=hs6,
+        container=container, kg=kg, value_usd_kg=value_usd_kg, value_basis=basis, fuel=fuel,
+    )  # fmt: skip
+
+
+async def options(
+    db: AsyncSession,
+    http: httpx.AsyncClient,
+    *,
+    origin: str,
+    dest: str,
+    hs6: str,
+    kg: float,
+    volume_m3: float,
+    value_usd_kg: float,
+    containers: tuple[ContainerKind, ...],
+) -> dict[ContainerKind, FreightEstimate]:
+    """One shipment priced several ways (e.g. shared vs a full 20ft), one lookup."""
+    source, target, route, reverse, fuel = await _inputs(
+        db, http, origin=origin, dest=dest, hs6=hs6
     )
+    return {
+        kind: build(
+            origin=source,
+            dest=target,
+            route=route,
+            reverse=reverse,
+            hs6=hs6,
+            container=kind,
+            kg=kg,
+            value_usd_kg=value_usd_kg,
+            value_basis="Your price",
+            fuel=fuel,
+            volume_m3=volume_m3,
+        )
+        for kind in containers
+    }

@@ -4,6 +4,9 @@ import { Suspense } from "react";
 import { MarketsView } from "@/components/views/markets-view";
 import { Loading } from "@/components/views/states";
 
+// Renders after the session check: see (signed-in)/layout.tsx.
+export const instant = false;
+
 export const metadata: Metadata = { title: "Ranked markets · Whitespace" };
 
 // The product code is only known at request time, so the view renders in a Suspense

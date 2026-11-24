@@ -232,8 +232,9 @@ def _supported(name: str, val: _Val, text: str | None) -> bool:
             d = date.fromisoformat(val.value[:10])
         except ValueError:
             return False
-        found = numbers(val.quote)
-        return str(d.day) in found and (str(d.year) in found or f"{d.year % 100:02d}" in found)
+        # Compare as numbers: "03 January 2027" has the day 3 written as "03".
+        found = {int(n) for n in numbers(val.quote) if n.isdigit()}
+        return d.day in found and (d.year in found or d.year % 100 in found)
     return True
 
 

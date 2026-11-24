@@ -14,7 +14,7 @@ from whitespace_pipeline.gold import opportunity
 from whitespace_pipeline.gold import routes as sea_routes
 from whitespace_pipeline.load import postgres
 from whitespace_pipeline.silver import baci as silver_baci
-from whitespace_pipeline.sources import baci
+from whitespace_pipeline.sources import baci, us_hts
 
 app = typer.Typer(help="Whitespace data pipeline", no_args_is_help=True)
 
@@ -91,10 +91,19 @@ def routes() -> None:
     typer.secho(f"routes ready: {path}", fg=typer.colors.GREEN)
 
 
+@app.command("us-tariffs")
+def us_tariffs() -> None:
+    """Rebuild the US additional-duty table from the official HTS chapter 99 (monthly)."""
+    path = us_hts.run(get_settings())
+    typer.secho(f"US tariffs ready: {path}", fg=typer.colors.GREEN)
+
+
 @app.command()
-def load() -> None:
+def load(
+    routes_only: bool = typer.Option(False, help="Reload only the sea routes table."),
+) -> None:
     """Replace the trade tables in Postgres with the latest gold data."""
-    counts = postgres.run(get_settings())
+    counts = postgres.run(get_settings(), routes_only=routes_only)
     for table, rows in counts.items():
         typer.echo(f"  {table}: {rows:,} rows")
     typer.secho("load complete", fg=typer.colors.GREEN)

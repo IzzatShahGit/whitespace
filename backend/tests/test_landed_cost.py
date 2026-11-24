@@ -32,8 +32,32 @@ from whitespace_api.models import Country, MarketOpportunity, MarketSupplier, Ta
 from whitespace_api.schemas.trade import CountryOut
 from whitespace_api.services import chat as chat_service
 from whitespace_api.services import landed_cost
+from whitespace_shared import us_tariffs
 
 FIXTURES = Path(__file__).parent / "fixtures"
+# A fixed US chapter 99 schedule, so a monthly refresh of the real one can't move results.
+US_SCHEDULE = us_tariffs.parse(
+    {
+        "release": "Revision 99 (2026)", "source_url": "https://hts.usitc.gov/",
+        "built": "2026-11-24",
+        "country": {
+            "PAK": [{"heading": "9903.05.62", "rate": 10, "ceiling": False}],
+            "CHN": [{"heading": "9903.05.31", "rate": 12.5, "ceiling": False}],
+            "EUN": [{"heading": "9903.05.39", "rate": 10, "ceiling": True}],
+        },
+        "country_exempt": [],
+        "china": [
+            {"name": "List 4A", "heading": "9903.88.15", "rate": 7.5, "codes": ["6302600010"]}
+        ],
+    }
+)  # fmt: skip
+
+
+@pytest.fixture(autouse=True)
+def us_schedule(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(landed_cost.us_tariffs, "load", lambda: US_SCHEDULE)
+
+
 NO_RECORDS = httpx.Response(404, text="Not Found - NoRecordsFound")
 WITS_FILES = {
     ("918", "000", "all"): "wits_918_630260_mfn.xml",
@@ -206,8 +230,9 @@ async def test_exporter_preference_against_rivals(
     assert response.headers["cache-control"].startswith("private")
     body = response.json()
     assert body["yours"] == {
-        "country": {"code": "PAK", "name": "Pakistan"}, "rate_pct": 0.0, "kind": "preference",
-        "scheme": "EU GSP+", "year": 2017, "source": "WITS-TRAINS (World Bank, UNCTAD)",
+        "country": {"code": "PAK", "name": "Pakistan"}, "rate_pct": 0.0, "base_pct": 0.0,
+        "additional": [], "kind": "preference", "scheme": "EU GSP+", "year": 2017,
+        "source": "WITS-TRAINS (World Bank, UNCTAD)",
         "note": "Last recorded in 2017; it may have changed since.",
     }  # fmt: skip
     assert body["standard"] == {"rate_pct": 12.0, "year": 2023, "source": body["yours"]["source"]}
@@ -247,11 +272,33 @@ async def test_uk_rates_are_live_and_complete(
     assert body["source_url"].startswith("https://www.trade-tariff.service.gov.uk/")
 
 
-async def test_us_rates_carry_the_extra_tariffs_note(
+async def test_us_rates_add_chapter_99_duties(
     user: AsyncClient, markets: None, source: Source
 ) -> None:
     body = (await user.get(url("USA"))).json()
-    assert body["yours"]["rate_pct"] == 9.1 and body["yours"]["kind"] == "standard"
+    yours = body["yours"]
+    assert (yours["base_pct"], yours["rate_pct"], yours["kind"]) == (9.1, 19.1, "standard")
+    assert yours["additional"] == [
+        {
+            "name": "Section 301 country duty", "heading": "9903.05.62", "rate_pct": 10.0,
+            "note": None,
+        }
+    ]  # fmt: skip
+    china = next(r for r in body["rivals"] if r["country"]["code"] == "CHN")
+    # 9.1% normal + 12.5% country duty + 7.5% List 4A, which names one of the code's lines
+    assert china["rate_pct"] == pytest.approx(29.1)
+    assert [d["heading"] for d in china["additional"]] == ["9903.05.31", "9903.88.15"]
+    assert china["additional"][1]["note"].startswith("Applies to 1 ")
+    assert china["advantage_pts"] == pytest.approx(10.0)  # both pay 9.1%; extras differ
+    assert body["notes"][0] == landed_cost.us_note() and "Revision 99 (2026)" in body["notes"][0]
+
+
+async def test_us_rates_without_a_built_schedule_say_extras_are_missing(
+    user: AsyncClient, markets: None, source: Source, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(landed_cost.us_tariffs, "load", lambda: None)
+    body = (await user.get(url("USA"))).json()
+    assert body["yours"]["rate_pct"] == 9.1 and body["yours"]["additional"] == []
     assert body["notes"][0] == landed_cost.US_EXTRA
 
 
@@ -345,9 +392,9 @@ async def test_landed_cost_in_a_fob_market_without_your_cost(
 ) -> None:
     body = (await user.get(url("USA", "landed-cost", freight_usd_kg=0.5))).json()
     assert body["duty_base"] == "FOB" and body["yours"] is None and body["margin"] is None
-    china = body["rivals"][0]  # 9.1% of the $4.00 goods only; freight isn't dutiable
-    assert china["duty_usd_kg"] == pytest.approx(0.364)
-    assert china["landed_usd_kg"] == pytest.approx(4.864)
+    china = body["rivals"][0]  # 29.1% of the $4.00 goods only; freight isn't dutiable
+    assert china["duty_usd_kg"] == pytest.approx(1.164)
+    assert china["landed_usd_kg"] == pytest.approx(5.664)
     assert len(body["explanation"]) == 2 and body["verdict"] is None
 
 

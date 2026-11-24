@@ -38,7 +38,9 @@
     "settingsHint": "Perfil, negócio e aparência",
     "usage": "Uso",
     "usageHint": "Visitantes, cadastros e uso de recursos",
-    "admin": "Admin"
+    "admin": "Admin",
+    "amazon": "Vender na Amazon",
+    "amazonHint": "Lucro por unidade na Amazon EUA: frete, tarifas, taxas"
   },
   "shell": {
     "search": "Busque produtos ou pergunte…",
