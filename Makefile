@@ -82,6 +82,9 @@ alerts: ## Check watched markets for new monthly data and notify watchers (cron-
 sanctions: ## Load the OFAC, UN, EU and UK sanctions lists now (the app also refreshes daily)
 	cd backend && uv run python -m whitespace_api.jobs.sanctions
 
+us-tariffs: ## Rebuild US additional duties from the official HTS chapter 99 (monthly; commit the JSON)
+	uv run ws-pipeline us-tariffs
+
 embed: ## Embed products for HS-code search (only new or changed ones; run after a data load)
 	cd backend && uv run python -m whitespace_api.jobs.embed_products
 
@@ -101,4 +104,4 @@ snapdeploy: ## Build the ARM64 web+API image for SnapDeploy -> dist/whitespace-s
 deploy-ec2: ## Build the ARM64 image and deploy it to the EC2 server (SKIP_BUILD=1 to reuse the last build)
 	scripts/ec2-deploy.sh
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions embed eval-hs gen-client snapdeploy deploy-ec2
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions us-tariffs embed eval-hs gen-client snapdeploy deploy-ec2

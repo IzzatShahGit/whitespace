@@ -4009,6 +4009,55 @@
         }
       }
     },
+    "/api/v1/public/products/search": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Search Products",
+        "description": "Products by everyday name, for the free Amazon calculator's product box.",
+        "operationId": "search_products_api_v1_public_products_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceProductMatch"
+                  },
+                  "title": "Response Search Products Api V1 Public Products Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events": {
       "post": {
         "tags": [
@@ -6871,10 +6920,188 @@
           }
         }
       }
+    },
+    "/api/v1/fba/estimate": {
+      "post": {
+        "tags": [
+          "fba"
+        ],
+        "summary": "Estimate",
+        "description": "Profit per unit, margin, cash needed and a verdict for one product on Amazon US.",
+        "operationId": "estimate_api_v1_fba_estimate_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FbaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FbaEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/fba/estimate": {
+      "post": {
+        "tags": [
+          "fba"
+        ],
+        "summary": "Public Estimate",
+        "description": "The same, signed out, for the free calculator: 10 a minute per visitor.",
+        "operationId": "public_estimate_api_v1_public_fba_estimate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FbaInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FbaEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/fba/options": {
+      "get": {
+        "tags": [
+          "fba"
+        ],
+        "summary": "Options",
+        "description": "Amazon categories, source countries and the fee table's date, for the form.",
+        "operationId": "options_api_v1_public_fba_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FbaOptions"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdditionalDuty": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "e.g. \"Section 301 country duty\""
+          },
+          "heading": {
+            "type": "string",
+            "title": "Heading",
+            "description": "The legal heading, e.g. \"9903.05.62\""
+          },
+          "rate_pct": {
+            "type": "number",
+            "title": "Rate Pct",
+            "description": "Percent of the customs value, added to the normal rate"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "heading",
+          "rate_pct"
+        ],
+        "title": "AdditionalDuty",
+        "description": "A duty charged on top of the normal rate (US HTS chapter 99)."
+      },
       "AdminStats": {
         "properties": {
           "since": {
@@ -6924,6 +7151,39 @@
           "actions"
         ],
         "title": "AdminStats"
+      },
+      "AmazonSize": {
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": [
+              "small_standard",
+              "large_standard"
+            ],
+            "title": "Tier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "shipping_weight_lb": {
+            "type": "number",
+            "title": "Shipping Weight Lb",
+            "description": "Unit or dimensional weight, as Amazon bills"
+          },
+          "cubic_feet": {
+            "type": "number",
+            "title": "Cubic Feet"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tier",
+          "label",
+          "shipping_weight_lb",
+          "cubic_feet"
+        ],
+        "title": "AmazonSize"
       },
       "Ask": {
         "properties": {
@@ -9291,7 +9551,20 @@
           "rate_pct": {
             "type": "number",
             "title": "Rate Pct",
-            "description": "Ad valorem duty, percent of the customs value"
+            "description": "Total ad valorem duty, percent of the customs value: normal + additional"
+          },
+          "base_pct": {
+            "type": "number",
+            "title": "Base Pct",
+            "description": "The normal rate alone (MFN or preference)"
+          },
+          "additional": {
+            "items": {
+              "$ref": "#/components/schemas/AdditionalDuty"
+            },
+            "type": "array",
+            "title": "Additional",
+            "description": "Duties on top of the normal rate (US only for now)"
           },
           "kind": {
             "type": "string",
@@ -9340,6 +9613,7 @@
         "required": [
           "country",
           "rate_pct",
+          "base_pct",
           "kind",
           "scheme",
           "year",
@@ -9404,6 +9678,562 @@
           "created_at"
         ],
         "title": "EventOut"
+      },
+      "FbaCategory": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "home_kitchen",
+              "beauty_health",
+              "baby",
+              "clothing",
+              "footwear",
+              "luggage",
+              "sports",
+              "toys",
+              "pet",
+              "grocery",
+              "electronics_accessories",
+              "consumer_electronics",
+              "furniture",
+              "jewelry",
+              "other"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "FbaCategory"
+      },
+      "FbaCost": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "type": "string",
+            "enum": [
+              "landed",
+              "amazon",
+              "selling"
+            ],
+            "title": "Group",
+            "description": "landed: to Amazon's door; amazon: Amazon's fees; selling: ads, returns"
+          },
+          "usd": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per unit sold"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "group",
+          "usd"
+        ],
+        "title": "FbaCost"
+      },
+      "FbaEstimate": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductOut"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "size": {
+            "$ref": "#/components/schemas/AmazonSize"
+          },
+          "duty": {
+            "$ref": "#/components/schemas/DutyRate"
+          },
+          "duty_stale": {
+            "type": "boolean",
+            "title": "Duty Stale"
+          },
+          "shipment": {
+            "$ref": "#/components/schemas/FbaShipment"
+          },
+          "costs": {
+            "items": {
+              "$ref": "#/components/schemas/FbaCost"
+            },
+            "type": "array",
+            "title": "Costs",
+            "description": "Per unit sold, in the order they're paid"
+          },
+          "landed_unit": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Product + freight + duty + import fees + prep"
+          },
+          "amazon_fees_unit": {
+            "type": "number",
+            "title": "Amazon Fees Unit"
+          },
+          "total_cost_unit": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "profit_unit": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "low: with the high costs; high: with the low"
+          },
+          "margin": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Profit / price"
+          },
+          "roi": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Profit / landed cost: what each dollar invested earns"
+          },
+          "break_even_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Break Even Price",
+            "description": "Lowest price that covers every cost"
+          },
+          "months_of_stock": {
+            "type": "number",
+            "title": "Months Of Stock"
+          },
+          "monthly_profit": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "At your expected sales, after the plan fee"
+          },
+          "first_order_cash": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Money out before the first sale: goods, freight, duty, fees, one month's plan"
+          },
+          "payback_months": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payback Months",
+            "description": "Typical case; None if it doesn't pay back"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/FbaVerdict"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "duty_source_url": {
+            "type": "string",
+            "title": "Duty Source Url"
+          },
+          "fees_as_of": {
+            "type": "string",
+            "title": "Fees As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "origin",
+          "category",
+          "size",
+          "duty",
+          "duty_stale",
+          "shipment",
+          "costs",
+          "landed_unit",
+          "amazon_fees_unit",
+          "total_cost_unit",
+          "profit_unit",
+          "margin",
+          "roi",
+          "break_even_price",
+          "months_of_stock",
+          "monthly_profit",
+          "first_order_cash",
+          "payback_months",
+          "verdict",
+          "notes",
+          "duty_source_url",
+          "fees_as_of"
+        ],
+        "title": "FbaEstimate"
+      },
+      "FbaInput": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "title": "Hs6"
+          },
+          "origin": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Origin",
+            "description": "Where you buy it (ISO alpha-3)"
+          },
+          "unit_cost_usd": {
+            "type": "number",
+            "maximum": 10000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Cost Usd",
+            "description": "Supplier price per unit, FOB"
+          },
+          "price_usd": {
+            "type": "number",
+            "maximum": 10000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Price Usd",
+            "description": "Your selling price on Amazon"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "home_kitchen",
+              "beauty_health",
+              "baby",
+              "clothing",
+              "footwear",
+              "luggage",
+              "sports",
+              "toys",
+              "pet",
+              "grocery",
+              "electronics_accessories",
+              "consumer_electronics",
+              "furniture",
+              "jewelry",
+              "other"
+            ],
+            "title": "Category",
+            "default": "home_kitchen"
+          },
+          "length_in": {
+            "type": "number",
+            "maximum": 120.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Length In",
+            "description": "Packed unit, longest side"
+          },
+          "width_in": {
+            "type": "number",
+            "maximum": 120.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Width In"
+          },
+          "height_in": {
+            "type": "number",
+            "maximum": 120.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Height In"
+          },
+          "weight_lb": {
+            "type": "number",
+            "maximum": 150.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Lb",
+            "description": "Packed unit weight"
+          },
+          "units": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Units",
+            "description": "Units in your first order"
+          },
+          "monthly_sales": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Monthly Sales",
+            "description": "Units you expect to sell a month"
+          },
+          "ad_pct": {
+            "type": "number",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Ad Pct",
+            "description": "Advertising, % of sales",
+            "default": 10
+          },
+          "return_pct": {
+            "type": "number",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Return Pct",
+            "description": "Returned units, %",
+            "default": 3
+          },
+          "prep_usd": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Prep Usd",
+            "description": "Labels and prep, per unit",
+            "default": 0
+          },
+          "us_shipment_fees_usd": {
+            "type": "number",
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Us Shipment Fees Usd",
+            "description": "Customs broker, bond and delivery to Amazon, per shipment",
+            "default": 450
+          },
+          "shipping": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "lcl",
+              "20ft",
+              "40ft"
+            ],
+            "title": "Shipping",
+            "default": "auto"
+          },
+          "freight_per_unit_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Per Unit Usd",
+            "description": "Your forwarder's quote; replaces our estimate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "origin",
+          "unit_cost_usd",
+          "price_usd",
+          "length_in",
+          "width_in",
+          "height_in",
+          "weight_lb",
+          "units",
+          "monthly_sales"
+        ],
+        "title": "FbaInput",
+        "description": "One product, one source country, sold on Amazon US. Inches, pounds, US dollars."
+      },
+      "FbaOptions": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/FbaCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "origins": {
+            "items": {
+              "$ref": "#/components/schemas/CountryOut"
+            },
+            "type": "array",
+            "title": "Origins",
+            "description": "Countries we can price shipping from"
+          },
+          "fees_as_of": {
+            "type": "string",
+            "title": "Fees As Of"
+          },
+          "plan_usd": {
+            "type": "number",
+            "title": "Plan Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "origins",
+          "fees_as_of",
+          "plan_usd"
+        ],
+        "title": "FbaOptions"
+      },
+      "FbaShipment": {
+        "properties": {
+          "container": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "20ft",
+                  "40ft",
+                  "40hc",
+                  "lcl"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container",
+            "description": "None when you gave your own freight"
+          },
+          "containers": {
+            "type": "integer",
+            "title": "Containers",
+            "description": "How many boxes of that kind (1 unless very large)"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "volume_m3": {
+            "type": "number",
+            "title": "Volume M3"
+          },
+          "kg": {
+            "type": "number",
+            "title": "Kg"
+          },
+          "freight_usd": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Whole shipment, to the US port and delivered"
+          },
+          "import_fees_usd": {
+            "type": "number",
+            "title": "Import Fees Usd",
+            "description": "US customs processing and harbour fees"
+          },
+          "days_low": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Low"
+          },
+          "days_high": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days High"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route",
+            "description": "e.g. \"PKKHI \u2192 USLAX\""
+          },
+          "rates_as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rates As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "container",
+          "containers",
+          "label",
+          "volume_m3",
+          "kg",
+          "freight_usd",
+          "import_fees_usd",
+          "days_low",
+          "days_high",
+          "route",
+          "rates_as_of"
+        ],
+        "title": "FbaShipment"
+      },
+      "FbaVerdict": {
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "neutral",
+              "negative"
+            ],
+            "title": "Tone"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tone",
+          "headline",
+          "reasons"
+        ],
+        "title": "FbaVerdict"
       },
       "Finding": {
         "properties": {
@@ -13133,7 +13963,20 @@
           "rate_pct": {
             "type": "number",
             "title": "Rate Pct",
-            "description": "Ad valorem duty, percent of the customs value"
+            "description": "Total ad valorem duty, percent of the customs value: normal + additional"
+          },
+          "base_pct": {
+            "type": "number",
+            "title": "Base Pct",
+            "description": "The normal rate alone (MFN or preference)"
+          },
+          "additional": {
+            "items": {
+              "$ref": "#/components/schemas/AdditionalDuty"
+            },
+            "type": "array",
+            "title": "Additional",
+            "description": "Duties on top of the normal rate (US only for now)"
           },
           "kind": {
             "type": "string",
@@ -13192,6 +14035,7 @@
         "required": [
           "country",
           "rate_pct",
+          "base_pct",
           "kind",
           "scheme",
           "year",

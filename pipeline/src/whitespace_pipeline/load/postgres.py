@@ -63,18 +63,25 @@ def tables(gold_dir: Path) -> dict[str, pl.DataFrame]:
     }
 
 
-def run(settings: PipelineSettings) -> dict[str, int]:
+def run(settings: PipelineSettings, *, routes_only: bool = False) -> dict[str, int]:
+    """Replace the tables in one transaction; `routes_only` reloads just the sea routes."""
     gold_dir = settings.gold_dir / f"V{settings.baci_version}"
-    if not (gold_dir / "market_opportunity.parquet").exists():
-        raise RuntimeError("Gold is missing; run `ws-pipeline gold` first")
-    data = tables(gold_dir)
     routes = settings.gold_dir / "sea_routes.parquet"  # from `ws-pipeline routes`
-    if routes.exists():
-        data[SEA_ROUTE_TABLE] = pl.read_parquet(routes)
+    if routes_only:
+        if not routes.exists():
+            raise RuntimeError("Routes are missing; run `ws-pipeline routes` first")
+        data = {SEA_ROUTE_TABLE: pl.read_parquet(routes)}
+    else:
+        if not (gold_dir / "market_opportunity.parquet").exists():
+            raise RuntimeError("Gold is missing; run `ws-pipeline gold` first")
+        data = tables(gold_dir)
+        if routes.exists():
+            data[SEA_ROUTE_TABLE] = pl.read_parquet(routes)
     with psycopg.connect(libpq_url(settings.database_url)) as conn, conn.cursor() as cur:
         for table, frame in data.items():
             _copy(cur, table, frame)
             log.info("loaded %s rows into %s", f"{frame.height:,}", table)
-        cur.execute(f'ANALYZE "{MARKET_OPPORTUNITY_TABLE}"')
+        if not routes_only:
+            cur.execute(f'ANALYZE "{MARKET_OPPORTUNITY_TABLE}"')
     # Leaving the `with` block commits; an exception rolls everything back.
     return {table: frame.height for table, frame in data.items()}

@@ -45,7 +45,8 @@ export type ChatCard = ChatMessage["cards"][number];
 
 /** A product found by search: `count` is ranked markets (selling) or supplier countries (buying). */
 export type ProductOption = Product & { count: number };
-export type Mode = "sell" | "buy";
+/** "public": buying, signed out (the free Amazon calculator). */
+export type Mode = "sell" | "buy" | "public";
 
 // ---------- errors ----------
 export class ApiError extends Error {
@@ -203,11 +204,13 @@ export function useProductSearch(mode: Mode, exporter: string | undefined, q: st
   return useQuery({
     queryKey: keys.search(mode, exporter ?? "", query),
     queryFn: async (): Promise<ProductOption[]> => {
-      if (mode === "buy") {
+      if (mode !== "sell") {
         const found = await unwrap(
-          api.GET("/api/v1/sourcing/products/search", {
-            params: { query: { q: query, limit: 8 } },
-          }),
+          mode === "public"
+            ? api.GET("/api/v1/public/products/search", { params: { query: { q: query } } })
+            : api.GET("/api/v1/sourcing/products/search", {
+                params: { query: { q: query, limit: 8 } },
+              }),
         );
         return found.map(({ suppliers, ...product }) => ({ ...product, count: suppliers }));
       }
@@ -218,7 +221,7 @@ export function useProductSearch(mode: Mode, exporter: string | undefined, q: st
       );
       return found.map(({ markets, ...product }) => ({ ...product, count: markets }));
     },
-    enabled: (mode === "buy" || Boolean(exporter)) && query.length >= 2,
+    enabled: (mode !== "sell" || Boolean(exporter)) && query.length >= 2,
     placeholderData: (previous) => previous, // keep old suggestions while typing
   });
 }

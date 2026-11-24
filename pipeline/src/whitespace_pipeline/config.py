@@ -40,6 +40,10 @@ class PipelineSettings(BaseSettings):
         # Latin America
         "MEX", "BRA", "COL",
     ]  # fmt: skip
+    # Where Amazon sellers often buy, beyond the exporters above: sea routes only, to the
+    # Amazon marketplaces we price (a few rows, no market scores).
+    sourcing_origins: list[str] = ["CHN", "HKG", "TWN", "KOR", "JPN"]
+    marketplaces: list[str] = ["USA", "GBR", "DEU", "CAN"]
 
     @property
     def bronze_dir(self) -> Path:

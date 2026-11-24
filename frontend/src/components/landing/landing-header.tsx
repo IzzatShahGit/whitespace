@@ -2,9 +2,11 @@ import { Logo } from "@/components/brand/logo";
 import { ButtonLink } from "@/components/ui/button";
 
 const LINKS = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#inside", label: "What’s inside" },
-  { href: "#data", label: "The data" },
+  // "/#…" so the anchors also work from other public pages (e.g. the FBA calculator).
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#inside", label: "What’s inside" },
+  { href: "/fba-calculator", label: "Amazon calculator" },
+  { href: "/#data", label: "The data" },
 ];
 
 /** Signed-out header: the brand, three anchors, and the two ways in. */

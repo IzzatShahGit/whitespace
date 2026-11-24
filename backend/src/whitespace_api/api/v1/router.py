@@ -7,6 +7,7 @@ from whitespace_api.api.v1.routes import (
     chat,
     checks,
     documents,
+    fba,
     freight,
     fx,
     google,
@@ -50,3 +51,4 @@ api_router.include_router(shipments.router)
 api_router.include_router(checks.router)
 api_router.include_router(documents.router)
 api_router.include_router(hs.router)
+api_router.include_router(fba.router)

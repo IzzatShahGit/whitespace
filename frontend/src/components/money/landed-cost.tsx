@@ -18,6 +18,28 @@ const rate = (pct: number) => `${Number(pct.toFixed(1))}%`;
  * trade scheme behind it. Hidden for markets the tariff data doesn't cover.
  */
 /** The scheme's name, or what kind of rate it is when the source doesn't name one. */
+type Duty = {
+  base_pct: number;
+  additional?: { name: string; heading: string; rate_pct: number; note?: string | null }[];
+};
+
+/** "9.1% + 10% Section 301": how a total with US extra duties is made up. */
+function DutyParts({ duty }: { duty: Duty }) {
+  if (!duty.additional?.length) return null;
+  const parts = [
+    rate(duty.base_pct),
+    ...duty.additional.map((a) => `${rate(a.rate_pct)} ${a.name}`),
+  ];
+  return (
+    <dd
+      className="mt-1 text-xs leading-5 text-muted"
+      title={duty.additional.map((a) => a.heading).join(", ")}
+    >
+      {parts.join(" + ")}
+    </dd>
+  );
+}
+
 function rateLabel(rate: { kind: string; scheme?: string | null }): string {
   return rate.scheme ?? (rate.kind === "preference" ? "Preferential rate" : "Standard rate");
 }
@@ -76,6 +98,7 @@ export function DutyAdvantage({
           <dd className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
             {rate(d.yours.rate_pct)}
           </dd>
+          <DutyParts duty={d.yours} />
           <dd className="mt-1.5">
             <Badge tone={d.yours.kind === "preference" ? "brand" : "neutral"}>
               {rateLabel(d.yours)}
@@ -90,6 +113,7 @@ export function DutyAdvantage({
             <dd className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
               {rate(rival.rate_pct)}
             </dd>
+            <DutyParts duty={rival} />
             <dd className="mt-1.5">
               <Badge tone={rival.kind === "preference" ? "brand" : "neutral"}>
                 {rateLabel(rival)}

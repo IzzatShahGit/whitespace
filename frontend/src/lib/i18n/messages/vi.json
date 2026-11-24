@@ -38,7 +38,9 @@
     "settingsHint": "Hồ sơ, doanh nghiệp và giao diện",
     "usage": "Lượt dùng",
     "usageHint": "Khách truy cập, đăng ký và mức dùng tính năng",
-    "admin": "Quản trị"
+    "admin": "Quản trị",
+    "amazon": "Bán trên Amazon",
+    "amazonHint": "Lợi nhuận mỗi sản phẩm trên Amazon Mỹ: cước, thuế, phí"
   },
   "shell": {
     "search": "Tìm sản phẩm hoặc đặt câu hỏi…",

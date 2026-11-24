@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IsoGrid } from "@/components/brand/iso-grid";
 import { Wordmark } from "@/components/brand/logo";
 import { ButtonLink } from "@/components/ui/button";
@@ -39,24 +40,27 @@ export function Footer() {
           </p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm">
-          <a href="#how-it-works" className="text-muted hover:text-fg">
+          <Link href="/#how-it-works" className="text-muted hover:text-fg">
             How it works
-          </a>
-          <a href="/signup" className="text-muted hover:text-fg">
+          </Link>
+          <Link href="/signup" className="text-muted hover:text-fg">
             Create an account
-          </a>
-          <a href="#data" className="text-muted hover:text-fg">
+          </Link>
+          <Link href="/#data" className="text-muted hover:text-fg">
             The data
-          </a>
-          <a href="/login" className="text-muted hover:text-fg">
+          </Link>
+          <Link href="/login" className="text-muted hover:text-fg">
             Sign in
-          </a>
-          <a href="/terms" className="text-muted hover:text-fg">
+          </Link>
+          <Link href="/fba-calculator" className="text-muted hover:text-fg">
+            Amazon FBA calculator
+          </Link>
+          <Link href="/terms" className="text-muted hover:text-fg">
             Terms
-          </a>
-          <a href="/privacy" className="text-muted hover:text-fg">
+          </Link>
+          <Link href="/privacy" className="text-muted hover:text-fg">
             Privacy
-          </a>
+          </Link>
         </nav>
       </div>
       <p className="mx-auto max-w-6xl px-4 pb-8 text-xs text-subtle sm:px-6">

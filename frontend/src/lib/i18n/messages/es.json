@@ -38,7 +38,9 @@
     "settingsHint": "Perfil, negocio y apariencia",
     "usage": "Uso",
     "usageHint": "Visitantes, registros y uso de funciones",
-    "admin": "Admin"
+    "admin": "Admin",
+    "amazon": "Vender en Amazon",
+    "amazonHint": "Beneficio por unidad en Amazon EE. UU.: flete, aranceles, tarifas"
   },
   "shell": {
     "search": "Busque productos o pregunte…",

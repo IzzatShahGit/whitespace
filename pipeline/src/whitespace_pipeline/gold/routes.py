@@ -225,7 +225,10 @@ def compute(exporters: Iterable[str], countries: Iterable[str]) -> pl.DataFrame:
 def run(settings: PipelineSettings) -> Path:
     gold = settings.gold_dir / f"V{settings.baci_version}"
     countries = pl.read_parquet(gold / "countries.parquet")["iso3"].unique().to_list()
+    extra = [o for o in settings.sourcing_origins if o not in settings.exporters]
     frame = compute(settings.exporters, countries)
+    if extra:
+        frame = pl.concat([frame, compute(extra, settings.marketplaces)])
     validate_against(frame, SeaRoute)
     out = settings.gold_dir / "sea_routes.parquet"  # independent of the BACI release
     write_parquet_atomic(frame, out)

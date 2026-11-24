@@ -157,7 +157,7 @@ export function ProductPicker({
                 <span className="shrink-0 pt-0.5 text-right text-xs text-subtle tabular-nums">
                   HS {product.hs6}
                   <span className="block">
-                    {product.count} {mode === "buy" ? "suppliers" : "markets"}
+                    {product.count} {mode === "sell" ? "markets" : "suppliers"}
                   </span>
                 </span>
               </li>
@@ -165,7 +165,7 @@ export function ProductPicker({
           </ul>
         )}
       </div>
-      {!off && (
+      {!off && mode !== "public" && (
         <button
           type="button"
           aria-expanded={finding}
@@ -175,7 +175,7 @@ export function ProductPicker({
           <Sparkles className="h-3.5 w-3.5" aria-hidden /> {t("hs.notSure")}
         </button>
       )}
-      {finding && !off && (
+      {finding && !off && mode !== "public" && (
         <HsFinder
           initial={text}
           onPick={(product) => {

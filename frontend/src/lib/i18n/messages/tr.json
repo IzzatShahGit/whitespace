@@ -38,7 +38,9 @@
     "settingsHint": "Profil, işletme ve görünüm",
     "usage": "Kullanım",
     "usageHint": "Ziyaretçiler, kayıtlar ve özellik kullanımı",
-    "admin": "Yönetici"
+    "admin": "Yönetici",
+    "amazon": "Amazon'da sat",
+    "amazonHint": "Amazon ABD'de birim başına kâr: navlun, gümrük, ücretler"
   },
   "shell": {
     "search": "Ürün arayın veya sorun…",

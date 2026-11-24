@@ -227,3 +227,17 @@ def minimal_pdf(text: str) -> bytes:
     out += b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
     out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode()
     return out
+
+
+@pytest.mark.parametrize(
+    ("value", "quote", "kept"),
+    [
+        ("2027-01-03", "Ship by 03 January 2027", True),  # leading zero on the day
+        ("2027-01-03", "Ship by 3 Jan 27", True),
+        ("2027-01-13", "Ship by 03 January 2027", False),  # a different day
+        ("2027-01-03", "Ship by 03 January 2026", False),  # a different year
+    ],
+)
+def test_dates_must_match_the_quote(value: str, quote: str, kept: bool) -> None:
+    val = doc_check._Val(value=value, quote=quote)
+    assert doc_check._supported("latest_shipment", val, quote) is kept

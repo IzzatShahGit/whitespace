@@ -9,6 +9,8 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from whitespace_api.api.deps import DbSession
 from whitespace_api.core.ratelimit import RateLimiter, limit
 from whitespace_api.schemas.public import Preview, PreviewMarket
+from whitespace_api.schemas.sourcing import SourceProductMatch
+from whitespace_api.services import sourcing as sourcing_service
 from whitespace_api.services import trade as trade_service
 from whitespace_shared.gold import COUNTRY_CODE_PATTERN
 
@@ -56,3 +58,20 @@ async def preview(
             for m in page.items
         ],
     )
+
+
+_search_limit = RateLimiter(per_minute=40)
+SEARCH_LIMIT = 8
+
+
+@router.get("/products/search", response_model=list[SourceProductMatch])
+async def search_products(
+    request: Request,
+    response: Response,
+    db: DbSession,
+    q: Annotated[str, Query(min_length=2, max_length=60)],
+) -> list[SourceProductMatch]:
+    """Products by everyday name, for the free Amazon calculator's product box."""
+    limit(_search_limit, request)
+    response.headers["Cache-Control"] = f"public, max-age={CACHE_SECONDS}"
+    return await sourcing_service.search_products(db, q=q, limit=SEARCH_LIMIT)
