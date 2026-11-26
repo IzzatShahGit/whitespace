@@ -24,6 +24,7 @@ export function ProductPicker({
   label,
   id,
   autoFocus = false,
+  initialText = "",
 }: {
   mode?: Mode;
   exporter: string | undefined;
@@ -35,10 +36,12 @@ export function ProductPicker({
   label?: string;
   id?: string;
   autoFocus?: boolean;
+  /** Start with this search typed in (e.g. a product name brought from another page). */
+  initialText?: string;
 }) {
   const t = useT();
   const listId = useId();
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [finding, setFinding] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);

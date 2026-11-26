@@ -49,6 +49,8 @@ export const en = {
     usageHint: "Visitors, sign-ups and feature use",
     amazon: "Sell on Amazon",
     amazonHint: "Profit per unit on Amazon US: freight, duty, fees",
+    ideas: "Product ideas",
+    ideasHint: "Amazon best sellers and rising US imports",
     admin: "Admin",
   },
   shell: {
@@ -440,11 +442,81 @@ export const en = {
     estimated: "Estimated {value}",
     addProducts: "Add your products first",
   },
+  ideas: {
+    title: "Product ideas",
+    subtitle:
+      "What sells on Amazon US right now, and which products America is importing more of. Pick one and check its profit, suppliers and markets.",
+    landing: {
+      eyebrow: "Free, updated every week",
+      title: "Amazon best sellers this week, and what to sell next",
+      lead: "The top 10 in 15 Amazon categories, beside official US import figures. Every number names its source and date, and any product opens straight in the profit calculator.",
+    },
+    category: "Amazon category",
+    amazon: {
+      title: "Best sellers on Amazon",
+      captured: "Collected {date}",
+      compared: "moves vs {date}",
+      openLive: "Live list on Amazon",
+      empty:
+        "The first weekly list is being collected. Until then, open any category's live list on Amazon.",
+      none: "No list for this category this week.",
+      reviews: "{count} ratings",
+      newEntry: "New",
+      up: "Up {count}",
+      down: "Down {count}",
+      code: "Customs code",
+      startCost: "Buy from {country} at about {cost} a unit",
+      startCountry: "Usually bought from {country}",
+      listPrice: "was {price}",
+      noCode: "No sure customs code yet: you'll pick the product in one step.",
+      view: "View on Amazon",
+    },
+    hot: {
+      title: "Hot categories in US imports",
+      description: "Last 12 months against the 12 before",
+      year: "12 months",
+      quarter: "Last 3 months",
+      noData: "No import codes mapped",
+      note: "US consumer imports fell this year after the new tariffs, so any category still growing stands out.",
+    },
+    rising: {
+      title: "Rising imports: {category}",
+      description: "Products the US imports more of, and still rising in the latest quarter",
+      none: "Nothing in this category is growing on both counts right now.",
+      perYear: "{value} a year",
+      growth: "{change} in 12 months",
+      recent: "{change} in the last 3 months",
+      china: "From China: +{rate}% extra US duty",
+      chinaNone: "No extra China duty",
+      notCovered: "We don't have trade data for this code yet.",
+    },
+    actions: {
+      profit: "Check profit",
+      suppliers: "Suppliers",
+      markets: "Other markets",
+    },
+    sources: {
+      title: "Where these numbers come from",
+      amazon:
+        "Amazon lists: the public Amazon.com Best Sellers pages, top 10 per category, collected weekly through Apify. Amazon ranks by recent sales and updates hourly, so a list is a snapshot.",
+      imports: "US imports: {source}, {from} to {to}.",
+      codes:
+        "Customs codes for Amazon products are suggested by our HS finder from the product name. Check the code before you order.",
+      affiliation: "Whitespace isn't affiliated with Amazon.",
+    },
+  },
   fba: {
     title: "Sell on Amazon",
     subtitle:
       "Will this product make money on Amazon US? Every cost from your supplier to the customer: freight, US duty, Amazon's fees, ads and returns.",
     example: "Showing an example: bath towels from Pakistan. Change any field to yours.",
+    fromAmazon:
+      "From Amazon's best sellers: {name}. Price and size come from the listing; the supplier price is estimated from US import prices. Replace any number with your own quote.",
+    fromImports:
+      "Product and supplier country come from US import data. Price, size and supplier price are still the example's: enter yours.",
+    fromAmazonNoSize:
+      "From Amazon's best sellers: {name}. The price comes from the listing, which gives no packed size: enter yours (the example's is shown).",
+    pickProduct: "Pick the closest product above and the profit appears here.",
     reset: "Back to the example",
     copyLink: "Copy link",
     copied: "Link copied",
@@ -534,6 +606,7 @@ export const en = {
     },
     demand: {
       title: "US demand",
+      findSuppliers: "Compare suppliers and their prices",
       last12: "US imports, last 12 months",
       change: "{change} vs the 12 months before",
       share: "{country} supplies {share} of it",

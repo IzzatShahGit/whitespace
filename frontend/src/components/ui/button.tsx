@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
-type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "accent" | "secondary" | "tinted" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -16,6 +16,8 @@ const variants: Record<Variant, string> = {
   accent: "bg-action text-white shadow-card hover:brightness-110",
   secondary:
     "border border-line bg-surface text-fg shadow-card hover:border-line-strong hover:bg-surface-2",
+  // A repeated row action that must stand out without being the view's one orange button.
+  tinted: "bg-brand-soft font-semibold text-brand hover:bg-brand hover:text-white",
   ghost: "text-muted hover:bg-surface-2 hover:text-fg",
   danger: "bg-negative text-white hover:opacity-90",
 };

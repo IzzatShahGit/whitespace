@@ -4,6 +4,7 @@ from whitespace_api.models.analytics import AnalyticsDaily, AnalyticsVisitor
 from whitespace_api.models.base import Base
 from whitespace_api.models.brief import MarketBrief
 from whitespace_api.models.chat import ChatMessage, ChatThread
+from whitespace_api.models.ideas import AmazonBestsellers
 from whitespace_api.models.jobs import EmailSend, EmailVerification, JobLease
 from whitespace_api.models.lead import TradeLeads
 from whitespace_api.models.pipeline import PipelineContact, PipelineEvent, PipelineMessage
@@ -29,6 +30,7 @@ from whitespace_api.models.user import PasswordReset, RefreshToken, User
 from whitespace_api.models.watch import Notification, Watch
 
 __all__ = [
+    "AmazonBestsellers",
     "AnalyticsDaily",
     "AnalyticsVisitor",
     "Base",

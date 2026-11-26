@@ -40,7 +40,9 @@
     "usageHint": "Visitantes, cadastros e uso de recursos",
     "admin": "Admin",
     "amazon": "Vender na Amazon",
-    "amazonHint": "Lucro por unidade na Amazon EUA: frete, tarifas, taxas"
+    "amazonHint": "Lucro por unidade na Amazon EUA: frete, tarifas, taxas",
+    "ideas": "Ideias de produtos",
+    "ideasHint": "Mais vendidos da Amazon e importações dos EUA em alta"
   },
   "shell": {
     "search": "Busque produtos ou pergunte…",

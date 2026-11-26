@@ -121,6 +121,18 @@ async def list_countries(session: AsyncSession) -> Sequence[Country]:
     return (await session.scalars(select(Country).order_by(Country.name))).all()
 
 
+async def suppliers_for(
+    session: AsyncSession, *, market: str, codes: Sequence[str]
+) -> list[MarketSupplier]:
+    """Who supplies `market` with each of `codes` (one query for many products)."""
+    if not codes:
+        return []
+    rows = await session.scalars(
+        select(MarketSupplier).where(MarketSupplier.market == market, MarketSupplier.hs6.in_(codes))
+    )
+    return list(rows)
+
+
 async def countries_by_code(session: AsyncSession, codes: Sequence[str]) -> dict[str, Country]:
     if not codes:
         return {}

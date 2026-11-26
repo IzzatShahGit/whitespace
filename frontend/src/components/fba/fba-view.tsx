@@ -47,11 +47,27 @@ export function FbaCalculator({ signedOut = false }: { signedOut?: boolean }) {
   const isExample = (Object.keys(EXAMPLE) as (keyof FbaForm)[]).every(
     (k) => form[k] === EXAMPLE[k],
   );
+  // Arriving from Product ideas: say which numbers came from where.
+  const search = useSearchParams();
+  const source = search.get("src");
+  const amazonName = search.get("an")?.slice(0, 140);
+  const lookFor = search.get("q")?.slice(0, 80) ?? "";
 
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,25rem)_minmax(0,1fr)] xl:gap-8">
       <div className="flex flex-col gap-4 lg:sticky lg:top-6">
-        {isExample ? (
+        {source === "amazon" || source === "imports" ? (
+          <Callout tone="brand">
+            <span className="flex items-start gap-2">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              {source !== "amazon"
+                ? t("fba.fromImports")
+                : search.get("l")
+                  ? t("fba.fromAmazon", { name: amazonName ?? "" })
+                  : t("fba.fromAmazonNoSize", { name: amazonName ?? "" })}
+            </span>
+          </Callout>
+        ) : isExample ? (
           <Callout tone="brand">
             <span className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -73,12 +89,15 @@ export function FbaCalculator({ signedOut = false }: { signedOut?: boolean }) {
           setUnit={setUnit}
           options={options.data}
           signedOut={signedOut}
+          lookFor={lookFor}
         />
       </div>
 
       <div className="flex min-w-0 flex-col gap-6" aria-live="polite">
         {input === null ? (
-          <Callout tone="caution">{t("fba.result.fixFields")}</Callout>
+          <Callout tone="caution">
+            {!form.hs6 ? t("fba.pickProduct") : t("fba.result.fixFields")}
+          </Callout>
         ) : estimate.isError ? (
           <Callout tone="negative">
             <p className="font-medium">{t("fba.result.failed")}</p>
@@ -136,6 +155,7 @@ function FormCard({
   setUnit,
   options,
   signedOut,
+  lookFor,
 }: {
   form: FbaForm;
   errors: FormErrors;
@@ -143,6 +163,8 @@ function FormCard({
   setUnit: (unit: FbaForm["unit"]) => void;
   options: FbaOptions | undefined;
   signedOut: boolean;
+  /** A product name to search for when the code isn't known yet. */
+  lookFor: string;
 }) {
   const t = useT();
   const id = useId();
@@ -178,7 +200,8 @@ function FormCard({
               id={`${id}-product`}
               label={t("fba.fields.product")}
               placeholder={t("fba.fields.productPlaceholder")}
-              autoFocus={picking}
+              autoFocus={picking || (!form.hs6 && Boolean(lookFor))}
+              initialText={form.hs6 ? "" : lookFor}
               onSelect={(p) => {
                 update({
                   hs6: p.hs6,

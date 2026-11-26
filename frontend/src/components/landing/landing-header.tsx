@@ -5,7 +5,7 @@ const LINKS = [
   // "/#…" so the anchors also work from other public pages (e.g. the FBA calculator).
   { href: "/#how-it-works", label: "How it works" },
   { href: "/#inside", label: "What’s inside" },
-  { href: "/fba-calculator", label: "Amazon calculator" },
+  { href: "/amazon-best-sellers", label: "Amazon best sellers" },
   { href: "/#data", label: "The data" },
 ];
 

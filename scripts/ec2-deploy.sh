@@ -81,8 +81,14 @@ fi
 echo "==> Starting"
 ssh_run "cd $REMOTE && docker compose up -d --remove-orphans && docker image prune -f >/dev/null"
 
-# Daily market alerts (replaces a GitHub Actions job: the server is always on).
-ssh_run "printf '%s\n' '15 6 * * * cd $REMOTE && docker compose exec -T api python -m whitespace_api.jobs.alerts >> $REMOTE/alerts.log 2>&1' | crontab -"
+# Daily jobs on the server (it is always on, so no GitHub Actions needed):
+# - market alerts
+# - product embeddings for HS-code search: only new or changed products, so it finishes a
+#   partial run (the free Gemini quota allows ~2,000 a day) and is a no-op afterwards.
+ssh_run "printf '%s\n' \
+  '15 6 * * * cd $REMOTE && docker compose exec -T api python -m whitespace_api.jobs.alerts >> $REMOTE/alerts.log 2>&1' \
+  '30 1 * * * cd $REMOTE && docker compose exec -T api python -m whitespace_api.jobs.embed_products >> $REMOTE/embed.log 2>&1' \
+  | crontab -"
 
 echo "==> Waiting for https://$DOMAIN"
 for _ in $(seq 1 60); do

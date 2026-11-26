@@ -4,6 +4,7 @@ import { SectionIntro } from "@/components/landing/section";
 import { ButtonLink } from "@/components/ui/button";
 
 const POINTS = [
+  "This week's top 10 in 15 Amazon categories, beside official US import growth",
   "Sea freight priced on your order's real size, shared container or full",
   "US duty with the 2026 tariffs: the Section 301 country duties and China's lists",
   "Amazon's 2026 referral, fulfilment and storage fees, with the fuel surcharge",
@@ -20,9 +21,14 @@ export function AmazonBand() {
             Before you order stock, see what one unit really earns on Amazon US, from your
             supplier&apos;s port to the customer&apos;s door.
           </SectionIntro>
-          <ButtonLink href="/fba-calculator" size="lg" variant="secondary" className="mt-8">
-            Try the FBA calculator <ArrowRight className="h-4 w-4" aria-hidden />
-          </ButtonLink>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink href="/amazon-best-sellers" size="lg" variant="secondary">
+              This week&apos;s best sellers <ArrowRight className="h-4 w-4" aria-hidden />
+            </ButtonLink>
+            <ButtonLink href="/fba-calculator" size="lg" variant="ghost">
+              Try the FBA calculator
+            </ButtonLink>
+          </div>
         </div>
         <ul className="flex flex-col gap-3">
           {POINTS.map((point) => (

@@ -27,6 +27,9 @@ _UNCOUNTABLE = {"rice", "salt", "tea", "coffee", "fish", "seafood", "furniture",
                 "marble", "granite", "honey", "beef", "mutton", "chicken", "denim", "footwear",
                 "sportswear", "workwear", "packaging", "cutlery", "medicine"}  # fmt: skip
 
+_IRREGULAR = {"knife": "knives", "shelf": "shelves", "leaf": "leaves", "dish": "dishes",
+              "brush": "brushes", "box": "boxes", "watch": "watches"}  # fmt: skip
+
 
 def everyday_name(hs6: str, description: str) -> str:
     """What people call the product: 630260 -> "towels", 950662 -> "footballs".
@@ -45,7 +48,11 @@ def everyday_name(hs6: str, description: str) -> str:
     if matches:
         alias = max(matches)[-1]
         last = alias.split()[-1]
-        return alias if last in _UNCOUNTABLE or last.endswith("s") else f"{alias}s"
+        if last in _UNCOUNTABLE or last.endswith("s"):
+            return alias
+        if last in _IRREGULAR:
+            return f"{alias[: -len(last)]}{_IRREGULAR[last]}"
+        return f"{alias}s"
     niche = next((n for n in NICHES if n.matches(hs6)), None)
     if niche:
         return niche.name.lower()

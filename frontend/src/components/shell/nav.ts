@@ -8,6 +8,7 @@ import {
   Home,
   KanbanSquare,
   type LucideIcon,
+  Lightbulb,
   PackageSearch,
   Settings,
   ShoppingCart,
@@ -22,6 +23,7 @@ export type NavId =
   | "sell"
   | "buy"
   | "amazon"
+  | "ideas"
   | "ask"
   | "pipeline"
   | "check"
@@ -47,6 +49,13 @@ export const NAV: NavItem[] = [
   { id: "home", href: "/app", label: "Home", icon: Home, hint: "Your overview" },
   { id: "sell", href: "/app/markets", label: "Sell", icon: TrendingUp, hint: "Where to sell" },
   { id: "buy", href: "/app/buy", label: "Buy", icon: PackageSearch, hint: "Where to buy" },
+  {
+    id: "ideas",
+    href: "/app/ideas",
+    label: "Product ideas",
+    icon: Lightbulb,
+    hint: "Amazon best sellers and rising US imports",
+  },
   {
     id: "amazon",
     href: "/app/fba",
@@ -103,7 +112,7 @@ export const NAV: NavItem[] = [
 /** How the sidebar groups NAV: a few top items, then two named sections. */
 export const NAV_GROUPS: { heading: "groupFind" | "groupDeals" | null; ids: NavId[] }[] = [
   { heading: null, ids: ["home", "ask"] },
-  { heading: "groupFind", ids: ["sell", "buy", "amazon", "explore", "watchlist"] },
+  { heading: "groupFind", ids: ["sell", "buy", "ideas", "amazon", "explore", "watchlist"] },
   { heading: "groupDeals", ids: ["pipeline", "check", "quotes", "shipments", "tenders"] },
 ];
 

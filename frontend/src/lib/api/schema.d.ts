@@ -1586,6 +1586,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/ideas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ideas
+         * @description Amazon's best sellers this week and the fastest-growing US imports, with sources.
+         */
+        get: operations["ideas_api_v1_public_ideas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1637,6 +1657,35 @@ export interface components {
              */
             actions: components["schemas"]["Count"][];
         };
+        /** AmazonBestsellersOut */
+        AmazonBestsellersOut: {
+            /**
+             * Captured At
+             * Format: date-time
+             */
+            captured_at: string;
+            /**
+             * Previous At
+             * @description The capture movement is measured against
+             */
+            previous_at: string | null;
+            /** Source */
+            source: string;
+            /** Lists */
+            lists: components["schemas"]["BestsellerList"][];
+        };
+        /** AmazonCategoryOut */
+        AmazonCategoryOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Bestsellers Url
+             * @description Amazon's live best-seller page for the category
+             */
+            bestsellers_url: string;
+        };
         /** AmazonSize */
         AmazonSize: {
             /**
@@ -1676,6 +1725,74 @@ export interface components {
         BestMove: {
             product: components["schemas"]["ProductOut"];
             market: components["schemas"]["MarketItem"];
+        };
+        /** BestsellerItem */
+        BestsellerItem: {
+            /** Rank */
+            rank: number;
+            /** Name */
+            name: string;
+            /** Price Usd */
+            price_usd: number | null;
+            /**
+             * List Price Usd
+             * @description Amazon's crossed-out price, if higher
+             */
+            list_price_usd: number | null;
+            /**
+             * Stars
+             * @description Average rating, out of 5
+             */
+            stars: number | null;
+            /**
+             * Reviews
+             * @description Number of ratings
+             */
+            reviews: number | null;
+            /**
+             * Bought
+             * @description Amazon's own figure, e.g. "10K+ bought in past month"
+             */
+            bought: string | null;
+            /** Brand */
+            brand: string | null;
+            size: components["schemas"]["ProductSize"] | null;
+            /** Asin */
+            asin: string | null;
+            /** Url */
+            url: string;
+            /**
+             * Hs6
+             * @description Likely customs code, guessed from the name
+             */
+            hs6: string | null;
+            /**
+             * Product Name
+             * @description Our name for that code
+             */
+            product_name: string | null;
+            /**
+             * Fee Category
+             * @enum {string}
+             */
+            fee_category: "home_kitchen" | "beauty_health" | "baby" | "clothing" | "footwear" | "luggage" | "sports" | "toys" | "pet" | "grocery" | "electronics_accessories" | "consumer_electronics" | "furniture" | "jewelry" | "other";
+            start: components["schemas"]["StartingPoint"] | null;
+            /**
+             * Moved
+             * @description Places up (+) or down (-) since last week
+             */
+            moved: number | null;
+            /**
+             * Is New
+             * @description Not in this category's top list last week
+             */
+            is_new: boolean;
+        };
+        /** BestsellerList */
+        BestsellerList: {
+            category: components["schemas"]["AmazonCategoryOut"];
+            /** Items */
+            items: components["schemas"]["BestsellerItem"][];
         };
         /** Body_check_api_v1_documents_check_post */
         Body_check_api_v1_documents_check_post: {
@@ -1943,6 +2060,30 @@ export interface components {
             growth: number;
             /** Already Selling */
             already_selling: boolean;
+        };
+        /** CategoryTrend */
+        CategoryTrend: {
+            category: components["schemas"]["AmazonCategoryOut"];
+            /**
+             * Imports Usd
+             * @description US imports, last 12 months
+             */
+            imports_usd: number;
+            /**
+             * Growth
+             * @description Last 12 months vs the 12 before (0.1 = +10%)
+             */
+            growth: number | null;
+            /**
+             * Recent Growth
+             * @description Last 3 months vs the same 3 a year earlier
+             */
+            recent_growth: number | null;
+            /**
+             * Codes
+             * @description Customs codes counted in this category
+             */
+            codes: number;
         };
         /** ChangePasswordRequest */
         ChangePasswordRequest: {
@@ -3043,6 +3184,29 @@ export interface components {
             /** Why */
             why: string;
         };
+        /** IdeasOut */
+        IdeasOut: {
+            /** Categories */
+            categories: components["schemas"]["AmazonCategoryOut"][];
+            /** @description None until the first capture */
+            amazon: components["schemas"]["AmazonBestsellersOut"] | null;
+            imports: components["schemas"]["ImportTrends"] | null;
+        };
+        /** ImportTrends */
+        ImportTrends: {
+            /** Source */
+            source: string;
+            /** Source Url */
+            source_url: string;
+            /** First Month */
+            first_month: string;
+            /** Last Month */
+            last_month: string;
+            /** Categories */
+            categories: components["schemas"]["CategoryTrend"][];
+            /** Rising */
+            rising: components["schemas"]["RisingProduct"][];
+        };
         /** IntroIn */
         IntroIn: {
             /** Hs6 */
@@ -3831,6 +3995,22 @@ export interface components {
              */
             readonly name: string;
         };
+        /** ProductSize */
+        ProductSize: {
+            /** Length In */
+            length_in: number;
+            /** Width In */
+            width_in: number;
+            /** Height In */
+            height_in: number;
+            /** Weight Lb */
+            weight_lb: number;
+            /**
+             * Packed
+             * @description Amazon listed the packed unit (else the item itself)
+             */
+            packed: boolean;
+        };
         /** ProfileIn */
         ProfileIn: {
             /**
@@ -4379,6 +4559,45 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /** RisingProduct */
+        RisingProduct: {
+            /** Hs6 */
+            hs6: string;
+            /** Name */
+            name: string;
+            /**
+             * Category
+             * @description Amazon category key
+             */
+            category: string;
+            /**
+             * Fee Category
+             * @enum {string}
+             */
+            fee_category: "home_kitchen" | "beauty_health" | "baby" | "clothing" | "footwear" | "luggage" | "sports" | "toys" | "pet" | "grocery" | "electronics_accessories" | "consumer_electronics" | "furniture" | "jewelry" | "other";
+            /**
+             * In Catalog
+             * @description We have trade data for it (calculator, suppliers)
+             */
+            in_catalog: boolean;
+            /** Imports Usd */
+            imports_usd: number;
+            /** Growth */
+            growth: number;
+            /** Recent Growth */
+            recent_growth: number | null;
+            /**
+             * Monthly Usd
+             * @description US imports per month, oldest first
+             */
+            monthly_usd: number[];
+            /**
+             * China Extra Pct
+             * @description Extra US duty if bought from China
+             */
+            china_extra_pct: number | null;
+            start: components["schemas"]["StartingPoint"] | null;
+        };
         /** RivalDuty */
         RivalDuty: {
             country: components["schemas"]["CountryOut"];
@@ -4790,6 +5009,26 @@ export interface components {
             year: number;
             /** Source */
             source: string;
+        };
+        /**
+         * StartingPoint
+         * @description Where a small seller would likely buy, from US import records: the biggest US
+         *     supplier we can price shipping from, and its import price.
+         */
+        StartingPoint: {
+            origin: components["schemas"]["CountryOut"];
+            /**
+             * Share
+             * @description Its share of US imports of this product
+             */
+            share: number;
+            /** Price Per Kg Usd */
+            price_per_kg_usd: number | null;
+            /**
+             * Unit Cost Usd
+             * @description Price per kg x the product's weight
+             */
+            unit_cost_usd: number | null;
         };
         /**
          * SupplierOption
@@ -8595,6 +8834,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FbaOptions"];
+                };
+            };
+        };
+    };
+    ideas_api_v1_public_ideas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeasOut"];
                 };
             };
         };

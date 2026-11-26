@@ -197,8 +197,8 @@ async def test_public_calculator_needs_no_sign_in(
 
 async def test_options_list_the_countries_we_can_ship_from(
     client: AsyncClient,
-    markets: None,
-    us_route: None,  # noqa: F811
+    markets: None,  # noqa: F811
+    us_route: None,
 ) -> None:
     options = (await client.get("/api/v1/public/fba/options")).json()
     assert {"code": "PAK", "name": "Pakistan"} in options["origins"]

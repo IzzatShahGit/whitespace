@@ -14,7 +14,7 @@ from whitespace_pipeline.gold import opportunity
 from whitespace_pipeline.gold import routes as sea_routes
 from whitespace_pipeline.load import postgres
 from whitespace_pipeline.silver import baci as silver_baci
-from whitespace_pipeline.sources import baci, us_hts
+from whitespace_pipeline.sources import baci, us_hts, us_imports
 
 app = typer.Typer(help="Whitespace data pipeline", no_args_is_help=True)
 
@@ -96,6 +96,13 @@ def us_tariffs() -> None:
     """Rebuild the US additional-duty table from the official HTS chapter 99 (monthly)."""
     path = us_hts.run(get_settings())
     typer.secho(f"US tariffs ready: {path}", fg=typer.colors.GREEN)
+
+
+@app.command("us-imports")
+def us_imports_cmd() -> None:
+    """Rebuild monthly US consumer imports from the Census Bureau (monthly)."""
+    path = us_imports.run(get_settings())
+    typer.secho(f"US imports ready: {path}", fg=typer.colors.GREEN)
 
 
 @app.command()

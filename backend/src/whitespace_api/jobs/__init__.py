@@ -40,6 +40,12 @@ async def _sanctions(settings: Settings) -> str:
     return await sanctions.run(settings)
 
 
+async def _bestsellers(settings: Settings) -> str:
+    from whitespace_api.jobs import bestsellers
+
+    return await bestsellers.run(settings)
+
+
 def scheduled_jobs() -> list[Job]:
     return [
         Job("follow_up_reminders", every=timedelta(hours=1), lease=timedelta(minutes=10),
@@ -51,4 +57,7 @@ def scheduled_jobs() -> list[Job]:
             run=_alerts),
         Job("sanctions_lists", every=timedelta(hours=24), lease=timedelta(minutes=30),
             run=_sanctions),
+        # Hourly check; Apify runs it weekly (services/bestsellers.py decides).
+        Job("amazon_bestsellers", every=timedelta(hours=1), lease=timedelta(minutes=10),
+            run=_bestsellers),
     ]  # fmt: skip
