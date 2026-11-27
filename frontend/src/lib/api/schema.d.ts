@@ -1732,6 +1732,11 @@ export interface components {
             rank: number;
             /** Name */
             name: string;
+            /**
+             * Plain Name
+             * @description What it is, without brand: "steel tumbler"
+             */
+            plain_name: string | null;
             /** Price Usd */
             price_usd: number | null;
             /**

@@ -468,6 +468,7 @@ export const en = {
       startCost: "Buy from {country} at about {cost} a unit",
       startCountry: "Usually bought from {country}",
       listPrice: "was {price}",
+      oversize: "Oversize for Amazon's standard fees: the calculator can't price it yet.",
       noCode: "No sure customs code yet: you'll pick the product in one step.",
       view: "View on Amazon",
     },

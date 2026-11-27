@@ -7335,6 +7335,18 @@
             "type": "string",
             "title": "Name"
           },
+          "plain_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plain Name",
+            "description": "What it is, without brand: \"steel tumbler\""
+          },
           "price_usd": {
             "anyOf": [
               {
@@ -7507,6 +7519,7 @@
         "required": [
           "rank",
           "name",
+          "plain_name",
           "price_usd",
           "list_price_usd",
           "stars",

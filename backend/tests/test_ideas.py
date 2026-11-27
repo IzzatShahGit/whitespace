@@ -157,6 +157,33 @@ async def test_codes_are_reused_by_asin_and_unsure_picks_dropped(
         )  # type: ignore[call-arg]
     assert [i["hs6"] for i in items] == [TOWELS, None, BED_LINEN]
     assert [i["plain"] for i in items] == ["cotton towel", None, "linen"]
+    # Answered (even "not sure") is final; no plain name means the title was searched.
+    assert [i["decided"] for i in items] == [True, False, True]
+
+
+async def test_failed_lookups_are_retried_on_the_next_check(
+    monkeypatch: pytest.MonkeyPatch, db_sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    async def guess(
+        db: AsyncSession, settings: Settings, items: list[dict[str, Any]], **_: Any
+    ) -> None:
+        for i in items:
+            i.update(hs6=TOWELS, plain="towel", decided=True)
+
+    monkeypatch.setattr(bestsellers, "guess_codes", guess)
+    base = {"category": "home", "url": "u"}
+    rows = [
+        base | {"rank": 1, "name": "A", "asin": "A", "hs6": BED_LINEN, "decided": True},
+        base | {"rank": 2, "name": "B", "asin": "B", "hs6": None, "decided": False},
+    ]
+    async with db_sessionmaker() as db:
+        db.add(AmazonBestsellers(run_id="r", captured_at=NOW, items=rows))
+        await db.commit()
+        assert await bestsellers.retry_undecided(db, Settings(_env_file=None)) == 1  # type: ignore[call-arg]
+        assert await bestsellers.retry_undecided(db, Settings(_env_file=None)) == 0  # type: ignore[call-arg]
+    async with db_sessionmaker() as db:
+        saved = (await db.get(AmazonBestsellers, "r")).items  # type: ignore[union-attr]
+    assert [i["hs6"] for i in saved] == [BED_LINEN, TOWELS]
 
 
 def test_detailed_pages_give_price_size_and_volume() -> None:

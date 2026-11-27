@@ -76,7 +76,7 @@ function amazonParams(item: BestsellerItem): Params {
   return {
     hs6: item.hs6 ?? "", // no sure code: the calculator asks for the product
     pn: item.product_name ?? "",
-    q: item.hs6 ? null : searchPhrase(item.name, item.brand),
+    q: item.hs6 ? null : (item.plain_name ?? searchPhrase(item.name, item.brand)),
     cat: item.fee_category,
     price: num(item.price_usd),
     u: size ? "imperial" : null,
@@ -89,6 +89,12 @@ function amazonParams(item: BestsellerItem): Params {
     src: "amazon",
     an: item.name.slice(0, 110),
   };
+}
+
+/** Past Amazon's standard size (18 x 14 x 8 in, 20 lb): the calculator can't price it. */
+function oversize(item: BestsellerItem): boolean {
+  const s = item.size;
+  return Boolean(s && (s.length_in > 18 || s.width_in > 14 || s.height_in > 8 || s.weight_lb > 20));
 }
 
 function date(iso: string): string {
@@ -160,7 +166,8 @@ function AmazonList({ data, category, go }: { data: Ideas; category: AmazonCateg
   let description: string | undefined;
   if (amazon) {
     description = t("ideas.amazon.captured", { date: date(amazon.captured_at) });
-    if (amazon.previous_at) {
+    // Two captures on one day (a manual refresh) have no week to compare.
+    if (amazon.previous_at && date(amazon.previous_at) !== date(amazon.captured_at)) {
       description += ` · ${t("ideas.amazon.compared", { date: date(amazon.previous_at) })}`;
     }
   }
@@ -265,6 +272,9 @@ function BestsellerRow({ item, go }: { item: BestsellerItem; go: Links }) {
             t("ideas.amazon.noCode")
           )}
         </p>
+        {oversize(item) && (
+          <p className="mt-1 text-xs text-caution">{t("ideas.amazon.oversize")}</p>
+        )}
       </div>
       <div className="col-start-2 flex items-center gap-2 sm:col-start-3">
         <Link href={profit} className={buttonClass("tinted", "flex-1 sm:flex-none")}>

@@ -47,7 +47,7 @@ TOP = 10
 REFRESH = timedelta(days=7)
 RETRY_FAILED = timedelta(days=1)
 KEEP = 2  # this week and last week, for movement
-PICKS_AT_ONCE = 4  # model calls in parallel (free-tier rate limits)
+PICKS_AT_ONCE = 2  # model calls in parallel (free-tier rate limits)
 SURE = frozenset({"high", "medium"})  # a low-confidence code is worse than none
 
 _ASIN = re.compile(r"/dp/([A-Z0-9]{10})(?:[/?]|$)")
@@ -230,15 +230,18 @@ async def _options(db: AsyncSession, name: str, vector: list[float] | None) -> d
     return {h: products[h].description for h in ranked if h in products}
 
 
-async def _pick(settings: Settings, name: str, options: dict[str, str]) -> str | None:
-    """The model's first pick if it's at least fairly sure; otherwise no code."""
+async def _pick(settings: Settings, name: str, options: dict[str, str]) -> tuple[str | None, bool]:
+    """(code, decided): the model's first pick if it's at least fairly sure. `decided` is
+    False when the model couldn't be asked (rate limits, outage): worth trying again."""
     if not options:
-        return None
+        return None, True
     chosen = await hs_finder.choose(settings, name, options)
-    if not chosen or not chosen[0]:
-        return None
+    if chosen is None:
+        return None, False
+    if not chosen[0]:
+        return None, True
     code, confidence, _ = chosen[0][0]
-    return code if confidence in SURE else None
+    return (code if confidence in SURE else None), True
 
 
 class _Named(BaseModel):
@@ -295,6 +298,7 @@ async def guess_codes(
     a plain name from the title ("insulated steel tumbler" for a brand's long title),
     then the HS finder's searches on it, then its AI pick among the candidates."""
     todo = sorted({i["name"] for i in items if i.get("asin") not in known})
+    # (Callers pass only decided products as `known`; undecided ones are looked up again.)
     plain = await plain_names(settings, todo) if todo else {}
     queries = [plain.get(title, title) for title in todo]
     vectors: list[list[float] | None] = [None] * len(todo)
@@ -311,19 +315,23 @@ async def guess_codes(
     options = [await _options(db, q, v) for q, v in zip(queries, vectors, strict=True)]
     gate = asyncio.Semaphore(PICKS_AT_ONCE)
 
-    async def pick(title: str, found: dict[str, str]) -> str | None:
+    async def pick(title: str, found: dict[str, str]) -> tuple[str | None, bool]:
         async with gate:
             described = f"{plain[title]} (sold on Amazon as: {title})" if title in plain else title
             return await _pick(settings, described, found)
 
-    codes = await asyncio.gather(*(pick(t, o) for t, o in zip(todo, options, strict=True)))
-    picked = dict(zip(todo, codes, strict=True))
+    results = await asyncio.gather(*(pick(t, o) for t, o in zip(todo, options, strict=True)))
+    picked = dict(zip(todo, results, strict=True))
     for item in items:
         before = known.get(item.get("asin") or "")
         if before is not None:
             item["hs6"], item["plain"] = before.get("hs6"), before.get("plain")
+            item["decided"] = before.get("decided", True)
         else:
-            item["hs6"], item["plain"] = picked.get(item["name"]), plain.get(item["name"])
+            code, decided = picked.get(item["name"], (None, False))
+            item["hs6"], item["plain"] = code, plain.get(item["name"])
+            # Without a plain name the search ran on the raw title: try again later too.
+            item["decided"] = decided and item["name"] in plain
 
 
 def due(last: apify.Run | None, now: datetime) -> bool:
@@ -348,7 +356,11 @@ async def collect(
         log.warning("Best sellers run %s had only %d usable items", done.id, len(items))
         return None
     current, _ = await latest(db)
-    known = {i["asin"]: i for i in (current.items if current else []) if i.get("asin")}
+    known = {
+        i["asin"]: i
+        for i in (current.items if current else [])
+        if i.get("asin") and i.get("decided", True)
+    }
     await guess_codes(db, settings, items, known=known)
     row = AmazonBestsellers(
         run_id=done.id, captured_at=done.finished_at or done.started_at, items=items
@@ -360,6 +372,26 @@ async def collect(
     await db.execute(delete(AmazonBestsellers).where(AmazonBestsellers.run_id.not_in(keep)))
     await db.commit()
     return row
+
+
+RETRY_AT_ONCE = 30  # undecided products looked up again per hourly check
+
+
+async def retry_undecided(db: AsyncSession, settings: Settings) -> int:
+    """Look up again the products whose lookup failed (model unavailable). Returns how
+    many were retried; a later check takes the rest."""
+    current, _ = await latest(db)
+    if current is None:
+        return 0
+    items = [dict(i) for i in current.items]
+    undecided = [i for i in items if not i.get("decided", True)][:RETRY_AT_ONCE]
+    if not undecided:
+        return 0
+    await guess_codes(db, settings, undecided, known={})
+    by_key = {(i["category"], i["rank"]): i for i in undecided}
+    current.items = [by_key.get((i["category"], i["rank"]), i) for i in items]
+    await db.commit()
+    return len(undecided)
 
 
 async def refresh(
@@ -377,6 +409,8 @@ async def refresh(
     token = settings.apify_token.get_secret_value()
     saved = await collect(db, client, settings, token)
     out = [f"saved {len(saved.items)} items from run {saved.run_id}" if saved else "nothing new"]
+    if not saved and (retried := await retry_undecided(db, settings)):
+        out.append(f"retried {retried} codes")
     last = await apify.last_run(client, token)
     if (force and not (last and last.running)) or due(last, now or datetime.now(UTC)):
         run = await apify.start(
