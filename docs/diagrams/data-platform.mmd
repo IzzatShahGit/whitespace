@@ -7,4 +7,7 @@ flowchart LR
     GO -->|descriptions + everyday names| EM[Gemini embeddings<br/>768-d, changed rows only]
     EM -->|pgvector| PG
     S3[Sanctions lists<br/>OFAC · UN · EU · UK] -->|daily job · checksum skip<br/>atomic swap per list| PG
+    S6[Amazon best sellers<br/>15 categories, via Apify] -->|weekly · cost-capped<br/>auto-tagged with HS codes| PG
     L1[Live APIs<br/>Eurostat · US Census · WITS<br/>HMRC · FRED · FX · TED] -->|cached on demand| PG
+    S4[US tariff schedule<br/>HTS chapter 99 PDF] -->|parsed monthly| REF[📄 Reference files<br/>versioned JSON in the<br/>shared package, no DB]
+    S5[US Census<br/>24 months of imports] -->|monthly| REF

@@ -1,0 +1,15 @@
+flowchart LR
+    BS[Amazon best sellers<br/>top 10 × 15 categories<br/>weekly, via Apify] --> TAG[HS code finder<br/>AI picks from candidates<br/>unsure → no code]
+    TAG --> SUP[Starting supplier<br/>top US supplier with a sea route<br/>· its price per kg × weight]
+    CEN[US Census imports<br/>24 months · 568 codes] --> RISE[Rising imports<br/>by Amazon category]
+    SUP --> IDEAS[Product ideas]
+    RISE --> IDEAS
+    IDEAS -->|Check profit, prefilled| CALC
+
+    subgraph CALC[FBA profit calculator]
+        L[Landed<br/>supplier price · freight range<br/>duty incl. Section 301 · MPF + HMF]
+        A[Amazon<br/>referral · fulfilment + fuel surcharge<br/>· storage]
+        S[Selling<br/>ads · returns]
+    end
+
+    CALC --> OUT[Profit · margin · ROI<br/>break-even price · payback<br/>low / typical / high]

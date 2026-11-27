@@ -1,10 +1,14 @@
 flowchart TB
-    U[Browser] --> W[Next.js 16 · React 19<br/>9 languages · typed API client]
-    W -->|/api proxy · first-party cookies| API[FastAPI<br/>async SQLAlchemy]
+    U[Browser] --> C
+
+    subgraph EC2[AWS EC2 · ARM64 · Docker Compose]
+        C[Caddy<br/>automatic HTTPS] -->|pages| W[Next.js 16 · React 19<br/>9 languages · typed API client]
+        C -->|/api/* · streamed replies| API[FastAPI<br/>async SQLAlchemy]
+    end
 
     API --> AI
     API --> RULES
-    API --> EXT[Live APIs<br/>trade · tariffs · FX · TED<br/>GLEIF · VIES · RDAP]
+    API --> EXT[Live APIs<br/>trade · tariffs · FX · TED<br/>GLEIF · VIES · RDAP · Apify]
 
     subgraph AI[AI layer]
         AG[Agents<br/>brief · guide · requirements<br/>leads · outreach · PO and LC reader]
@@ -14,13 +18,14 @@ flowchart TB
     subgraph RULES[Rules in code]
         BC[Buyer check<br/>sanctions · registers · domains]
         DR[Document rules<br/>MT700 · UCP 600 · soft clauses]
+        FBA[FBA unit economics<br/>Amazon fees · US duties · freight]
     end
 
     AI --> LLM[Gemini / Groq<br/>key rotation · fallback]
 
-    subgraph DB[PostgreSQL 16]
+    subgraph DB[PostgreSQL · Neon in production]
         GOLD[(Gold tables<br/>scores · prices · routes)]
-        APP[(App data<br/>pipeline · quotes · shipments)]
+        APP[(App data<br/>pipeline · quotes · shipments<br/>best sellers · visits)]
         TRG[(pg_trgm<br/>sanctioned names)]
         VEC[(pgvector<br/>product embeddings)]
     end
@@ -29,4 +34,4 @@ flowchart TB
     API --> APP
     RAG --> VEC
     BC --> TRG
-    JOB[Lease-based scheduler<br/>alerts · reminders · digests<br/>sanctions refresh] --> DB
+    JOB[Lease-based scheduler<br/>alerts · reminders · digests<br/>sanctions · best sellers] --> DB
