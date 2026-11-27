@@ -986,7 +986,8 @@ export interface paths {
         put?: never;
         /**
          * Track
-         * @description Count one page view or action. No cookies; nothing that identifies a person.
+         * @description Count a page view or action, and add it to the visit. No cookies; the address is
+         *     used for the day's visitor code and the country, then dropped.
          */
         post: operations["track_api_v1_events_post"];
         delete?: never;
@@ -1004,9 +1005,94 @@ export interface paths {
         };
         /**
          * Stats
-         * @description Visitors, sign-ups and feature use over the last 30 days. Admins only.
+         * @description Visitors, visits, sign-ups and feature use over the last 30 days.
          */
         get: operations["stats_api_v1_admin_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Users
+         * @description Accounts, 50 a page. `segment`: real users, or test/demo/admin accounts.
+         */
+        get: operations["users_api_v1_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * User
+         * @description One account: profile, activity, what they made and their latest visits.
+         */
+        get: operations["user_api_v1_admin_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Disable or enable an account (disabling signs it out everywhere at once), or mark
+         *     it as a test/demo account.
+         */
+        patch: operations["update_user_api_v1_admin_users__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign Out
+         * @description End every session of this account (within 15 minutes for open tabs).
+         */
+        post: operations["sign_out_api_v1_admin_users__user_id__sign_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/visits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Visits
+         * @description Latest visits first: origin, device, pages in order and time on each.
+         */
+        get: operations["visits_api_v1_admin_visits_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1633,6 +1719,18 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** AdminActionOut */
+        AdminActionOut: {
+            /** Action */
+            action: string;
+            /** Admin Email */
+            admin_email: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** AdminStats */
         AdminStats: {
             /**
@@ -1645,7 +1743,7 @@ export interface components {
              * Format: date
              */
             until: string;
-            /** @description Over the period, except users and active_7d */
+            /** @description Over the period, except users and active counts */
             totals: components["schemas"]["Totals"];
             /** Days */
             days: components["schemas"]["DayStats"][];
@@ -1656,6 +1754,7 @@ export interface components {
              * @description Feature use over the period
              */
             actions: components["schemas"]["Count"][];
+            visits: components["schemas"]["VisitSummary"];
         };
         /** AmazonBestsellersOut */
         AmazonBestsellersOut: {
@@ -2472,8 +2571,18 @@ export interface components {
             page_views: number;
             /** Visitors */
             visitors: number;
-            /** Sign Ups */
+            /**
+             * Sign Ups
+             * @description Real accounts only
+             */
             sign_ups: number;
+            /**
+             * Active Users
+             * @description Real accounts that used the app that day
+             */
+            active_users: number;
+            /** Visits */
+            visits: number;
         };
         /** DeleteAccountRequest */
         DeleteAccountRequest: {
@@ -2716,9 +2825,17 @@ export interface components {
              * Event
              * @enum {string}
              */
-            event: "page_view" | "deal_sheet_print" | "deal_sheet_copy_link" | "email_draft_open" | "intro_copy";
+            event: "page_view" | "engage" | "deal_sheet_print" | "deal_sheet_copy_link" | "email_draft_open" | "intro_copy";
             /** Path */
             path?: string | null;
+            /** Referrer */
+            referrer?: string | null;
+            /** Utm Source */
+            utm_source?: string | null;
+            /** Utm Campaign */
+            utm_campaign?: string | null;
+            /** Seconds */
+            seconds?: number | null;
         };
         /** EventOut */
         EventOut: {
@@ -3710,6 +3827,13 @@ export interface components {
              */
             exporter: number;
         };
+        /** Named */
+        Named: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+        };
         /** NewsCard */
         NewsCard: {
             /**
@@ -4041,6 +4165,23 @@ export interface components {
              * @default []
              */
             current_markets: string[];
+        };
+        /** ProfileInfo */
+        ProfileInfo: {
+            exporter: components["schemas"]["Named"];
+            /** Role */
+            role: string;
+            /** Goal */
+            goal: string;
+            /** Products */
+            products: components["schemas"]["Named"][];
+            /** Current Markets */
+            current_markets: components["schemas"]["Named"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** ProfileOut */
         ProfileOut: {
@@ -4682,6 +4823,18 @@ export interface components {
             /** Niches */
             niches: components["schemas"]["NicheSummary"][];
         };
+        /** SegmentCounts */
+        SegmentCounts: {
+            /** Real */
+            real: number;
+            /**
+             * Test
+             * @description Test, demo and admin accounts
+             */
+            test: number;
+            /** Disabled */
+            disabled: number;
+        };
         /** SentIn */
         SentIn: {
             /** Subject */
@@ -5236,13 +5389,23 @@ export interface components {
         };
         /** Totals */
         Totals: {
-            /** Users */
+            /**
+             * Users
+             * @description Real accounts (not test, demo or admin)
+             */
             users: number;
             /**
+             * Test Users
+             * @description Test, demo and admin accounts
+             */
+            test_users: number;
+            /**
              * Active 7D
-             * @description Signed in during the last 7 days
+             * @description Real accounts that used the app in the last 7 days
              */
             active_7d: number;
+            /** Active 30D */
+            active_30d: number;
             /** Sign Ups */
             sign_ups: number;
             /** Visitors */
@@ -5290,6 +5453,61 @@ export interface components {
             /** Full Name */
             full_name: string;
         };
+        /** UserDetail */
+        UserDetail: {
+            user: components["schemas"]["UserRow"];
+            /** Locale */
+            locale: string | null;
+            /** Digest Enabled */
+            digest_enabled: boolean;
+            /** Last Login At */
+            last_login_at: string | null;
+            /** Open Sessions */
+            open_sessions: number;
+            profile: components["schemas"]["ProfileInfo"] | null;
+            /**
+             * Active Days
+             * @description Days they used the app, last 90 days
+             */
+            active_days: string[];
+            /**
+             * Feature Use
+             * @description AI actions by feature, last 30 days
+             */
+            feature_use: components["schemas"]["Count"][];
+            /**
+             * Made
+             * @description What they created, all time
+             */
+            made: components["schemas"]["Count"][];
+            /**
+             * Pipeline
+             * @description Companies in their pipeline, by stage
+             */
+            pipeline: components["schemas"]["Count"][];
+            /**
+             * Visits
+             * @description Latest visits, newest first
+             */
+            visits: components["schemas"]["VisitOut"][];
+            /**
+             * History
+             * @description Admin changes to this account
+             */
+            history: components["schemas"]["AdminActionOut"][];
+        };
+        /** UserList */
+        UserList: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            counts: components["schemas"]["SegmentCounts"];
+            /** Users */
+            users: components["schemas"]["UserRow"][];
+        };
         /** UserOut */
         UserOut: {
             /**
@@ -5326,6 +5544,91 @@ export interface components {
             digest_enabled: boolean;
             /** Locale */
             locale?: string | null;
+        };
+        /** UserRow */
+        UserRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Sign In
+             * @enum {string}
+             */
+            sign_in: "google" | "password" | "both";
+            /** Email Verified */
+            email_verified: boolean;
+            /**
+             * Is Active
+             * @description False when an admin disabled the account
+             */
+            is_active: boolean;
+            /**
+             * Is Test
+             * @description Marked as a demo or test account
+             */
+            is_test: boolean;
+            /** Is Admin */
+            is_admin: boolean;
+            /**
+             * Exporter
+             * @description Country they trade from (ISO alpha-3)
+             */
+            exporter: string | null;
+            /**
+             * Goal
+             * @description sell | buy | both
+             */
+            goal: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Seen At */
+            last_seen_at: string | null;
+            /**
+             * Active Days
+             * @description Days they used the app, last 30 days
+             */
+            active_days: number;
+            /**
+             * Feature Uses
+             * @description Metered AI actions, last 30 days
+             */
+            feature_uses: number;
+            /**
+             * Visits
+             * @description Visits, last 30 days
+             */
+            visits: number;
+            /**
+             * Engaged Seconds
+             * @description Time on the site, last 30 days
+             */
+            engaged_seconds: number;
+            /**
+             * Country
+             * @description Where their latest visit came from (ISO alpha-2)
+             */
+            country: string | null;
+            /**
+             * Source
+             * @description How they first found the site
+             */
+            source: string | null;
+        };
+        /** UserUpdate */
+        UserUpdate: {
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Is Test */
+            is_test?: boolean | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -5395,6 +5698,140 @@ export interface components {
             summary: string;
             /** Next Step */
             next_step: string;
+        };
+        /** VisitList */
+        VisitList: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /**
+             * Live Now
+             * @description Visits active in the last 5 minutes
+             */
+            live_now: number;
+            /** Visits */
+            visits: components["schemas"]["VisitOut"][];
+        };
+        /** VisitOut */
+        VisitOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /**
+             * Country
+             * @description ISO alpha-2
+             */
+            country: string | null;
+            /** Source */
+            source: string;
+            /** Referrer */
+            referrer: string | null;
+            /** Utm Campaign */
+            utm_campaign: string | null;
+            /** Landing */
+            landing: string;
+            /** Device */
+            device: string;
+            /** Browser */
+            browser: string;
+            /** Os */
+            os: string;
+            /** Pages */
+            pages: number;
+            /** Engaged Seconds */
+            engaged_seconds: number;
+            /**
+             * Live
+             * @description Active in the last 5 minutes
+             */
+            live: boolean;
+            user: components["schemas"]["VisitUser"] | null;
+            /** Journey */
+            journey: components["schemas"]["VisitPageOut"][];
+        };
+        /** VisitPageOut */
+        VisitPageOut: {
+            /** Path */
+            path: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Seconds */
+            seconds: number;
+        };
+        /**
+         * VisitSummary
+         * @description Visits over the period, leaving out visits by test, demo and admin accounts.
+         */
+        VisitSummary: {
+            /**
+             * Live Now
+             * @description Visits active in the last 5 minutes
+             */
+            live_now: number;
+            /** Visits */
+            visits: number;
+            /**
+             * Signed In
+             * @description Visits by someone signed in
+             */
+            signed_in: number;
+            /**
+             * Avg Seconds
+             * @description Engaged time per visit
+             */
+            avg_seconds: number;
+            /** Avg Pages */
+            avg_pages: number;
+            /**
+             * Bounce Rate
+             * @description Share of visits with one page and under 10 s
+             */
+            bounce_rate: number;
+            /**
+             * Countries
+             * @description ISO alpha-2 codes; '' when unknown
+             */
+            countries: components["schemas"]["Count"][];
+            /** Sources */
+            sources: components["schemas"]["Count"][];
+            /** Devices */
+            devices: components["schemas"]["Count"][];
+            /** Browsers */
+            browsers: components["schemas"]["Count"][];
+            /** Landing */
+            landing: components["schemas"]["Count"][];
+        };
+        /** VisitUser */
+        VisitUser: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Full Name */
+            full_name: string;
+            /** Email */
+            email: string;
+            /** Is Test */
+            is_test: boolean;
         };
         /** WatchIn */
         WatchIn: {
@@ -7406,7 +7843,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -7452,6 +7891,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    users_api_v1_admin_users_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                segment?: "real" | "test" | "all";
+                status?: "any" | "active" | "inactive" | "disabled" | "unverified" | "no_profile";
+                sort?: "joined" | "last_seen" | "most_active" | "name";
+                page?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    user_api_v1_admin_users__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                user_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user_api_v1_admin_users__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                user_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_out_api_v1_admin_users__user_id__sign_out_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                user_id: string;
+            };
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    visits_api_v1_admin_visits_get: {
+        parameters: {
+            query?: {
+                show?: "all" | "anonymous" | "signed_in";
+                country?: string | null;
+                source?: string | null;
+                include_test?: boolean;
+                page?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                ws_access?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitList"];
                 };
             };
             /** @description Validation Error */

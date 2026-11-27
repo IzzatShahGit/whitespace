@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, false, func
+from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Index, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from whitespace_api.models.base import Base
@@ -27,7 +27,12 @@ class User(Base):
     # Interface language (en, ur, bn, ...); None = the browser's choice.
     locale: Mapped[str | None] = mapped_column(String(8))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # When they typed a password or used Google. Renewed sessions don't change it.
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Any session start or renewal (every 15 minutes of use), so "last seen" is real.
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Demo and test accounts: kept, but shown apart and left out of the real-user numbers.
+    is_test: Mapped[bool] = mapped_column(default=False, server_default=false())
 
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -57,6 +62,34 @@ class RefreshToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="refresh_tokens")
+
+
+class UserActivityDay(Base):
+    """One row per user per day they used the app (a session started or renewed)."""
+
+    __tablename__ = "user_activity_days"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+
+    __table_args__ = (Index("ix_user_activity_days_day", "day"),)
+
+
+class AdminAction(Base):
+    """What an admin changed on an account (disable, enable, sign out, mark as test)."""
+
+    __tablename__ = "admin_actions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    admin_email: Mapped[str] = mapped_column(String(320))
+    action: Mapped[str] = mapped_column(String(20))
+    target_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), index=True
+    )
+    target_email: Mapped[str] = mapped_column(String(320))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class PasswordReset(Base):

@@ -136,9 +136,9 @@ export const SETTINGS: NavItem = {
 export const USAGE: NavItem = {
   id: "usage",
   href: "/app/admin",
-  label: "Usage",
+  label: "Users & visitors",
   icon: BarChart3,
-  hint: "Visitors, sign-ups and feature use",
+  hint: "Users, visitors, sign-ups and feature use",
 };
 
 /** The section a path belongs to ("/app/markets/630260/DEU" -> Sell). */

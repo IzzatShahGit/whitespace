@@ -91,6 +91,9 @@ us-imports: ## Rebuild monthly US consumer imports from the Census Bureau (month
 embed: ## Embed products for HS-code search (only new or changed ones; run after a data load)
 	cd backend && uv run python -m whitespace_api.jobs.embed_products
 
+geoip: ## Download the free DB-IP country database (visitor countries) to data/geoip/
+	uv run --no-project python scripts/fetch_geoip.py data/geoip/country.mmdb
+
 eval-hs: ## Score the HS-code finder on backend/evals/hs_codes.jsonl (add ARGS=--pick for the AI step)
 	cd backend && uv run python -m whitespace_api.tools.eval_hs $(ARGS)
 
@@ -113,4 +116,4 @@ deploy-ec2: ## Build the ARM64 image and deploy it to the EC2 server (SKIP_BUILD
 ec2-ssh: ## Open a shell on the EC2 server in /opt/whitespace
 	scripts/ec2-ssh.sh
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions us-tariffs us-imports embed eval-hs gen-client snapdeploy neon-update deploy-ec2 ec2-ssh
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions us-tariffs us-imports embed geoip eval-hs gen-client snapdeploy neon-update deploy-ec2 ec2-ssh

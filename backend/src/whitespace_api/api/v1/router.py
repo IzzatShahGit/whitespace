@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from whitespace_api.api.v1.routes import (
+    admin,
     analytics,
     auth,
     briefs,
@@ -44,6 +45,7 @@ api_router.include_router(chat.router)
 api_router.include_router(watches.router)
 api_router.include_router(public.router)
 api_router.include_router(analytics.router)
+api_router.include_router(admin.router)
 api_router.include_router(requirements.router)
 api_router.include_router(pipeline.router)
 api_router.include_router(quotes.router)

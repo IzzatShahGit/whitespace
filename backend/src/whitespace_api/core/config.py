@@ -191,6 +191,12 @@ class Settings(BaseSettings):
     # Who can open /app/admin: comma-separated emails.
     admin_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
     analytics_keep_days: int = Field(default=400, ge=30, description="Older counts are pruned")
+    visit_keep_days: int = Field(
+        default=180, ge=7, description="Visit details (pages, time, origin) older than this go"
+    )
+    # DB-IP's free country database (CC BY 4.0); `make geoip` downloads it. Missing file:
+    # visits are still recorded, just without a country.
+    geoip_path: str = "data/geoip/country.mmdb"
 
     def is_admin(self, email: str) -> bool:
         return email.strip().lower() in {e.strip().lower() for e in self.admin_emails if e.strip()}

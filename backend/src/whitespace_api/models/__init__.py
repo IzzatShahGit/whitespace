@@ -1,6 +1,6 @@
 """Table models. Import every model here so Alembic sees all tables."""
 
-from whitespace_api.models.analytics import AnalyticsDaily, AnalyticsVisitor
+from whitespace_api.models.analytics import AnalyticsDaily, AnalyticsVisitor, Visit, VisitPage
 from whitespace_api.models.base import Base
 from whitespace_api.models.brief import MarketBrief
 from whitespace_api.models.chat import ChatMessage, ChatThread
@@ -26,10 +26,17 @@ from whitespace_api.models.trade import (
     SupplierLandscape,
 )
 from whitespace_api.models.usage import UsageCounter
-from whitespace_api.models.user import PasswordReset, RefreshToken, User
+from whitespace_api.models.user import (
+    AdminAction,
+    PasswordReset,
+    RefreshToken,
+    User,
+    UserActivityDay,
+)
 from whitespace_api.models.watch import Notification, Watch
 
 __all__ = [
+    "AdminAction",
     "AmazonBestsellers",
     "AnalyticsDaily",
     "AnalyticsVisitor",
@@ -67,6 +74,9 @@ __all__ = [
     "TradeLeads",
     "UsageCounter",
     "User",
+    "UserActivityDay",
     "UserProfile",
+    "Visit",
+    "VisitPage",
     "Watch",
 ]

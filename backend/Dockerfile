@@ -23,6 +23,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim-bookworm AS runtime
 RUN useradd --create-home --uid 1000 app
 WORKDIR /app
+# Visitor countries: DB-IP's free country database (CC BY 4.0), fetched at build time.
+# A failed download never fails the build; visits are then recorded without a country.
+COPY scripts/fetch_geoip.py /tmp/fetch_geoip.py
+RUN python /tmp/fetch_geoip.py /app/geoip/country.mmdb || true; rm /tmp/fetch_geoip.py
+ENV GEOIP_PATH=/app/geoip/country.mmdb
 COPY --from=build --chown=app:app /app/.venv /app/.venv
 COPY --chown=app:app backend/alembic.ini ./backend/alembic.ini
 COPY --chown=app:app backend/migrations ./backend/migrations
