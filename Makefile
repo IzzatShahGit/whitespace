@@ -7,7 +7,7 @@ FRONTEND := cd frontend &&
 export WEB_PORT API_PORT DB_PORT OLLAMA_PORT OLLAMA_MODEL
 
 help: ## Show available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 # ---------- setup ----------
 install: ## Install Python and frontend dependencies
@@ -85,6 +85,9 @@ sanctions: ## Load the OFAC, UN, EU and UK sanctions lists now (the app also ref
 us-tariffs: ## Rebuild US additional duties from the official HTS chapter 99 (monthly; commit the JSON)
 	uv run ws-pipeline us-tariffs
 
+us-imports: ## Rebuild monthly US consumer imports from the Census Bureau (monthly; commit the JSON)
+	uv run ws-pipeline us-imports
+
 embed: ## Embed products for HS-code search (only new or changed ones; run after a data load)
 	cd backend && uv run python -m whitespace_api.jobs.embed_products
 
@@ -101,7 +104,13 @@ gen-client: ## Regenerate frontend API types from the backend
 snapdeploy: ## Build the ARM64 web+API image for SnapDeploy -> dist/whitespace-snapdeploy.tar
 	scripts/snapdeploy-build.sh
 
+neon-update: ## Back up the production database, migrate it and reload the trade data (SKIP_DATA=1: migrations only)
+	scripts/neon-update.sh
+
 deploy-ec2: ## Build the ARM64 image and deploy it to the EC2 server (SKIP_BUILD=1 to reuse the last build)
 	scripts/ec2-deploy.sh
 
-.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions us-tariffs embed eval-hs gen-client snapdeploy deploy-ec2
+ec2-ssh: ## Open a shell on the EC2 server in /opt/whitespace
+	scripts/ec2-ssh.sh
+
+.PHONY: help install env up down logs ollama ollama-stop ollama-clean db migrate api web lint format typecheck test check check-keys alerts sanctions us-tariffs us-imports embed eval-hs gen-client snapdeploy neon-update deploy-ec2 ec2-ssh

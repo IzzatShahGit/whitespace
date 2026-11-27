@@ -40,7 +40,9 @@
     "usageHint": "Pengunjung, pendaftaran, dan pemakaian fitur",
     "admin": "Admin",
     "amazon": "Jual di Amazon",
-    "amazonHint": "Laba per unit di Amazon AS: ongkos kirim, bea, biaya"
+    "amazonHint": "Laba per unit di Amazon AS: ongkos kirim, bea, biaya",
+    "ideas": "Ide produk",
+    "ideasHint": "Terlaris di Amazon dan impor AS yang naik"
   },
   "shell": {
     "search": "Cari produk atau bertanya…",

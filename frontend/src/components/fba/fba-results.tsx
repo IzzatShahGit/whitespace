@@ -1,8 +1,10 @@
 "use client";
 
-import { Anchor, Calculator, Landmark, Ship, TrendingUp } from "lucide-react";
+import { Anchor, ArrowRight, Calculator, Landmark, Ship, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 import { Badge, Callout } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Stat, StatGroup } from "@/components/ui/stat";
 import type { FbaCostItem, FbaEstimate } from "@/lib/api/fba";
@@ -349,6 +351,12 @@ export function FbaDemand({
           )}
         </>
       )}
+      <Link
+        href={`/app/buy/${hs6}`}
+        className={`${buttonClass("secondary", "", "sm")} mt-4 self-start`}
+      >
+        {t("fba.demand.findSuppliers")} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+      </Link>
     </Card>
   );
 }

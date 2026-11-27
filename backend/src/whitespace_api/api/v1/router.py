@@ -13,6 +13,7 @@ from whitespace_api.api.v1.routes import (
     google,
     health,
     hs,
+    ideas,
     landed_cost,
     leads,
     me,
@@ -52,3 +53,4 @@ api_router.include_router(checks.router)
 api_router.include_router(documents.router)
 api_router.include_router(hs.router)
 api_router.include_router(fba.router)
+api_router.include_router(ideas.router)

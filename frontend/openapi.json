@@ -7060,6 +7060,28 @@
           }
         }
       }
+    },
+    "/api/v1/public/ideas": {
+      "get": {
+        "tags": [
+          "ideas"
+        ],
+        "summary": "Ideas",
+        "description": "Amazon's best sellers this week and the fastest-growing US imports, with sources.",
+        "operationId": "ideas_api_v1_public_ideas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeasOut"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7152,6 +7174,71 @@
         ],
         "title": "AdminStats"
       },
+      "AmazonBestsellersOut": {
+        "properties": {
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Captured At"
+          },
+          "previous_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous At",
+            "description": "The capture movement is measured against"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "lists": {
+            "items": {
+              "$ref": "#/components/schemas/BestsellerList"
+            },
+            "type": "array",
+            "title": "Lists"
+          }
+        },
+        "type": "object",
+        "required": [
+          "captured_at",
+          "previous_at",
+          "source",
+          "lists"
+        ],
+        "title": "AmazonBestsellersOut"
+      },
+      "AmazonCategoryOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "bestsellers_url": {
+            "type": "string",
+            "title": "Bestsellers Url",
+            "description": "Amazon's live best-seller page for the category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "bestsellers_url"
+        ],
+        "title": "AmazonCategoryOut"
+      },
       "AmazonSize": {
         "properties": {
           "tier": {
@@ -7237,6 +7324,239 @@
           "market"
         ],
         "title": "BestMove"
+      },
+      "BestsellerItem": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "plain_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plain Name",
+            "description": "What it is, without brand: \"steel tumbler\""
+          },
+          "price_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Usd"
+          },
+          "list_price_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Price Usd",
+            "description": "Amazon's crossed-out price, if higher"
+          },
+          "stars": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stars",
+            "description": "Average rating, out of 5"
+          },
+          "reviews": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviews",
+            "description": "Number of ratings"
+          },
+          "bought": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bought",
+            "description": "Amazon's own figure, e.g. \"10K+ bought in past month\""
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductSize"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asin"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "hs6": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hs6",
+            "description": "Likely customs code, guessed from the name"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name",
+            "description": "Our name for that code"
+          },
+          "fee_category": {
+            "type": "string",
+            "enum": [
+              "home_kitchen",
+              "beauty_health",
+              "baby",
+              "clothing",
+              "footwear",
+              "luggage",
+              "sports",
+              "toys",
+              "pet",
+              "grocery",
+              "electronics_accessories",
+              "consumer_electronics",
+              "furniture",
+              "jewelry",
+              "other"
+            ],
+            "title": "Fee Category"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StartingPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moved",
+            "description": "Places up (+) or down (-) since last week"
+          },
+          "is_new": {
+            "type": "boolean",
+            "title": "Is New",
+            "description": "Not in this category's top list last week"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "name",
+          "plain_name",
+          "price_usd",
+          "list_price_usd",
+          "stars",
+          "reviews",
+          "bought",
+          "brand",
+          "size",
+          "asin",
+          "url",
+          "hs6",
+          "product_name",
+          "fee_category",
+          "start",
+          "moved",
+          "is_new"
+        ],
+        "title": "BestsellerItem"
+      },
+      "BestsellerList": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/AmazonCategoryOut"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BestsellerItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "items"
+        ],
+        "title": "BestsellerList"
       },
       "Body_check_api_v1_documents_check_post": {
         "properties": {
@@ -8005,6 +8325,56 @@
           "already_selling"
         ],
         "title": "CardMarket"
+      },
+      "CategoryTrend": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/AmazonCategoryOut"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd",
+            "description": "US imports, last 12 months"
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Growth",
+            "description": "Last 12 months vs the 12 before (0.1 = +10%)"
+          },
+          "recent_growth": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Growth",
+            "description": "Last 3 months vs the same 3 a year earlier"
+          },
+          "codes": {
+            "type": "integer",
+            "title": "Codes",
+            "description": "Customs codes counted in this category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "imports_usd",
+          "growth",
+          "recent_growth",
+          "codes"
+        ],
+        "title": "CategoryTrend"
       },
       "ChangePasswordRequest": {
         "properties": {
@@ -10705,6 +11075,89 @@
         ],
         "title": "HsPick"
       },
+      "IdeasOut": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/AmazonCategoryOut"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "amazon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AmazonBestsellersOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None until the first capture"
+          },
+          "imports": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportTrends"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "amazon",
+          "imports"
+        ],
+        "title": "IdeasOut"
+      },
+      "ImportTrends": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "first_month": {
+            "type": "string",
+            "title": "First Month"
+          },
+          "last_month": {
+            "type": "string",
+            "title": "Last Month"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryTrend"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "rising": {
+            "items": {
+              "$ref": "#/components/schemas/RisingProduct"
+            },
+            "type": "array",
+            "title": "Rising"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "source_url",
+          "first_month",
+          "last_month",
+          "categories",
+          "rising"
+        ],
+        "title": "ImportTrends"
+      },
       "IntroIn": {
         "properties": {
           "hs6": {
@@ -12685,6 +13138,40 @@
         ],
         "title": "ProductOut"
       },
+      "ProductSize": {
+        "properties": {
+          "length_in": {
+            "type": "number",
+            "title": "Length In"
+          },
+          "width_in": {
+            "type": "number",
+            "title": "Width In"
+          },
+          "height_in": {
+            "type": "number",
+            "title": "Height In"
+          },
+          "weight_lb": {
+            "type": "number",
+            "title": "Weight Lb"
+          },
+          "packed": {
+            "type": "boolean",
+            "title": "Packed",
+            "description": "Amazon listed the packed unit (else the item itself)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "length_in",
+          "width_in",
+          "height_in",
+          "weight_lb",
+          "packed"
+        ],
+        "title": "ProductSize"
+      },
       "ProfileIn": {
         "properties": {
           "exporter": {
@@ -13955,6 +14442,113 @@
         ],
         "title": "ResetPasswordRequest"
       },
+      "RisingProduct": {
+        "properties": {
+          "hs6": {
+            "type": "string",
+            "title": "Hs6"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Amazon category key"
+          },
+          "fee_category": {
+            "type": "string",
+            "enum": [
+              "home_kitchen",
+              "beauty_health",
+              "baby",
+              "clothing",
+              "footwear",
+              "luggage",
+              "sports",
+              "toys",
+              "pet",
+              "grocery",
+              "electronics_accessories",
+              "consumer_electronics",
+              "furniture",
+              "jewelry",
+              "other"
+            ],
+            "title": "Fee Category"
+          },
+          "in_catalog": {
+            "type": "boolean",
+            "title": "In Catalog",
+            "description": "We have trade data for it (calculator, suppliers)"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd"
+          },
+          "growth": {
+            "type": "number",
+            "title": "Growth"
+          },
+          "recent_growth": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Growth"
+          },
+          "monthly_usd": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Monthly Usd",
+            "description": "US imports per month, oldest first"
+          },
+          "china_extra_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "China Extra Pct",
+            "description": "Extra US duty if bought from China"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StartingPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs6",
+          "name",
+          "category",
+          "fee_category",
+          "in_catalog",
+          "imports_usd",
+          "growth",
+          "recent_growth",
+          "monthly_usd",
+          "china_extra_pct",
+          "start"
+        ],
+        "title": "RisingProduct"
+      },
       "RivalDuty": {
         "properties": {
           "country": {
@@ -15066,6 +15660,50 @@
         ],
         "title": "StandardRate",
         "description": "The MFN rate: what countries without a preference pay."
+      },
+      "StartingPoint": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/CountryOut"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share",
+            "description": "Its share of US imports of this product"
+          },
+          "price_per_kg_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Per Kg Usd"
+          },
+          "unit_cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost Usd",
+            "description": "Price per kg x the product's weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "share",
+          "price_per_kg_usd",
+          "unit_cost_usd"
+        ],
+        "title": "StartingPoint",
+        "description": "Where a small seller would likely buy, from US import records: the biggest US\nsupplier we can price shipping from, and its import price."
       },
       "SupplierOption": {
         "properties": {

@@ -52,6 +52,9 @@ export function Footer() {
           <Link href="/login" className="text-muted hover:text-fg">
             Sign in
           </Link>
+          <Link href="/amazon-best-sellers" className="text-muted hover:text-fg">
+            Amazon best sellers
+          </Link>
           <Link href="/fba-calculator" className="text-muted hover:text-fg">
             Amazon FBA calculator
           </Link>

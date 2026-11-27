@@ -138,6 +138,11 @@ class Settings(BaseSettings):
     tavily_api_key: SecretStr | None = None
     # Monthly US imports (Census Bureau). EU monthly data (Eurostat) needs no key.
     census_api_key: SecretStr | None = None
+    # Weekly Amazon best-seller lists via Apify (free plan, $5/month). Unset: lists hidden.
+    apify_token: SecretStr | None = None
+    bestsellers_max_run_usd: float = Field(
+        default=0.90, gt=0, le=5, description="Cost cap per weekly run (5 runs fit in $5)"
+    )
     monthly_cache_days: int = Field(default=7, ge=1, description="Refresh monthly data after")
     # Import duties (WITS-TRAINS, UK Trade Tariff: free, no key) change a few times a year.
     tariff_cache_days: int = Field(default=30, ge=1, description="Refresh import duties after")

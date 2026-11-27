@@ -40,7 +40,9 @@
     "usageHint": "Ziyaretçiler, kayıtlar ve özellik kullanımı",
     "admin": "Yönetici",
     "amazon": "Amazon'da sat",
-    "amazonHint": "Amazon ABD'de birim başına kâr: navlun, gümrük, ücretler"
+    "amazonHint": "Amazon ABD'de birim başına kâr: navlun, gümrük, ücretler",
+    "ideas": "Ürün fikirleri",
+    "ideasHint": "Amazon çok satanları ve artan ABD ithalatı"
   },
   "shell": {
     "search": "Ürün arayın veya sorun…",

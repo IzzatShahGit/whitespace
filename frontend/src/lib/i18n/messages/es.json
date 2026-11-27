@@ -40,7 +40,9 @@
     "usageHint": "Visitantes, registros y uso de funciones",
     "admin": "Admin",
     "amazon": "Vender en Amazon",
-    "amazonHint": "Beneficio por unidad en Amazon EE. UU.: flete, aranceles, tarifas"
+    "amazonHint": "Beneficio por unidad en Amazon EE. UU.: flete, aranceles, tarifas",
+    "ideas": "Ideas de productos",
+    "ideasHint": "Más vendidos de Amazon e importaciones de EE. UU. en alza"
   },
   "shell": {
     "search": "Busque productos o pregunte…",

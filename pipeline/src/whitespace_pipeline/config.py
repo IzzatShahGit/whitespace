@@ -44,6 +44,8 @@ class PipelineSettings(BaseSettings):
     # Amazon marketplaces we price (a few rows, no market scores).
     sourcing_origins: list[str] = ["CHN", "HKG", "TWN", "KOR", "JPN"]
     marketplaces: list[str] = ["USA", "GBR", "DEU", "CAN"]
+    # Monthly US imports for hot Amazon categories (free key: api.census.gov/data/key_signup.html).
+    census_api_key: str | None = None
 
     @property
     def bronze_dir(self) -> Path:

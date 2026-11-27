@@ -40,7 +40,9 @@
     "usageHint": "Khách truy cập, đăng ký và mức dùng tính năng",
     "admin": "Quản trị",
     "amazon": "Bán trên Amazon",
-    "amazonHint": "Lợi nhuận mỗi sản phẩm trên Amazon Mỹ: cước, thuế, phí"
+    "amazonHint": "Lợi nhuận mỗi sản phẩm trên Amazon Mỹ: cước, thuế, phí",
+    "ideas": "Ý tưởng sản phẩm",
+    "ideasHint": "Hàng bán chạy trên Amazon và nhập khẩu Mỹ đang tăng"
   },
   "shell": {
     "search": "Tìm sản phẩm hoặc đặt câu hỏi…",
