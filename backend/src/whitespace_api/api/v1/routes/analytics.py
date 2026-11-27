@@ -1,39 +1,56 @@
-"""Usage analytics: anonymous page views in, a summary out (admins only)."""
+"""Usage analytics: page views and visits in. The admin summaries live in routes/admin.py."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from datetime import UTC, datetime
 
-from whitespace_api.api.deps import AppSettings, CurrentUser, DbSession
+from fastapi import APIRouter, Request, Response, status
+
+from whitespace_api.api.deps import AppSettings, DbSession, OptionalUser
 from whitespace_api.core.ratelimit import RateLimiter, client_key, limit
-from whitespace_api.schemas.analytics import AdminStats, EventIn
+from whitespace_api.schemas.analytics import EventIn
 from whitespace_api.services import analytics as service
+from whitespace_api.services import geoip, visits
 
 router = APIRouter(tags=["analytics"])
 _event_limit = RateLimiter(per_minute=120)
 
 
 @router.post("/events", status_code=status.HTTP_204_NO_CONTENT)
-async def track(body: EventIn, request: Request, db: DbSession, settings: AppSettings) -> Response:
-    """Count one page view or action. No cookies; nothing that identifies a person."""
+async def track(
+    body: EventIn, request: Request, db: DbSession, settings: AppSettings, user: OptionalUser
+) -> Response:
+    """Count a page view or action, and add it to the visit. No cookies; the address is
+    used for the day's visitor code and the country, then dropped."""
     limit(_event_limit, request)
     agent = request.headers.get("user-agent", "")[:300]
-    if not service.is_bot(agent):
-        path = service.page_pattern(body.path)
-        visitor = (
-            service.visitor_id(
-                settings.jwt_secret.get_secret_value(), service.today(), client_key(request), agent
-            )
-            if body.event == "page_view"
-            else None
+    if service.is_bot(agent):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    address = client_key(request)
+    visitor = service.visitor_id(
+        settings.jwt_secret.get_secret_value(), service.today(), address, agent
+    )
+    if body.event != "engage":  # time reports aren't page views or actions
+        await service.record(
+            db,
+            event=body.event,
+            path=service.page_pattern(body.path),
+            visitor=visitor if body.event == "page_view" else None,
         )
-        await service.record(db, event=body.event, path=path, visitor=visitor)
+    if body.event in ("page_view", "engage"):
+        hit = visits.Hit(
+            event=body.event,
+            path=visits.journey_path(body.path),
+            visitor=visitor,
+            user_id=user.id if user else None,
+            agent=agent,
+            country=geoip.country(address, settings.geoip_path)
+            if body.event == "page_view"
+            else None,
+            referrer=visits.referrer_host(body.referrer, request.headers.get("host", "")),
+            utm_source=body.utm_source,
+            utm_campaign=body.utm_campaign,
+            seconds=body.seconds or 0,
+        )
+        await visits.record(db, hit, datetime.now(UTC))
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get("/admin/stats", response_model=AdminStats)
-async def stats(user: CurrentUser, db: DbSession, settings: AppSettings) -> AdminStats:
-    """Visitors, sign-ups and feature use over the last 30 days. Admins only."""
-    if not settings.is_admin(user.email):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    return await service.summary(db, settings)

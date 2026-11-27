@@ -26,7 +26,18 @@ export default function PrivacyPage() {
           <li>
             <strong>Usage counts:</strong> how many times each page and a few buttons are used per
             day, and a count of unique visitors per day. A visitor is counted with a code that
-            changes every day and can’t be traced back to you; we don’t store your IP address.
+            changes every day; we don’t store your IP address.
+          </li>
+          <li>
+            <strong>Visits:</strong> for each visit, the pages you open and how long you spend on
+            them, the site or link that sent you, your country (looked up from your IP address,
+            which is then dropped), and your type of device, browser and operating system. If you’re
+            signed in, the visit is linked to your account so we can see how Whitespace is used and
+            improve it.
+          </li>
+          <li>
+            <strong>Account activity:</strong> the days you used Whitespace and when you were last
+            active.
           </li>
           <li>
             <strong>Limits:</strong> how many AI questions, briefs and searches you used today, to
@@ -36,9 +47,9 @@ export default function PrivacyPage() {
       </Section>
       <Section title="Cookies">
         <p>
-          Only the cookies that keep you signed in. Your light/dark theme choice stays in your
-          browser. If your browser sends “Do Not Track” or Global Privacy Control, we don’t even
-          count your page views.
+          Only the cookies that keep you signed in; visits are counted without cookies or other
+          browser storage. Your light/dark theme choice stays in your browser. If your browser sends
+          “Do Not Track” or Global Privacy Control, we don’t count your page views or visits at all.
         </p>
       </Section>
       <Section title="Who else sees data">
@@ -62,13 +73,22 @@ export default function PrivacyPage() {
           <li>
             <strong>Sign-in:</strong> Google, if you choose “Continue with Google”.
           </li>
+          <li>
+            <strong>Country lookup:</strong> done on our own server with a downloaded copy of{" "}
+            <a href="https://db-ip.com" rel="noopener">
+              IP Geolocation by DB-IP
+            </a>
+            ; your address is never sent to them.
+          </li>
         </ul>
         <p>We never sell or rent personal data, and we don’t share it for advertising.</p>
       </Section>
       <Section title="How long we keep it">
         <p>
-          Your account data stays until you delete your account. Usage counts are kept for about a
-          year. Company and market research we generate isn’t personal and is shared between users.
+          Your account data stays until you delete your account. Visit details are kept for six
+          months; usage counts and activity days for about a year. When you delete your account,
+          your visits stop being linked to you. Company and market research we generate isn’t
+          personal and is shared between users.
         </p>
       </Section>
       <Section title="Your choices">

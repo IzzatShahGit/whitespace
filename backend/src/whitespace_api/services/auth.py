@@ -40,6 +40,8 @@ class Session:
 
 
 async def _start_session(db: AsyncSession, user: User, settings: Settings) -> Session:
+    # Every sign-in and every renewal (each 15 minutes of use) passes here.
+    await repo.mark_seen(db, user, datetime.now(UTC))
     refresh = security.new_refresh_token()
     await repo.add_refresh_token(
         db,
@@ -77,8 +79,10 @@ async def register(
 async def login(db: AsyncSession, *, email: str, password: str, settings: Settings) -> Session:
     user = await repo.get_user_by_email(db, email)
     valid = security.verify_password(password, user.password_hash if user else None)
-    if not user or not valid or not user.is_active:
+    if not user or not valid:
         raise AuthError("Incorrect email or password")
+    if not user.is_active:  # only said after the right password, so it leaks nothing
+        raise AuthError("This account is disabled")
     user.last_login_at = datetime.now(UTC)
     session = await _start_session(db, user, settings)
     await db.commit()

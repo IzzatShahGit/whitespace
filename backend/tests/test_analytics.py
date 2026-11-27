@@ -59,7 +59,9 @@ async def test_events_are_counted_and_summarised(user: AsyncClient, admin: None)
     assert (await user.get("/api/v1/auth/me")).json()["is_admin"] is True
     stats = (await user.get("/api/v1/admin/stats")).json()
     assert stats["totals"]["page_views"] == 3 and stats["totals"]["visitors"] == 1
-    assert stats["totals"]["users"] == 1 and stats["totals"]["sign_ups"] == 1
+    # The only account is the admin's: kept apart from the real-user numbers.
+    assert stats["totals"]["users"] == 0 and stats["totals"]["test_users"] == 1
+    assert stats["totals"]["sign_ups"] == 0
     assert stats["top_pages"][0] == {"name": "/app/markets/[hs6]/[country]", "count": 2}
     assert {"name": "Deal sheets printed", "count": 1} in stats["actions"]
     assert len(stats["days"]) == 30

@@ -36,3 +36,25 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_optional_user(
+    db: DbSession,
+    settings: AppSettings,
+    ws_access: Annotated[str | None, Cookie()] = None,
+) -> User | None:
+    """The signed-in user if there is one; never refuses the request."""
+    return await auth_service.user_from_access_token(db, ws_access, settings)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
+async def get_admin_user(user: CurrentUser, settings: AppSettings) -> User:
+    """Admins only (ADMIN_EMAILS). Everyone else gets a 404: the pages don't exist for them."""
+    if not settings.is_admin(user.email):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    return user
+
+
+AdminUser = Annotated[User, Depends(get_admin_user)]

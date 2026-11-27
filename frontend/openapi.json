@@ -4064,17 +4064,35 @@
           "analytics"
         ],
         "summary": "Track",
-        "description": "Count one page view or action. No cookies; nothing that identifies a person.",
+        "description": "Count a page view or action, and add it to the visit. No cookies; the address is\nused for the day's visitor code and the country, then dropped.",
         "operationId": "track_api_v1_events_post",
+        "parameters": [
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EventIn"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "204": {
@@ -4096,10 +4114,10 @@
     "/api/v1/admin/stats": {
       "get": {
         "tags": [
-          "analytics"
+          "admin"
         ],
         "summary": "Stats",
-        "description": "Visitors, sign-ups and feature use over the last 30 days. Admins only.",
+        "description": "Visitors, visits, sign-ups and feature use over the last 30 days.",
         "operationId": "stats_api_v1_admin_stats_get",
         "parameters": [
           {
@@ -4142,6 +4160,503 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Users",
+        "description": "Accounts, 50 a page. `segment`: real users, or test/demo/admin accounts.",
+        "operationId": "users_api_v1_admin_users_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "segment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "real",
+                "test",
+                "all"
+              ],
+              "type": "string",
+              "default": "real",
+              "title": "Segment"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "any",
+                "active",
+                "inactive",
+                "disabled",
+                "unverified",
+                "no_profile"
+              ],
+              "type": "string",
+              "default": "any",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "joined",
+                "last_seen",
+                "most_active",
+                "name"
+              ],
+              "type": "string",
+              "default": "joined",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "User",
+        "description": "One account: profile, activity, what they made and their latest visits.",
+        "operationId": "user_api_v1_admin_users__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Update User",
+        "description": "Disable or enable an account (disabling signs it out everywhere at once), or mark\nit as a test/demo account.",
+        "operationId": "update_user_api_v1_admin_users__user_id__patch",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/sign-out": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Sign Out",
+        "description": "End every session of this account (within 15 minutes for open tabs).",
+        "operationId": "sign_out_api_v1_admin_users__user_id__sign_out_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/visits": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Visits",
+        "description": "Latest visits first: origin, device, pages in order and time on each.",
+        "operationId": "visits_api_v1_admin_visits_get",
+        "parameters": [
+          {
+            "name": "show",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "anonymous",
+                "signed_in"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Show"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "include_test",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Test"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "ws_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ws Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitList"
                 }
               }
             }
@@ -7124,6 +7639,30 @@
         "title": "AdditionalDuty",
         "description": "A duty charged on top of the normal rate (US HTS chapter 99)."
       },
+      "AdminActionOut": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "admin_email": {
+            "type": "string",
+            "title": "Admin Email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "admin_email",
+          "created_at"
+        ],
+        "title": "AdminActionOut"
+      },
       "AdminStats": {
         "properties": {
           "since": {
@@ -7138,7 +7677,7 @@
           },
           "totals": {
             "$ref": "#/components/schemas/Totals",
-            "description": "Over the period, except users and active_7d"
+            "description": "Over the period, except users and active counts"
           },
           "days": {
             "items": {
@@ -7161,6 +7700,9 @@
             "type": "array",
             "title": "Actions",
             "description": "Feature use over the period"
+          },
+          "visits": {
+            "$ref": "#/components/schemas/VisitSummary"
           }
         },
         "type": "object",
@@ -7170,7 +7712,8 @@
           "totals",
           "days",
           "top_pages",
-          "actions"
+          "actions",
+          "visits"
         ],
         "title": "AdminStats"
       },
@@ -9478,7 +10021,17 @@
           },
           "sign_ups": {
             "type": "integer",
-            "title": "Sign Ups"
+            "title": "Sign Ups",
+            "description": "Real accounts only"
+          },
+          "active_users": {
+            "type": "integer",
+            "title": "Active Users",
+            "description": "Real accounts that used the app that day"
+          },
+          "visits": {
+            "type": "integer",
+            "title": "Visits"
           }
         },
         "type": "object",
@@ -9486,7 +10039,9 @@
           "day",
           "page_views",
           "visitors",
-          "sign_ups"
+          "sign_ups",
+          "active_users",
+          "visits"
         ],
         "title": "DayStats"
       },
@@ -9999,6 +10554,7 @@
             "type": "string",
             "enum": [
               "page_view",
+              "engage",
               "deal_sheet_print",
               "deal_sheet_copy_link",
               "email_draft_open",
@@ -10017,6 +10573,55 @@
               }
             ],
             "title": "Path"
+          },
+          "referrer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referrer"
+          },
+          "utm_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Source"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3600.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
           }
         },
         "type": "object",
@@ -12414,6 +13019,24 @@
         ],
         "title": "MonthPoint"
       },
+      "Named": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "Named"
+      },
       "NewsCard": {
         "properties": {
           "type": {
@@ -13234,6 +13857,50 @@
           "products"
         ],
         "title": "ProfileIn"
+      },
+      "ProfileInfo": {
+        "properties": {
+          "exporter": {
+            "$ref": "#/components/schemas/Named"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "goal": {
+            "type": "string",
+            "title": "Goal"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/Named"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "current_markets": {
+            "items": {
+              "$ref": "#/components/schemas/Named"
+            },
+            "type": "array",
+            "title": "Current Markets"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exporter",
+          "role",
+          "goal",
+          "products",
+          "current_markets",
+          "updated_at"
+        ],
+        "title": "ProfileInfo"
       },
       "ProfileOut": {
         "properties": {
@@ -14721,6 +15388,30 @@
           "niches"
         ],
         "title": "SectorOut"
+      },
+      "SegmentCounts": {
+        "properties": {
+          "real": {
+            "type": "integer",
+            "title": "Real"
+          },
+          "test": {
+            "type": "integer",
+            "title": "Test",
+            "description": "Test, demo and admin accounts"
+          },
+          "disabled": {
+            "type": "integer",
+            "title": "Disabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "real",
+          "test",
+          "disabled"
+        ],
+        "title": "SegmentCounts"
       },
       "SentIn": {
         "properties": {
@@ -16354,12 +17045,22 @@
         "properties": {
           "users": {
             "type": "integer",
-            "title": "Users"
+            "title": "Users",
+            "description": "Real accounts (not test, demo or admin)"
+          },
+          "test_users": {
+            "type": "integer",
+            "title": "Test Users",
+            "description": "Test, demo and admin accounts"
           },
           "active_7d": {
             "type": "integer",
             "title": "Active 7D",
-            "description": "Signed in during the last 7 days"
+            "description": "Real accounts that used the app in the last 7 days"
+          },
+          "active_30d": {
+            "type": "integer",
+            "title": "Active 30D"
           },
           "sign_ups": {
             "type": "integer",
@@ -16377,7 +17078,9 @@
         "type": "object",
         "required": [
           "users",
+          "test_users",
           "active_7d",
+          "active_30d",
           "sign_ups",
           "visitors",
           "page_views"
@@ -16494,6 +17197,154 @@
         ],
         "title": "UpdateMeRequest"
       },
+      "UserDetail": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserRow"
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locale"
+          },
+          "digest_enabled": {
+            "type": "boolean",
+            "title": "Digest Enabled"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "open_sessions": {
+            "type": "integer",
+            "title": "Open Sessions"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active_days": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Active Days",
+            "description": "Days they used the app, last 90 days"
+          },
+          "feature_use": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Feature Use",
+            "description": "AI actions by feature, last 30 days"
+          },
+          "made": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Made",
+            "description": "What they created, all time"
+          },
+          "pipeline": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Pipeline",
+            "description": "Companies in their pipeline, by stage"
+          },
+          "visits": {
+            "items": {
+              "$ref": "#/components/schemas/VisitOut"
+            },
+            "type": "array",
+            "title": "Visits",
+            "description": "Latest visits, newest first"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/AdminActionOut"
+            },
+            "type": "array",
+            "title": "History",
+            "description": "Admin changes to this account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "locale",
+          "digest_enabled",
+          "last_login_at",
+          "open_sessions",
+          "profile",
+          "active_days",
+          "feature_use",
+          "made",
+          "pipeline",
+          "visits",
+          "history"
+        ],
+        "title": "UserDetail"
+      },
+      "UserList": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "per_page": {
+            "type": "integer",
+            "title": "Per Page"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/SegmentCounts"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserRow"
+            },
+            "type": "array",
+            "title": "Users"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "per_page",
+          "counts",
+          "users"
+        ],
+        "title": "UserList"
+      },
       "UserOut": {
         "properties": {
           "id": {
@@ -16556,6 +17407,185 @@
           "created_at"
         ],
         "title": "UserOut"
+      },
+      "UserRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "sign_in": {
+            "type": "string",
+            "enum": [
+              "google",
+              "password",
+              "both"
+            ],
+            "title": "Sign In"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "False when an admin disabled the account"
+          },
+          "is_test": {
+            "type": "boolean",
+            "title": "Is Test",
+            "description": "Marked as a demo or test account"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin"
+          },
+          "exporter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exporter",
+            "description": "Country they trade from (ISO alpha-3)"
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal",
+            "description": "sell | buy | both"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "active_days": {
+            "type": "integer",
+            "title": "Active Days",
+            "description": "Days they used the app, last 30 days"
+          },
+          "feature_uses": {
+            "type": "integer",
+            "title": "Feature Uses",
+            "description": "Metered AI actions, last 30 days"
+          },
+          "visits": {
+            "type": "integer",
+            "title": "Visits",
+            "description": "Visits, last 30 days"
+          },
+          "engaged_seconds": {
+            "type": "integer",
+            "title": "Engaged Seconds",
+            "description": "Time on the site, last 30 days"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Where their latest visit came from (ISO alpha-2)"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "How they first found the site"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "full_name",
+          "sign_in",
+          "email_verified",
+          "is_active",
+          "is_test",
+          "is_admin",
+          "exporter",
+          "goal",
+          "created_at",
+          "last_seen_at",
+          "active_days",
+          "feature_uses",
+          "visits",
+          "engaged_seconds",
+          "country",
+          "source"
+        ],
+        "title": "UserRow"
+      },
+      "UserUpdate": {
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "is_test": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Test"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate"
       },
       "ValidationError": {
         "properties": {
@@ -16720,6 +17750,303 @@
         ],
         "title": "Verdict",
         "description": "The recommended action, derived from the signals by fixed rules."
+      },
+      "VisitList": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "per_page": {
+            "type": "integer",
+            "title": "Per Page"
+          },
+          "live_now": {
+            "type": "integer",
+            "title": "Live Now",
+            "description": "Visits active in the last 5 minutes"
+          },
+          "visits": {
+            "items": {
+              "$ref": "#/components/schemas/VisitOut"
+            },
+            "type": "array",
+            "title": "Visits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "per_page",
+          "live_now",
+          "visits"
+        ],
+        "title": "VisitList"
+      },
+      "VisitOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen At"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "ISO alpha-2"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "referrer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referrer"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign"
+          },
+          "landing": {
+            "type": "string",
+            "title": "Landing"
+          },
+          "device": {
+            "type": "string",
+            "title": "Device"
+          },
+          "browser": {
+            "type": "string",
+            "title": "Browser"
+          },
+          "os": {
+            "type": "string",
+            "title": "Os"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
+          "engaged_seconds": {
+            "type": "integer",
+            "title": "Engaged Seconds"
+          },
+          "live": {
+            "type": "boolean",
+            "title": "Live",
+            "description": "Active in the last 5 minutes"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VisitUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "journey": {
+            "items": {
+              "$ref": "#/components/schemas/VisitPageOut"
+            },
+            "type": "array",
+            "title": "Journey"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "started_at",
+          "last_seen_at",
+          "country",
+          "source",
+          "referrer",
+          "utm_campaign",
+          "landing",
+          "device",
+          "browser",
+          "os",
+          "pages",
+          "engaged_seconds",
+          "live",
+          "user",
+          "journey"
+        ],
+        "title": "VisitOut"
+      },
+      "VisitPageOut": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "seconds": {
+            "type": "integer",
+            "title": "Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "at",
+          "seconds"
+        ],
+        "title": "VisitPageOut"
+      },
+      "VisitSummary": {
+        "properties": {
+          "live_now": {
+            "type": "integer",
+            "title": "Live Now",
+            "description": "Visits active in the last 5 minutes"
+          },
+          "visits": {
+            "type": "integer",
+            "title": "Visits"
+          },
+          "signed_in": {
+            "type": "integer",
+            "title": "Signed In",
+            "description": "Visits by someone signed in"
+          },
+          "avg_seconds": {
+            "type": "integer",
+            "title": "Avg Seconds",
+            "description": "Engaged time per visit"
+          },
+          "avg_pages": {
+            "type": "number",
+            "title": "Avg Pages"
+          },
+          "bounce_rate": {
+            "type": "number",
+            "title": "Bounce Rate",
+            "description": "Share of visits with one page and under 10 s"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Countries",
+            "description": "ISO alpha-2 codes; '' when unknown"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Devices"
+          },
+          "browsers": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Browsers"
+          },
+          "landing": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Landing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "live_now",
+          "visits",
+          "signed_in",
+          "avg_seconds",
+          "avg_pages",
+          "bounce_rate",
+          "countries",
+          "sources",
+          "devices",
+          "browsers",
+          "landing"
+        ],
+        "title": "VisitSummary",
+        "description": "Visits over the period, leaving out visits by test, demo and admin accounts."
+      },
+      "VisitUser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "is_test": {
+            "type": "boolean",
+            "title": "Is Test"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "is_test"
+        ],
+        "title": "VisitUser"
       },
       "WatchIn": {
         "properties": {

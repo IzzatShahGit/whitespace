@@ -3,13 +3,13 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-import { track } from "@/lib/analytics";
+import { trackPageView } from "@/lib/analytics";
 
-/** Counts one page view per route change (path only; the server strips ids). */
+/** One page view per route change, plus engaged time on each page (see lib/analytics). */
 export function PageViews() {
   const pathname = usePathname();
   useEffect(() => {
-    if (pathname) track("page_view", pathname);
+    if (pathname) trackPageView(pathname);
   }, [pathname]);
   return null;
 }

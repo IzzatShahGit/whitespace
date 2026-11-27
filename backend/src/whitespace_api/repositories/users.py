@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from whitespace_api.models.user import RefreshToken, User
+from whitespace_api.models.user import RefreshToken, User, UserActivityDay
 
 
 async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
@@ -51,6 +52,16 @@ async def add_refresh_token(
 
 async def get_refresh_token(session: AsyncSession, token_hash: str) -> RefreshToken | None:
     return await session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
+
+
+async def mark_seen(session: AsyncSession, user: User, when: datetime) -> None:
+    """Remember that this user is using the app now (last seen, and today as an active day)."""
+    user.last_seen_at = when
+    await session.execute(
+        insert(UserActivityDay)
+        .values(user_id=user.id, day=when.astimezone(UTC).date())
+        .on_conflict_do_nothing()
+    )
 
 
 async def revoke_all_refresh_tokens(
